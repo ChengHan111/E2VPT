@@ -1,0 +1,225 @@
+python train.py --config-file /home/ch7858/vpt/configs/prompt/*.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
+
+python train.py --config-file /home/ch7858/vpt/configs/prompt/cub.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
+
+python tune_fgvc.py --config-file configs/prompt/*.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
+
+
+python train.py \
+        --config-file configs/prompt/cub.yaml \
+        MODEL.TYPE "vit" \
+        DATA.BATCH_SIZE "64" \
+        MODEL.PROMPT.NUM_TOKENS "100" \
+        MODEL.PROMPT.DEEP "True" \
+        MODEL.PROMPT.DROPOUT "0.1" \
+        DATA.FEATURE "sup_vitb16_imagenet21k" \
+        DATA.NAME "vtab-dmlab" \
+        DATA.NUMBER_CLASSES "6" \
+        SOLVER.BASE_LR "0.25" \
+        SOLVER.WEIGHT_DECAY "0.001" \
+        SEED ${seed} \
+        MODEL.MODEL_ROOT "${model_root}" \
+        DATA.DATAPATH "${data_path}" \
+        OUTPUT_DIR "${output_dir}/seed${seed}"
+
+python tune_fgvc.py \
+    --train-type "prompt" \
+    --config-file configs/prompt/cub.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.PROMPT.DEEP "True" \
+    MODEL.PROMPT.DROPOUT "0.1" \
+    MODEL.PROMPT.NUM_TOKENS "10" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.DATAPATH  \
+    MODEL.MODEL_ROOT  \
+    OUTPUT_DIR 
+
+
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/*.yaml MODEL.TRANSFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
+
+src里面提供了config的baseline 但是configs里面的文件的优先级在其之上(修改对应configs文件内的内容就行)
+tune_fgvc 和 tune_vtab 是用来一次性跑很多实验的 (find the best lr and wd) wd as WEIGHT_DECAY
+
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.0"
+
+prompt_proj 写着一层的目的是区分训练部分 方便选择对应的部分进行train
+
+DATASETS = [
+    'caltech101',
+    'cifar(num_classes=100)',
+    'dtd',
+    'oxford_flowers102',
+    'oxford_iiit_pet',
+    'patch_camelyon',
+    'sun397',
+    'svhn',
+    'resisc45',
+    'eurosat',
+    'dmlab',
+    'kitti(task="closest_vehicle_distance")',
+    'smallnorb(predicted_attribute="label_azimuth")',
+    'smallnorb(predicted_attribute="label_elevation")',
+    'dsprites(predicted_attribute="label_x_position",num_classes=16)',
+    'dsprites(predicted_attribute="label_orientation",num_classes=16)',
+    'clevr(task="closest_object_distance")',
+    'clevr(task="count_all")',
+    'diabetic_retinopathy(config="btgraham-300")'
+]
+
+##### P_VK approach separate commands
+# FGVC
+Cars: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+CUB: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/cub.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Dogs: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/dogs.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Flowers: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/flowers.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Nabirds: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+# VTAB-1k
+## Natural
+Caltech101(Failed): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Cifar100: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+dtd: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Oxford_flowers102: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Oxford_iiit_pet: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+SUN397: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Svhn_cropped: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+
+## Specialized
+Diabetic_retinopathy_detection (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Eurosat: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Patch_camelyon: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Resisc45 (Failed): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+
+
+## Structured
+Clevr_count: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Clevr_distance: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Dmlab: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Dsprites_location (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Dsprites_orientation (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Kitti_distance: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Smallnorb_azimuth: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+Smallnorb_evaluation: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
+
+
+
+# SELF_QKV + bias approach
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "SELF_QKV+bias" MODEL.PROMPT.NUM_TOKENS "10"
+
+
+%%bash
+# Tune VTAB-caltech101 with VPT:
+python tune_vtab.py \
+    --train-type "QKV" \
+    --config-file configs/prompt/cub.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.PROMPT.DEEP "True" \
+    MODEL.PROMPT.DROPOUT "0.1" \
+    MODEL.PROMPT.NUM_TOKENS "10" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.NAME "vtab-caltech101" \
+    DATA.NUMBER_CLASSES "102" \
+    DATA.DATAPATH  \
+    MODEL.MODEL_ROOT  \
+    OUTPUT_DIR  
+
+# Tune CUB with VPT:
+python tune_fgvc.py \
+    --train-type "QKV" \
+    --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.QKV_insert.DEEP "True" \
+    MODEL.QKV_insert.DROPOUT "0.1" \
+    MODEL.QKV_insert.NUM_TOKENS "10" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.DATAPATH  \
+    MODEL.MODEL_ROOT  \
+    OUTPUT_DIR 
+
+
+
+##### P_VK approach tune_command commands
+# FGVC
+Cars: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+CUB: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cub.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Dogs: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/dogs.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Flowers: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/flowers.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Nabirds: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+
+
+# VTAB-1k
+## Natural
+Caltech101(Failed): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Cifar100: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+dtd: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Oxford_flowers102: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Oxford_iiit_pet: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+SUN397: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Svhn_cropped: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+
+## Specialized
+Diabetic_retinopathy_detection (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Eurosat: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Patch_camelyon: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Resisc45 (Failed): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+
+
+## Structured
+Clevr_count: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Clevr_distance: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Dmlab: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Dsprites_location (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Dsprites_orientation (Failed (Due to memory)): 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Kitti_distance: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Smallnorb_azimuth: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+Smallnorb_evaluation: 
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"

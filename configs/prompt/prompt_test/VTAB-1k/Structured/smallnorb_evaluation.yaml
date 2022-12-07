@@ -1,0 +1,12 @@
+_BASE_: "../../../../base-prompt_changed_P_VK.yaml"
+RUN_N_TIMES: 1
+DATA:
+  NAME: vtab-smallnorb(predicted_attribute="label_elevation")
+  DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Structured/"  #TODO: need to specify here
+  NUMBER_CLASSES: 9
+  MULTILABEL: False
+MODEL:
+  TYPE: "vit"
+SOLVER:
+  BASE_LR: 0.01
+  WEIGHT_DECAY: 0.001

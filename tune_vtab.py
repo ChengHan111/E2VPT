@@ -204,10 +204,13 @@ def train(cfg, args, final_runs):
     if train_loader:
         trainer.train_classifier(train_loader, val_loader, test_loader)
         # save the evaluation results
-        torch.save(
-            evaluator.results,
-            os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
-        )
+        if cfg.SAVE_VTAB_RESULTS_PTH == True:
+            torch.save(
+                evaluator.results,
+                os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
+            )
+        else:
+            print("Self-added: Unsave tune-vtab pth results")
     else:
         print("No train loader presented. Exit")
 

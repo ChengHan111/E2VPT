@@ -183,11 +183,11 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --conf
 Caltech101(Failed): 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
 Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.SHARE_PARAM_KV "False"
 dtd: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
 Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "5" 
 Oxford_iiit_pet: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.NUM_TOKENS_P "10"
 SUN397: 

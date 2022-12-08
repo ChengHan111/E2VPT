@@ -25,6 +25,7 @@ _C.NUM_SHARDS = 1
 # Note that non-determinism may still be present due to non-deterministic
 # operator implementations in GPU operator libraries
 _C.SEED = None
+_C.SAVE_VTAB_RESULTS_PTH = False # self added here for not saving tune_vtab pth results
 
 # ----------------------------------------------------------------------
 # Model options

@@ -26,6 +26,7 @@ class ViT(nn.Module):
 
         # 是通过cfg里面的这个输入来确定model的
         if "prompt" in cfg.MODEL.TRANSFER_TYPE:
+            print('should not pop out here!')
             prompt_cfg = cfg.MODEL.PROMPT
         else:
             prompt_cfg = None

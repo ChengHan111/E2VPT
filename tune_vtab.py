@@ -114,9 +114,21 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
     output_dir = cfg.OUTPUT_DIR
-    output_folder = os.path.join(
-        cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    )
+    if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
+        P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
+        VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
+        SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
+        if SHARED == True:
+            marker = 1
+        else:
+            marker = 0
+        output_folder = os.path.join(
+            cfg.DATA.NAME + f"P{P_NUM}_VK{VK_NUM}_SHARED_{marker}", cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
+        )
+    else:
+        output_folder = os.path.join(
+            cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
+        )
 
     # train cfg.RUN_N_TIMES times
     if run_idx is None:
@@ -204,13 +216,14 @@ def train(cfg, args, final_runs):
     if train_loader:
         trainer.train_classifier(train_loader, val_loader, test_loader)
         # save the evaluation results
-        if cfg.SAVE_VTAB_RESULTS_PTH == True:
-            torch.save(
-                evaluator.results,
-                os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
-            )
-        else:
-            print("Self-added: Unsave tune-vtab pth results")
+        # if cfg.SAVE_VTAB_RESULTS_PTH == True:
+        # Here is a must saved
+        torch.save(
+            evaluator.results,
+            os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
+        )
+        # else:
+        #     print("Self-added: Unsave tune-vtab pth results")
     else:
         print("No train loader presented. Exit")
 

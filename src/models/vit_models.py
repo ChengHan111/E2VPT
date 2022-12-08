@@ -147,7 +147,6 @@ class ViT(nn.Module):
             for k, p in self.enc.named_parameters():
                 print('#####', k)
                 if "QKV" not in k and 'prompt' not in k: 
-                    # print('marker!')
                     p.requires_grad = False
                     print(p.requires_grad)
             

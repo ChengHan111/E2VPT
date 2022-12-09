@@ -46,7 +46,6 @@ DATA2CLS = {
 
 
 def find_best_lrwd(files, data_name):
-    
     t_name = "val_" + data_name
     best_lr = None
     best_wd = None
@@ -55,6 +54,7 @@ def find_best_lrwd(files, data_name):
         try:
             results_dict = torch.load(f, "cpu")
             epoch = len(results_dict) - 1
+            # read every epoch --> find the best epoch result
             val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
             val_result = float(val_result)
         except Exception as e:
@@ -93,17 +93,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     if cfg.DATA.FEATURE == "sup_vitb16_imagenet21k":
         cfg.MODEL.PROMPT.CLSEMB_PATH = os.path.join(
             cfg.MODEL.PROMPT.CLSEMB_FOLDER, "{}.npy".format(cfg.DATA.NAME))
-        
-    if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-        P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
-        VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
-        SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
-        if SHARED == True:
-            marker = 1
-        else:
-            marker = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}"
-
 
     if not final_runs:
         cfg.RUN_N_TIMES = 1
@@ -117,15 +106,8 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         cfg.RUN_N_TIMES = 5
         cfg.MODEL.SAVE_CKPT = False
         # find the best lr and best wd
-        if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
-            lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-            print('!!!!!!!', lr)
-            print('@@@@@@', wd)
-        else:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
-            lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-            
+        files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
+        lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
         cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_finalfinal"
         cfg.SOLVER.BASE_LR = lr
         cfg.SOLVER.WEIGHT_DECAY = wd
@@ -133,26 +115,9 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
     output_dir = cfg.OUTPUT_DIR
-    # if lr is not None and wd is not None:
-    #     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-    #         P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
-    #         VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
-    #         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
-    #         if SHARED == True:
-    #             marker = 1
-    #         else:
-    #             marker = 0
-    #         # TODO: Add extra "_" before P
-    #         output_folder = os.path.join(
-    #             cfg.DATA.NAME + f"P{P_NUM}_VK{VK_NUM}_SHARED_{marker}", cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    #         )
-    #     else:
-    #         output_folder = os.path.join(
-    #             cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    #         )
-    if lr is None or wd is None:
-        output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{0.000}_wd{0.000}")
-    output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}")
+    output_folder = os.path.join(
+        cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
+    )
 
     # train cfg.RUN_N_TIMES times
     if run_idx is None:
@@ -240,14 +205,10 @@ def train(cfg, args, final_runs):
     if train_loader:
         trainer.train_classifier(train_loader, val_loader, test_loader)
         # save the evaluation results
-        # if cfg.SAVE_VTAB_RESULTS_PTH == True:
-        # Here is a must saved
         torch.save(
             evaluator.results,
             os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
         )
-        # else:
-        #     print("Self-added: Unsave tune-vtab pth results")
     else:
         print("No train loader presented. Exit")
 
@@ -302,32 +263,6 @@ def get_lrwd_range(args):
             1.0, 2.5, 5.
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
-    
-    elif args.train_type == "QKV" or args.train_type == "P_VK":
-        # lr_range = [
-        #     5.0, 2.5, 1.0,
-        #     50.0, 25., 10.0,
-        #     0.5, 0.25, 0.1, 0.05
-        # ]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-        lr_range = [
-            1.0
-        ]
-        wd_range = [0.01]
-        
-
-    elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":
-        lr_range = [
-            500, 1000, 250., 100.0,
-        ]
-        wd_range = [0.01, 0.001, 0.0001, 0.0]
-
-    # elif args.train_type == "prompt_resnet":
-    #     lr_range = [
-    #         0.05, 0.025, 0.01, 0.5, 0.25, 0.1,
-    #         1.0, 2.5, 5.
-    #     ]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
 
     return lr_range, wd_range
 

@@ -11,7 +11,7 @@ _C = CfgNode()
 #   from configs.config import cfg
 
 _C.DBG = False
-_C.OUTPUT_DIR = "./output"
+_C.OUTPUT_DIR = "./output_fgvc"
 _C.RUN_N_TIMES = 5
 # Perform benchmarking to select the fastest CUDNN algorithms to use
 # Note that this may increase the memory usage and will likely not result
@@ -25,7 +25,7 @@ _C.NUM_SHARDS = 1
 # Note that non-determinism may still be present due to non-deterministic
 # operator implementations in GPU operator libraries
 _C.SEED = None
-_C.SAVE_VTAB_RESULTS_PTH = False # self added here for not saving tune_vtab pth results
+# _C.SAVE_VTAB_RESULTS_PTH = False # self added here for not saving tune_vtab pth results
 
 # ----------------------------------------------------------------------
 # Model options

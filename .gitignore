@@ -141,5 +141,6 @@ dmypy.json
 .pyre/
 
 /output
+/output_fgvc
 /output_finalfinal
 /output_val

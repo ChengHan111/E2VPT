@@ -46,8 +46,20 @@ def setup(args):
     current_time = time.strftime("%H:%M:%S", time.localtime())
     print("Self-added Current time (Applied for debugging), In train.py")
     
-    output_folder = os.path.join(
-        cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}", current_time)
+    # if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
+    #     P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
+    #     VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
+    #     SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
+    #     if SHARED == True:
+    #         marker = 1
+    #     else:
+    #         marker = 0
+    #     Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}"
+    #     output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}", current_time)
+    # else:
+    output_folder = os.path.join(cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}", current_time)
+    
+    
 
     # train cfg.RUN_N_TIMES times
     count = 1

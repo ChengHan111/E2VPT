@@ -1,5 +1,5 @@
 """
-tune lr, wd for fgvc datasets and other datasets with train / val / test splits
+tune lr, wd for fgvc datasets and other datasets with train / val / test splits, should find the best results among 5 runs manually
 """
 import os
 import warnings

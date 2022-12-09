@@ -150,8 +150,9 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     #         output_folder = os.path.join(
     #             cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
     #         )
-    if lr is None or wd is None:
-        output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{0.000}_wd{0.000}")
+    # if lr is None or wd is None:
+    #     output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{0.000}_wd{0.000}")
+    
     output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}")
 
     # train cfg.RUN_N_TIMES times

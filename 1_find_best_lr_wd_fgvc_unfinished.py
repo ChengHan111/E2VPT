@@ -199,39 +199,18 @@ def prompt_main_largerrange(args):
             train_main(cfg, args)
             sleep(randint(1, 10))
 
-def QKV_main(args):
-    lr_range = [
-        5.0, 2.5, 1.0,
-        50.0, 25., 10.0,
-        0.5, 0.25, 0.1,
-    ]
-    wd_range = [0.01, 0.001, 0.0001, 0.0]
-    for lr in lr_range:
-        for wd in wd_range:
-            # set up cfg and args
-            try:
-                cfg = setup(args, lr, wd)
-            except ValueError:
-                continue
-            train_main(cfg, args)
-            sleep(randint(1, 10))
+def MainSelf(args):
 
-
-def QKV_main_largerrange(args):
-    lr_range = [
-        500, 1000,    # for parralel-based prompt for stanford cars
-        250., 100.0,  # for parralel-based prompt for stanford cars
-    ]
-    wd_range = [0.0, 0.01, 0.001, 0.0001]
-    for lr in lr_range:
-        for wd in wd_range:
-            # set up cfg and args
-            try:
-                cfg = setup(args, lr, wd)
-            except ValueError:
-                continue
-            train_main(cfg, args)
-            sleep(randint(1, 10))
+    lr, wd = find_best_lrwd(files)
+    # final run 5 times with fixed seed
+    random_seeds = [42, 44, 82, 100, 800]
+    for run_idx, seed in enumerate(random_seeds):
+        try:
+            cfg = setup(args, lr, wd, run_idx=run_idx+1, seed=seed)
+        except ValueError:
+            continue
+        train_main(cfg, args)
+        sleep(randint(1, 10))
 
 def main(args):
     """main function to call from workflow"""
@@ -253,11 +232,12 @@ def main(args):
         prompt_main_largerrange(args)
     
     elif args.train_type == "QKV" or "P_VK":
-        QKV_main(args)
+        print('!!!find_best_lrwd!!! In 1_find_best_lr_wd_fgvc.py')
+        MainSelf(args)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)
     elif args.train_type == "QKV_largerrange" or args.train_type == "QKV_largerlr" or args.train_type == "P_VK_largerrange" or args.train_type == "P_VK_largerlr":  # noqa
-        QKV_main_largerrange(args)
+        MainSelf(args)
 
 
 if __name__ == '__main__':

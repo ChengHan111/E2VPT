@@ -35,7 +35,7 @@ _C.MODEL.TRANSFER_TYPE = "linear"  # one of linear, end2end, prompt, adapter, si
 _C.MODEL.WEIGHT_PATH = ""  # if resume from some checkpoint file
 _C.MODEL.SAVE_CKPT = False
 
-_C.MODEL.MODEL_ROOT = "/home/ch7858/vpt/models"  # root folder for pretrained model weights (changed here!)
+_C.MODEL.MODEL_ROOT = "./models"  # root folder for pretrained model weights (changed here!)
 
 _C.MODEL.TYPE = "vit"
 _C.MODEL.MLP_NUM = 0
@@ -186,7 +186,7 @@ _C.MODEL.P_VK.SHARE_PARAM_KV = True # change it to False to init two parameters
 _C.DATA = CfgNode()
 
 _C.DATA.NAME = ""
-_C.DATA.DATAPATH = "/home/ch7858/vpt/fgvc" # (changed here!)
+_C.DATA.DATAPATH = "" # (changed here!)
 _C.DATA.FEATURE = ""  # e.g. inat2021_supervised
 
 _C.DATA.PERCENTAGE = 1.0

@@ -20,6 +20,6 @@ SOLVER:
 DATA:
   NAME: "test"
   NUMBER_CLASSES: -1
-  DATAPATH: "/home/ch7858/vpt/fgvc"
+  DATAPATH: ""
   FEATURE: "sup_vitb16_224"
   BATCH_SIZE: 64

@@ -32,6 +32,7 @@ print(df)
 f_df = average_df(df, metric_names=["l-test_top1"], take_average=True)
 print(f_df)
 
+# print(df["l-test_top1"].tolist())
 # print(f_df["l-test_top1"])
 # print(f_df["Prompt_length"])
 # print(f_df["VK_length"])
@@ -47,6 +48,7 @@ lr = f_df["lr"].tolist()[0]
 wd = f_df["wd"].tolist()[0]
 tuned_percentage = f_df["tuned / total (%)"].tolist()[0]
 batch_size = f_df["batch_size"].tolist()[0]
-print(f"{best_top_1}--({Prompt_length}+{VK_length}+lr{lr}_wd{wd} {tuned_percentage} {batch_size})")
+runs = df["l-test_top1"].tolist()
+print(f"{best_top_1}--{runs}({Prompt_length}+{VK_length}+lr{lr}_wd{wd} {tuned_percentage} {batch_size})")
 # print(best_top_1)
 

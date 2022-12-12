@@ -1,5 +1,5 @@
 _BASE_: "../../../base-prompt_changed_P_VK.yaml"
-RUN_N_TIMES: 5
+RUN_N_TIMES: 1
 DATA:
   NAME: "StanfordDogs"
   DATAPATH: "/shared/kgcoe-research/spl/fgvc/Stanford-dogs"  #TODO: need to specify here

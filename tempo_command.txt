@@ -1,0 +1,3 @@
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True"
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.SHARE_PARAM_KV "False"

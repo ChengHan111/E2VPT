@@ -11,7 +11,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/output_finalfinal/vtab-cifar(num_classes=100)_P5_VK5_SHARED_1"
+root = "/home/ch7858/vpt/output_finalfinal/vtab-caltech101_P5_VK5_SHARED_1"
 df_list=[]
 # for seed in ["42", "44", "82", "100", "800"]:
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):
@@ -32,15 +32,6 @@ print(df)
 f_df = average_df(df, metric_names=["l-test_top1"], take_average=True)
 print(f_df)
 
-# print(df["l-test_top1"].tolist())
-# print(f_df["l-test_top1"])
-# print(f_df["Prompt_length"])
-# print(f_df["VK_length"])
-# print(f_df["lr"])
-# print(f_df["wd"])
-# print(f_df["tuned / total (%)"])
-# print(f_df["batch_size"])
-
 best_top_1 = pd.to_numeric(f_df["l-test_top1"]).tolist()[0]
 Prompt_length = f_df["Prompt_length"].tolist()[0][1:]
 VK_length = f_df["VK_length"].tolist()[0][2:]
@@ -50,5 +41,4 @@ tuned_percentage = f_df["tuned / total (%)"].tolist()[0]
 batch_size = f_df["batch_size"].tolist()[0]
 runs = df["l-test_top1"].tolist()
 print(f"{best_top_1}--{runs}({Prompt_length}+{VK_length}+lr{lr}_wd{wd} {tuned_percentage} {batch_size})")
-# print(best_top_1)
 

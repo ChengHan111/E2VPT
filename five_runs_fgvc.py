@@ -15,7 +15,7 @@ from launch import default_argument_parser
 warnings.filterwarnings("ignore")
 # make small changes
 
-def setup(args, lr, wd, check_runtime=True):
+def setup(args, lr, wd, check_runtime=True, seed=None):
     """
     Create configs and perform basic setups.
     overwrite the 2 parameters in cfg and args
@@ -23,9 +23,11 @@ def setup(args, lr, wd, check_runtime=True):
     cfg = get_cfg()
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
-
-    # setup dist # comment here
-    # cfg.DIST_INIT_PATH = "tcp://{}:4000".format(os.environ["SLURMD_NODENAME"])
+    
+    cfg.SEED = seed
+    
+    # manually set to 5 for 5 runs.
+    cfg.RUN_N_TIMES = 5
 
     # overwrite below four parameters
     lr = lr / 256 * cfg.DATA.BATCH_SIZE  # update lr based on the batchsize
@@ -44,7 +46,7 @@ def setup(args, lr, wd, check_runtime=True):
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
-    output_dir = cfg.OUTPUT_DIR
+    output_dir = cfg.OUTPUT_DIR + "_val_fgvc"
     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
         output_folder = os.path.join(
         Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
@@ -58,8 +60,8 @@ def setup(args, lr, wd, check_runtime=True):
     # train cfg.RUN_N_TIMES times
     if check_runtime:
         count = 1
-        print('Should run times:', cfg.RUN_N_TIMES)
-        print('Current time', count)
+        # print('Should run times:', cfg.RUN_N_TIMES)
+        # print('Current time', count)
         while count <= cfg.RUN_N_TIMES:
             output_path = os.path.join(output_dir, output_folder, f"run{count}")
             # pause for a random time, so concurrent process with same setting won't interfere with each other. # noqa
@@ -199,16 +201,15 @@ def prompt_main_largerrange(args):
             train_main(cfg, args)
             sleep(randint(1, 10))
 
-def MainSelf(files, data_name):
+def MainSelf(args, files, data_name):
 
-    # print(files)
-    # print(data_name)
     lr, wd = find_best_lrwd(files, data_name)
     # final run 5 times with fixed seed
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
         try:
-            cfg = setup(args, lr, wd, run_idx=run_idx+1, seed=seed)
+            # cfg = setup(args, lr, wd, run_idx=run_idx+1, seed=seed)
+            cfg = setup(args, lr, wd, seed=seed, check_runtime=True)
         except ValueError:
             continue
         train_main(cfg, args)
@@ -219,20 +220,11 @@ def find_best_lrwd(files, data_name):
     best_lr = None
     best_wd = None
     best_val_acc = -1
-    for folder in os.listdir(str(files)):
-        # print('@@@@@', folder)
+    for idx, folder in enumerate(os.listdir(str(files))):
         log_path = files + '/' + folder + '/run1/logs.txt'
-        # for log_file in os.listdir(str(log_path)):
-            # print('!!!!!', log_file)
-            
-        # f = open(log_path, encoding="utf-8")
-        # print(f.read())
             
         try:
             f = open(log_path, encoding="utf-8")
-            # epoch = len(results_dict) - 1
-            # val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
-            # val_result = float(val_result)
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue
@@ -240,29 +232,35 @@ def find_best_lrwd(files, data_name):
         line = f.readline()
         cnt = 1
         while line:
-            print("Line {}: {}".format(cnt, line.strip()))
+            # print("Line {}: {}".format(cnt, line.strip()))
             if 'test_CUB' in line: # change test_files here for reference
-                print('yes')
-                print(line.split('top1:')[1].split('top5:')[0])
-                val_result = line.split('top1:')[1].split('top5:')[0]
+                val_result = float(line.split('top1:')[1].split('top5:')[0][1:-1])
+                # print(val_result)
+                
+                if val_result == best_val_acc:
+                    frag_txt = folder
+                    cur_lr = float(frag_txt.split("lr")[-1].split("_wd")[0])
+                    cur_wd = float(frag_txt.split("_wd")[-1])
+                    if best_lr is not None and cur_lr < best_lr:
+                        # get the smallest lr to break tie for stability
+                        best_lr = cur_lr
+                        best_wd = cur_wd
+                        best_val_acc = val_result
+
+                elif val_result > best_val_acc:
+                    best_val_acc = val_result
+                    frag_txt = folder
+                    best_lr = float(frag_txt.split("lr")[-1].split("_wd")[0])
+                    best_wd = float(frag_txt.split("_wd")[-1])
+                
+                
             line = f.readline()
             cnt += 1
+    
+    print('Combinations:', idx + 1)
+    # print(best_lr)
+    # print(best_wd)
         
-        if val_result == best_val_acc:
-            frag_txt = f.split("/run")[0]
-            cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
-            cur_wd = float(frag_txt.split("_wd")[-1])
-            if best_lr is not None and cur_lr < best_lr:
-                # get the smallest lr to break tie for stability
-                best_lr = cur_lr
-                best_wd = cur_wd
-                best_val_acc = val_result
-
-        elif val_result > best_val_acc:
-            best_val_acc = val_result
-            frag_txt = f.split("/run")[0]
-            best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
-            best_wd = float(frag_txt.split("_wd")[-1])
     return best_lr, best_wd        
 
 
@@ -286,15 +284,14 @@ def main(args):
         prompt_main_largerrange(args)
     
     elif args.train_type == "QKV" or "P_VK":
-        print('!!!find_best_lrwd!!! In 1_find_best_lr_wd_fgvc.py')
-        # print(args.data_name)
+        # print('!!!find_best_lrwd!!! In 1_find_best_lr_wd_fgvc.py')
         data_name = 'CUB'
         file = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
-        MainSelf(file, data_name)
+        MainSelf(args, file, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)
     elif args.train_type == "QKV_largerrange" or args.train_type == "QKV_largerlr" or args.train_type == "P_VK_largerrange" or args.train_type == "P_VK_largerlr":  # noqa
-        MainSelf(file, data_name)
+        MainSelf(args, file, data_name)
 
 
 if __name__ == '__main__':

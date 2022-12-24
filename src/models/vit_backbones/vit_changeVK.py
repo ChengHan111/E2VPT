@@ -542,7 +542,7 @@ class VisionTransformer_changedVK(nn.Module):
         assert qkv_cfg.VIT_POOL_TYPE == "original"
         super(VisionTransformer_changedVK, self).__init__()
         if qkv_cfg is None:
-            raise ValueError("prompt_cfg cannot be None if using VisionTransformer_changedVK")
+            raise ValueError("p_vk cannot be None if using VisionTransformer_changedVK")
         self.qkv_cfg = qkv_cfg
         
         config = CONFIGS[model_type]

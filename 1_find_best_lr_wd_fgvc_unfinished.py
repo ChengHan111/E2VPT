@@ -199,9 +199,11 @@ def prompt_main_largerrange(args):
             train_main(cfg, args)
             sleep(randint(1, 10))
 
-def MainSelf(args):
+def MainSelf(files, data_name):
 
-    lr, wd = find_best_lrwd(files)
+    # print(files)
+    # print(data_name)
+    lr, wd = find_best_lrwd(files, data_name)
     # final run 5 times with fixed seed
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
@@ -213,20 +215,39 @@ def MainSelf(args):
         sleep(randint(1, 10))
 
 def find_best_lrwd(files, data_name):
-    t_name = "val_" + data_name
+    t_name =  data_name # just data name
     best_lr = None
     best_wd = None
     best_val_acc = -1
-    for f in files:
+    for folder in os.listdir(str(files)):
+        # print('@@@@@', folder)
+        log_path = files + '/' + folder + '/run1/logs.txt'
+        # for log_file in os.listdir(str(log_path)):
+            # print('!!!!!', log_file)
+            
+        # f = open(log_path, encoding="utf-8")
+        # print(f.read())
+            
         try:
-            results_dict = torch.load(f, "cpu")
-            epoch = len(results_dict) - 1
-            val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
-            val_result = float(val_result)
+            f = open(log_path, encoding="utf-8")
+            # epoch = len(results_dict) - 1
+            # val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
+            # val_result = float(val_result)
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue
-
+        
+        line = f.readline()
+        cnt = 1
+        while line:
+            print("Line {}: {}".format(cnt, line.strip()))
+            if 'test_CUB' in line: # change test_files here for reference
+                print('yes')
+                print(line.split('top1:')[1].split('top5:')[0])
+                val_result = line.split('top1:')[1].split('top5:')[0]
+            line = f.readline()
+            cnt += 1
+        
         if val_result == best_val_acc:
             frag_txt = f.split("/run")[0]
             cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
@@ -266,11 +287,14 @@ def main(args):
     
     elif args.train_type == "QKV" or "P_VK":
         print('!!!find_best_lrwd!!! In 1_find_best_lr_wd_fgvc.py')
-        MainSelf(args)
+        # print(args.data_name)
+        data_name = 'CUB'
+        file = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
+        MainSelf(file, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)
     elif args.train_type == "QKV_largerrange" or args.train_type == "QKV_largerlr" or args.train_type == "P_VK_largerrange" or args.train_type == "P_VK_largerlr":  # noqa
-        MainSelf(args)
+        MainSelf(file, data_name)
 
 
 if __name__ == '__main__':

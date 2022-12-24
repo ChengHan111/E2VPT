@@ -57,8 +57,8 @@ def find_best_lrwd(files, data_name):
             epoch = len(results_dict) - 1
             val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
             val_result = float(val_result)
-            print(val_result)
-            exit()
+            # print(val_result)
+            # exit()
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue

@@ -221,7 +221,6 @@ def find_best_lrwd(files, data_name):
     best_val_acc = -1
     for idx, folder in enumerate(os.listdir(str(files))):
         log_path = files + '/' + folder + '/run1/logs.txt'
-            
         try:
             f = open(log_path, encoding="utf-8")
         except Exception as e:
@@ -232,8 +231,8 @@ def find_best_lrwd(files, data_name):
         cnt = 1
         while line:
             # print("Line {}: {}".format(cnt, line.strip()))
-            test_name = 'test_' + data_name
-            if test_name in line: # change test_files here for reference
+            val_name = 'val_' + data_name
+            if val_name in line: # change test_files here for reference
                 print('exist!')
                 val_result = float(line.split('top1:')[1].split('top5:')[0][1:-1])
                 
@@ -286,8 +285,9 @@ def main(args):
     
     elif args.train_type == "QKV" or "P_VK":
         # currently available for this branch (P_VK+5runs setup)
-        files = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
-        data_name = 'CUB'
+        # path to model (before lr{}_wd{} folders)
+        files = '/home/ch7858/vpt/output/StanfordCars_P5_VK5_SHARED_1/sup_vitb16_224'
+        data_name = 'StanfordCars' #val_ 后面的dataset名字
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)

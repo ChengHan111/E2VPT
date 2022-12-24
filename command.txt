@@ -226,4 +226,13 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --conf
 
 
 # FGVC final runs(contain 5 runs)
+# cub
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cub.yaml
+# cars
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml
+# dogs
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/dogs.yaml
+# flowers
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/flowers.yaml
+# nabirds
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml

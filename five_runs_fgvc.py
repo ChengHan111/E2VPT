@@ -30,7 +30,7 @@ def setup(args, lr, wd, check_runtime=True, seed=None):
     cfg.RUN_N_TIMES = 5
 
     # overwrite below four parameters
-    lr = lr / 256 * cfg.DATA.BATCH_SIZE  # update lr based on the batchsize
+    # change corresponding config files of lr and wd
     cfg.SOLVER.BASE_LR = lr
     cfg.SOLVER.WEIGHT_DECAY = wd
     
@@ -203,7 +203,7 @@ def prompt_main_largerrange(args):
 
 def MainSelf(args, files, data_name):
 
-    lr, wd = find_best_lrwd(files, data_name)
+    lr, wd = find_best_lrwd(files)
     # final run 5 times with fixed seed
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
@@ -215,8 +215,7 @@ def MainSelf(args, files, data_name):
         train_main(cfg, args)
         sleep(randint(1, 10))
 
-def find_best_lrwd(files, data_name):
-    t_name =  data_name # just data name
+def find_best_lrwd(files):
     best_lr = None
     best_wd = None
     best_val_acc = -1
@@ -284,14 +283,12 @@ def main(args):
         prompt_main_largerrange(args)
     
     elif args.train_type == "QKV" or "P_VK":
-        # print('!!!find_best_lrwd!!! In 1_find_best_lr_wd_fgvc.py')
-        data_name = 'CUB'
         file = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
-        MainSelf(args, file, data_name)
+        MainSelf(args, file)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)
     elif args.train_type == "QKV_largerrange" or args.train_type == "QKV_largerlr" or args.train_type == "P_VK_largerrange" or args.train_type == "P_VK_largerlr":  # noqa
-        MainSelf(args, file, data_name)
+        MainSelf(args, file)
 
 
 if __name__ == '__main__':

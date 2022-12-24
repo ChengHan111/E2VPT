@@ -46,7 +46,7 @@ def setup(args, lr, wd, check_runtime=True, seed=None):
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
-    output_dir = cfg.OUTPUT_DIR + "_val_fgvc"
+    output_dir = cfg.OUTPUT_DIR + "_fgvc_finalfinal"
     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
         output_folder = os.path.join(
         Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
@@ -203,7 +203,7 @@ def prompt_main_largerrange(args):
 
 def MainSelf(args, files, data_name):
 
-    lr, wd = find_best_lrwd(files)
+    lr, wd = find_best_lrwd(files, data_name)
     # final run 5 times with fixed seed
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
@@ -215,7 +215,7 @@ def MainSelf(args, files, data_name):
         train_main(cfg, args)
         sleep(randint(1, 10))
 
-def find_best_lrwd(files):
+def find_best_lrwd(files, data_name):
     best_lr = None
     best_wd = None
     best_val_acc = -1
@@ -232,9 +232,10 @@ def find_best_lrwd(files):
         cnt = 1
         while line:
             # print("Line {}: {}".format(cnt, line.strip()))
-            if 'test_CUB' in line: # change test_files here for reference
+            test_name = 'test_' + data_name
+            if test_name in line: # change test_files here for reference
+                print('exist!')
                 val_result = float(line.split('top1:')[1].split('top5:')[0][1:-1])
-                # print(val_result)
                 
                 if val_result == best_val_acc:
                     frag_txt = folder
@@ -256,10 +257,11 @@ def find_best_lrwd(files):
             line = f.readline()
             cnt += 1
     
+    # list useful info
     print('Combinations:', idx + 1)
-    # print(best_lr)
-    # print(best_wd)
-        
+    print('best_lr:', best_lr)
+    print('best_wd', best_wd)
+    
     return best_lr, best_wd        
 
 
@@ -283,12 +285,14 @@ def main(args):
         prompt_main_largerrange(args)
     
     elif args.train_type == "QKV" or "P_VK":
-        file = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
-        MainSelf(args, file)
+        # currently available for this branch (P_VK+5runs setup)
+        files = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1/sup_vitb16_224'
+        data_name = 'CUB'
+        MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)
     elif args.train_type == "QKV_largerrange" or args.train_type == "QKV_largerlr" or args.train_type == "P_VK_largerrange" or args.train_type == "P_VK_largerlr":  # noqa
-        MainSelf(args, file)
+        MainSelf(args, files, data_name)
 
 
 if __name__ == '__main__':

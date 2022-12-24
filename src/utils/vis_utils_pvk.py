@@ -24,12 +24,16 @@ def remove_trailing(eval_dict):
     return new_dict
 
 
-def get_meta(job_root, job_path, model_type, model_name):
+def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     # get lr, wd, feature-type, dataset
     # print(job_root, job_path, model_type)
     j_data = job_path.split("/run")[0].split(
         job_root + "/" + model_type)[-1].split("/")
-    job_name = job_root.split("/output_finalfinal/")[1]
+    if dataset_type == 'vtab':
+        job_name = job_root.split("/output_finalfinal/")[1]
+    elif dataset_type == 'fgvc':
+        job_name = job_root.split("/output_fgvc_finalfinal/")[1]
+    
     # print('???', job_name.split("_"))
     job_name_split = job_name.split("_")
     P_value, VK_value, Shared = job_name_split[-4], job_name_split[-3], job_name_split[-1]
@@ -41,8 +45,11 @@ def get_meta(job_root, job_path, model_type, model_name):
     lr = float(j_data_lrwd.split("_")[0].split("lr")[-1])
     wd = float(j_data_lrwd.split("_")[1].split("wd")[-1])
     # return data_name, feat_type, lr, wd
-    data_name = job_root.split("_P")[0].split("/output_finalfinal/")[1]
-    # print('@@@@@@@@@@@@', data_name)
+    if dataset_type == 'vtab':
+        data_name = job_root.split("_P")[0].split("/output_finalfinal/")[1]
+    elif dataset_type == 'fgvc':
+        data_name = job_root.split("_P")[0].split("/output_fgvc_finalfinal/")[1]
+    
     return data_name, model_name, P_value, VK_value, Shared, lr, wd
 
 
@@ -94,9 +101,9 @@ def get_mean_accuracy(job_path, data_name):
     return np.mean(v_matrix.diagonal()/v_matrix.sum(axis=1) ) * 100, np.mean(t_matrix.diagonal()/t_matrix.sum(axis=1) ) * 100
 
 
-def get_training_data(job_path, model_type, job_root, MODEL_NAME):
+def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     # data_name, feat_type, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME)
-    data_name, feat_type, P_value, VK_value, Shared, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME)
+    data_name, feat_type, P_value, VK_value, Shared, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME, dataset_type)
     with open(job_path) as f:
         lines = f.readlines()
 
@@ -171,13 +178,10 @@ def get_time(file):
     return datetime.timedelta(seconds=(end_time-start_time).total_seconds()), np.mean(per_batch), np.mean(per_batch_train)
 
 
-def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_epoch=300):
+def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_epoch=300, dataset_type='vtab'):
     pd_dict = defaultdict(list)
     for job_path in tqdm(files, desc=model_type):
-        # print(job_path)
-        # print(model_type)
-        # print(root)
-        train_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME)
+        train_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME, dataset_type)
         batch_size = meta_dict["batch_size"]
         
         if len(eval_results) == 0:

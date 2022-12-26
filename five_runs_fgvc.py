@@ -15,7 +15,7 @@ from launch import default_argument_parser
 warnings.filterwarnings("ignore")
 # make small changes
 
-def setup(args, lr, wd, check_runtime=True, seed=None):
+def setup(args, lr, wd, P_value, VK_value, Shared, check_runtime=True, seed=None):
     """
     Create configs and perform basic setups.
     overwrite the 2 parameters in cfg and args
@@ -35,9 +35,14 @@ def setup(args, lr, wd, check_runtime=True, seed=None):
     cfg.SOLVER.WEIGHT_DECAY = wd
     
     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-        P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
-        VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
-        SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
+        P_NUM = P_value
+        VK_NUM = VK_value
+        SHARED = Shared
+        
+        cfg.MODEL.P_VK.SHARE_PARAM_KV = SHARED
+        cfg.MODEL.P_VK.NUM_TOKENS_P = P_value
+        cfg.MODEL.P_VK.NUM_TOKENS = VK_value
+        
         if SHARED == True:
             marker = 1
         else:
@@ -205,11 +210,19 @@ def MainSelf(args, files, data_name):
 
     lr, wd = find_best_lrwd(files, data_name)
     # final run 5 times with fixed seed
+    P_value = int(files.split('_P')[1].split('_VK')[0])
+    # print('P_value', P_value)
+    VK_value = int(files.split('VK')[1].split('_SHARED')[0])
+    # print('VK_value', VK_value)
+    model_name = files.split('SHARED_')[1].split('/')[1]
+    Shared = int(files.split('SHARED_')[1].split(f'/{model_name}')[0])
+    # print('model_name', model_name)
+    # print('Shared', Shared)
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
         try:
             # cfg = setup(args, lr, wd, run_idx=run_idx+1, seed=seed)
-            cfg = setup(args, lr, wd, seed=seed, check_runtime=True)
+            cfg = setup(args, lr, wd, P_value, VK_value, Shared, seed=seed, check_runtime=True)
         except ValueError:
             continue
         train_main(cfg, args)
@@ -287,7 +300,7 @@ def main(args):
         # currently available for this branch (P_VK+5runs setup)
         # path to model (before lr{}_wd{} folders)
         files = '/home/ch7858/vpt/output/StanfordCars_P5_VK5_SHARED_1/sup_vitb16_224'
-        data_name = 'StanfordCars' #val_ 后面的dataset名字
+        data_name = 'StanfordCars' #val_ 后面的dataset名字 # StanfordDogs
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)

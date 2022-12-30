@@ -167,7 +167,7 @@ python tune_fgvc.py \
 ##### P_VK approach tune_command commands
 # FGVC
 Cars: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "50" MODEL.P_VK.NUM_TOKENS "50" MODEL.P_VK.SHARE_PARAM_KV "True"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "20" MODEL.P_VK.NUM_TOKENS "20" MODEL.P_VK.SHARE_PARAM_KV "True"
 CUB: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cub.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True"
 Dogs: 

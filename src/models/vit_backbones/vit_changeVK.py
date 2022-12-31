@@ -127,8 +127,6 @@ class Attention(nn.Module):
         if self.qkv_cfg.NUM_TOKENS_P is not None:
             print('num_tokens_p', self.qkv_cfg.NUM_TOKENS_P)
         
-
-        
         # add vk prompt layers separate
         if self.qkv_cfg.SHARE_PARAM_KV == False:
             head_fixed, num_patches_QKV_V, num_patches_QKV_K, head_size_fixed = self.num_attention_heads, num_tokens, num_tokens, self.attention_head_size
@@ -150,7 +148,12 @@ class Attention(nn.Module):
                 # apply timm trunc norm for init
                 trunc_normal_(self.deep_QKV_embeddings_V, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_K, std=0.02)
-            
+                
+            # kaiming init # untested(to be continued)
+            # else: 
+            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
+            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                
             ''' (Under construction)
             if self.qkv_cfg.DEEP == False:
                 # self.num_attention_heads set this to 1 for the first attention head.
@@ -180,8 +183,11 @@ class Attention(nn.Module):
                 # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
                 nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
             else:
-                print('pass here')
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
+            # kaiming init (to be continued, untested)
+            # else:
+            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
+
             
         
         
@@ -189,14 +195,7 @@ class Attention(nn.Module):
         # self.prompt_config.DROPOUT
         self.QKV_dropout = Dropout(self.qkv_cfg.DROPOUT) # should add config here
     
-    def init_weights(m):
-        if isinstance(m, nn.Linear):
-            trunc_normal_(m.weight, std=0.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.LayerNorm):
-            nn.init.constant_(m.bias, 0)
-            nn.init.constant_(m.weight, 1.0)
+
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)

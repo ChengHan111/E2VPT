@@ -19,6 +19,7 @@ import numpy as np
 from torch.nn import Dropout, Softmax, Linear, Conv2d, LayerNorm
 from torch.nn.modules.utils import _pair
 from scipy import ndimage
+from timm.models.layers import trunc_normal_
 
 from ...configs import vit_configs as configs
 
@@ -126,6 +127,8 @@ class Attention(nn.Module):
         if self.qkv_cfg.NUM_TOKENS_P is not None:
             print('num_tokens_p', self.qkv_cfg.NUM_TOKENS_P)
         
+
+        
         # add vk prompt layers separate
         if self.qkv_cfg.SHARE_PARAM_KV == False:
             head_fixed, num_patches_QKV_V, num_patches_QKV_K, head_size_fixed = self.num_attention_heads, num_tokens, num_tokens, self.attention_head_size
@@ -134,13 +137,19 @@ class Attention(nn.Module):
                         head_fixed, num_patches_QKV_V, head_size_fixed))
             self.deep_QKV_embeddings_K = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV_K, head_size_fixed))
-            # xavier_uniform initialization
-            patch_size = _pair(self.config.patches["size"])
-            # print('patch_size', patch_size) # 16, 16
-            val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
-            nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
-            nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
+            
+            if self.qkv_cfg.ORIGIN_INIT == True:
+                # xavier_uniform initialization
+                patch_size = _pair(self.config.patches["size"]) # print('patch_size', patch_size) # 16, 16
+                
+                val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
+                nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
+            else:
+                # apply timm trunc norm for init
+                trunc_normal_(self.deep_QKV_embeddings_V, std=0.02)
+                trunc_normal_(self.deep_QKV_embeddings_K, std=0.02)
             
             ''' (Under construction)
             if self.qkv_cfg.DEEP == False:
@@ -163,19 +172,31 @@ class Attention(nn.Module):
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV, head_size_fixed))
-            # xavier_uniform initialization
-            patch_size = _pair(self.config.patches["size"])
-            # print('patch_size', patch_size) # 16, 16
-            val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
-            nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
+            if self.qkv_cfg.ORIGIN_INIT == True:
+                # xavier_uniform initialization
+                patch_size = _pair(self.config.patches["size"])
+                # print('patch_size', patch_size) # 16, 16
+                val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
+            else:
+                print('pass here')
+                trunc_normal_(self.deep_QKV_embeddings, std=0.02)
             
         
         
         self.QKV_proj = nn.Identity()
         # self.prompt_config.DROPOUT
         self.QKV_dropout = Dropout(self.qkv_cfg.DROPOUT) # should add config here
-        
+    
+    def init_weights(m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=0.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)

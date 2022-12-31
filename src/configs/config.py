@@ -179,6 +179,7 @@ _C.MODEL.P_VK.DEEP = True # "whether do deep QKV or not, only for prepend locati
 _C.MODEL.P_VK.DROPOUT = 0.0
 _C.MODEL.P_VK.LAYER_BEHIND = True # to put layers behind new-added prompt in key/value
 _C.MODEL.P_VK.SHARE_PARAM_KV = True # change it to False to init two parameters
+_C.MODEL.P_VK.ORIGIN_INIT = False
 
 # ----------------------------------------------------------------------
 # Dataset options

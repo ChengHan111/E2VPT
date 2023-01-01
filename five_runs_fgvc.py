@@ -15,6 +15,7 @@ from launch import default_argument_parser
 warnings.filterwarnings("ignore")
 # make small changes
 
+#  在这里要加一个额外参数 init
 def setup(args, lr, wd, P_value, VK_value, Shared, check_runtime=True, seed=None):
     """
     Create configs and perform basic setups.
@@ -38,16 +39,23 @@ def setup(args, lr, wd, P_value, VK_value, Shared, check_runtime=True, seed=None
         P_NUM = P_value
         VK_NUM = VK_value
         SHARED = Shared
+        # INIT = Init
         
         cfg.MODEL.P_VK.SHARE_PARAM_KV = SHARED
         cfg.MODEL.P_VK.NUM_TOKENS_P = P_value
         cfg.MODEL.P_VK.NUM_TOKENS = VK_value
+        # cfg.MODEL.P_VK.ORIGIN_INIT = INIT
         
         if SHARED == True:
             marker = 1
         else:
             marker = 0
+        # if INIT == True:
+        #     init = 1
+        # else:
+        #     init = 0
         Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}"
+        # Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}"
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
@@ -299,7 +307,7 @@ def main(args):
     elif args.train_type == "QKV" or "P_VK":
         # currently available for this branch (P_VK+5runs setup)
         # path to model (before lr{}_wd{} folders)
-        files = '/home/ch7858/vpt/output/StanfordCars_P20_VK20_SHARED_1/sup_vitb16_224'
+        files = '/home/ch7858/vpt/output/StanfordCars_P150_VK20_SHARED_1/sup_vitb16_224'
         data_name = 'StanfordCars' #val_ 后面的dataset名字 # StanfordDogs
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":

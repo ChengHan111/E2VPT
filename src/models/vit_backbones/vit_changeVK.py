@@ -100,7 +100,7 @@ class Attention(nn.Module):
         self.vis = vis
         self.num_attention_heads = config.transformer["num_heads"]
         self.attention_head_size = int(config.hidden_size / self.num_attention_heads) # 768 / 12 (same as HyperPrompt discribe)
-        self.all_head_size = self.num_attention_heads * self.attention_head_size #12 *64
+        self.all_head_size = self.num_attention_heads * self.attention_head_size # 12 *64
         
         # print('1', self.num_attention_heads) 12
         # print('2', self.attention_head_size) 64
@@ -262,11 +262,11 @@ class Attention(nn.Module):
         if self.qkv_cfg.SHARE_PARAM_KV == False:
             # B, num_head, num_patches, head_size
             if self.qkv_cfg.LAYER_BEHIND == False:
-                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1))), dim=2)
-                value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1))), dim=2)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1))), dim=2)
+                value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1))), dim=2)
             else:
-                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1)), key_layer), dim=2)
-                value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1)), value_layer), dim=2)
+                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1)), key_layer), dim=2)
+                value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1)), value_layer), dim=2)
         else:
             if self.qkv_cfg.LAYER_BEHIND == False:
                 key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
@@ -294,6 +294,100 @@ class Attention(nn.Module):
         
         return attention_output, weights
 
+
+class Attention_SHARED_ACCROSS(nn.Module):
+    def __init__(self, Prompt, Prompt_K, qkv_cfg, config, vis):
+        super(Attention_SHARED_ACCROSS, self).__init__()
+        self.vis = vis
+        self.num_attention_heads = config.transformer["num_heads"]
+        self.attention_head_size = int(config.hidden_size / self.num_attention_heads) # 768 / 12 (same as HyperPrompt discribe)
+        self.all_head_size = self.num_attention_heads * self.attention_head_size # 12 *64
+        
+        # print('1', self.num_attention_heads) 12
+        # print('2', self.attention_head_size) 64
+        # print('3', self.all_head_size) 768
+        
+        self.config = config
+        self.qkv_cfg = qkv_cfg
+
+        self.query = Linear(config.hidden_size, self.all_head_size)
+        self.key = Linear(config.hidden_size, self.all_head_size)
+        self.value = Linear(config.hidden_size, self.all_head_size)
+
+        self.out = Linear(config.hidden_size, config.hidden_size)
+        self.attn_dropout = Dropout(config.transformer["attention_dropout_rate"])
+        self.proj_dropout = Dropout(config.transformer["attention_dropout_rate"])
+
+        self.softmax = Softmax(dim=-1)
+        
+        num_layers = self.config.transformer["num_layers"]
+        
+        self.QKV_dropout = Dropout(self.qkv_cfg.DROPOUT) 
+        # named as inherited layer since it update together in the first QKV layer
+        if Prompt_K is None:
+            print('goes shared+shared version(shared param for v+k and across layers)')
+            self.inherited_layer = Prompt
+        else:
+            print('goes unshared+shared version(unshared param for v+k but share across layers)')
+            self.inherited_layer = Prompt
+            self.inherited_layer_K = Prompt_K
+    
+    def transpose_for_scores(self, x):
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        x = x.view(*new_x_shape)
+        return x.permute(0, 2, 1, 3)
+
+    def forward(self, hidden_states):
+        # print('mark', hidden_states)
+        
+        mixed_query_layer = self.query(hidden_states) # B, num_patches, head_size*num_head
+        mixed_key_layer = self.key(hidden_states)
+        mixed_value_layer = self.value(hidden_states)
+
+        query_layer = self.transpose_for_scores(mixed_query_layer) # B, num_head, num_patches, head_size
+        key_layer = self.transpose_for_scores(mixed_key_layer)
+        value_layer = self.transpose_for_scores(mixed_value_layer) # B, num_head, num_patches, head_size
+        # head, sequence length (L) 应该加在这一维, dimension of each head
+        # print('1', query_layer.shape) torch.Size([128, 12, 197, 64])
+        # print('2', key_layer.shape) torch.Size([128, 12, 197, 64])
+        # print('3', value_layer.shape) torch.Size([128, 12, 197, 64]
+        
+
+        B = query_layer.shape[0]
+        if self.qkv_cfg.SHARE_PARAM_KV == False:
+            # B, num_head, num_patches, head_size
+            if self.qkv_cfg.LAYER_BEHIND == False:
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.inherited_layer_K.expand(B, -1, -1, -1))), dim=2)
+                value_layer = torch.cat((value_layer, self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1))), dim=2)
+            else:
+                key_layer = torch.cat((self.QKV_dropout(self.inherited_layer_K.expand(B, -1, -1, -1)), key_layer), dim=2)
+                value_layer = torch.cat((self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1)), value_layer), dim=2)
+        else:
+            if self.qkv_cfg.LAYER_BEHIND == False:
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1))), dim=2)
+                value_layer = torch.cat((value_layer, self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1))), dim=2)
+            else:
+                key_layer = torch.cat((self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1)), key_layer), dim=2)
+                value_layer = torch.cat((self.QKV_dropout(self.inherited_layer.expand(B, -1, -1, -1)), value_layer), dim=2)
+        
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) # B, num_head, num_patches, num_patches (turn into patches*patches)                    
+        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+        # 接着做softmax了 和论文中的一致
+        attention_probs = self.softmax(attention_scores) # B, num_head, num_patches(query), num_patches(key)
+        weights = attention_probs if self.vis else None
+        attention_probs = self.attn_dropout(attention_probs)
+        
+        # print('1', attention_probs.shape) # torch.Size([B, 12, 197, 197+(num_token)])
+        # print('2', value_layer.shape) # torch.Size([B, 12, 197+(num_token), 64])
+        context_layer = torch.matmul(attention_probs, value_layer) # B, num_head, num_patches, head_size 
+        
+        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        context_layer = context_layer.view(*new_context_layer_shape)
+        attention_output = self.out(context_layer)
+        attention_output = self.proj_dropout(attention_output)
+        
+        return attention_output, weights
 
 class Mlp(nn.Module):
     def __init__(self, config):
@@ -425,6 +519,64 @@ class Block(nn.Module):
             self.ffn_norm.weight.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "scale")]))
             self.ffn_norm.bias.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "bias")]))
 
+class Block_SHARED_ACCROSS(nn.Module):
+    def __init__(self, Prompt, Prompt_K, qkv_cfg, config, vis):
+        super(Block_SHARED_ACCROSS, self).__init__()
+        self.hidden_size = config.hidden_size
+        self.attention_norm = LayerNorm(config.hidden_size, eps=1e-6)
+        self.ffn_norm = LayerNorm(config.hidden_size, eps=1e-6)
+        self.ffn = Mlp(config)
+        self.attn = Attention_SHARED_ACCROSS(Prompt, Prompt_K, qkv_cfg, config, vis)
+
+    def forward(self, x):
+        h = x
+        x = self.attention_norm(x)
+        x, weights = self.attn(x)
+        x = x + h
+
+        h = x
+        x = self.ffn_norm(x)
+        x = self.ffn(x)
+        x = x + h
+        return x, weights
+
+    def load_from(self, weights, n_block):
+        ROOT = f"Transformer/encoderblock_{n_block}"
+        with torch.no_grad():
+            query_weight = np2th(weights[pjoin(ROOT, ATTENTION_Q, "kernel")]).view(self.hidden_size, self.hidden_size).t()
+            key_weight = np2th(weights[pjoin(ROOT, ATTENTION_K, "kernel")]).view(self.hidden_size, self.hidden_size).t()
+            value_weight = np2th(weights[pjoin(ROOT, ATTENTION_V, "kernel")]).view(self.hidden_size, self.hidden_size).t()
+            out_weight = np2th(weights[pjoin(ROOT, ATTENTION_OUT, "kernel")]).view(self.hidden_size, self.hidden_size).t()
+
+            query_bias = np2th(weights[pjoin(ROOT, ATTENTION_Q, "bias")]).view(-1)
+            key_bias = np2th(weights[pjoin(ROOT, ATTENTION_K, "bias")]).view(-1)
+            value_bias = np2th(weights[pjoin(ROOT, ATTENTION_V, "bias")]).view(-1)
+            out_bias = np2th(weights[pjoin(ROOT, ATTENTION_OUT, "bias")]).view(-1)
+
+            self.attn.query.weight.copy_(query_weight)
+            self.attn.key.weight.copy_(key_weight)
+            self.attn.value.weight.copy_(value_weight)
+            self.attn.out.weight.copy_(out_weight)
+            self.attn.query.bias.copy_(query_bias)
+            self.attn.key.bias.copy_(key_bias)
+            self.attn.value.bias.copy_(value_bias)
+            self.attn.out.bias.copy_(out_bias)
+
+            mlp_weight_0 = np2th(weights[pjoin(ROOT, FC_0, "kernel")]).t()
+            mlp_weight_1 = np2th(weights[pjoin(ROOT, FC_1, "kernel")]).t()
+            mlp_bias_0 = np2th(weights[pjoin(ROOT, FC_0, "bias")]).t()
+            mlp_bias_1 = np2th(weights[pjoin(ROOT, FC_1, "bias")]).t()
+
+            self.ffn.fc1.weight.copy_(mlp_weight_0)
+            self.ffn.fc2.weight.copy_(mlp_weight_1)
+            self.ffn.fc1.bias.copy_(mlp_bias_0)
+            self.ffn.fc2.bias.copy_(mlp_bias_1)
+
+            self.attention_norm.weight.copy_(np2th(weights[pjoin(ROOT, ATTENTION_NORM, "scale")]))
+            self.attention_norm.bias.copy_(np2th(weights[pjoin(ROOT, ATTENTION_NORM, "bias")]))
+            self.ffn_norm.weight.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "scale")]))
+            self.ffn_norm.bias.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "bias")]))
+
 class Block_Origin_ViT(nn.Module):
     def __init__(self, config, vis):
         super(Block_Origin_ViT, self).__init__()
@@ -492,19 +644,93 @@ class Encoder(nn.Module):
         self.layer = nn.ModuleList()
         self.encoder_norm = LayerNorm(config.hidden_size, eps=1e-6)
         print('Num_layers:', config.transformer["num_layers"])
-        for i in range(config.transformer["num_layers"]):
-            if qkv_cfg.DEEP == True:
-                layer = Block(qkv_cfg, config, vis)
-                self.layer.append(copy.deepcopy(layer))
-            else:
-                if i == 0:
-                    print('Apply on' + str(i) + 'layer')
+        
+        if qkv_cfg.SHARED_ACCROSS == False: 
+            for i in range(config.transformer["num_layers"]):
+                if qkv_cfg.DEEP == True:
                     layer = Block(qkv_cfg, config, vis)
                     self.layer.append(copy.deepcopy(layer))
                 else:
-                    print('Apply origin layer (for VK shallow)')
-                    layer = Block_Origin_ViT(config, vis)
-                    self.layer.append(copy.deepcopy(layer))
+                    if i == 0:
+                        print('Apply on' + str(i) + 'layer')
+                        layer = Block(qkv_cfg, config, vis)
+                        self.layer.append(copy.deepcopy(layer))
+                    else:
+                        print('Apply origin layer (for VK shallow)')
+                        layer = Block_Origin_ViT(config, vis)
+                        self.layer.append(copy.deepcopy(layer))
+        else:
+            for i in range(config.transformer["num_layers"]):
+                if qkv_cfg.DEEP == True:
+                    # add vk prompt layers separate
+                    num_tokens = qkv_cfg.NUM_TOKENS
+                    # print('num_tokens', num_tokens)
+                    # if qkv_cfg.NUM_TOKENS_P is not None:
+                    #     print('num_tokens_p', qkv_cfg.NUM_TOKENS_P)
+                    if qkv_cfg.SHARE_PARAM_KV == False:
+                        head_fixed = config.transformer["num_heads"]
+                        head_size_fixed = int(config.hidden_size / head_fixed)
+                        num_patches_QKV_V, num_patches_QKV_K = num_tokens, num_tokens
+
+                        self.deep_QKV_embeddings_V = nn.Parameter(torch.zeros(
+                                    head_fixed, num_patches_QKV_V, head_size_fixed))
+                        self.deep_QKV_embeddings_K = nn.Parameter(torch.zeros(
+                                    head_fixed, num_patches_QKV_K, head_size_fixed))
+                        
+                        if qkv_cfg.ORIGIN_INIT == True:
+                            # xavier_uniform initialization
+                            patch_size = _pair(self.config.patches["size"]) # print('patch_size', patch_size) # 16, 16
+                            
+                            val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                            nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
+                            nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
+                        else:
+                            # apply timm trunc norm for init
+                            trunc_normal_(self.deep_QKV_embeddings_V, std=0.02)
+                            trunc_normal_(self.deep_QKV_embeddings_K, std=0.02)
+                            
+                        # kaiming init # untested(to be continued)
+                        # else: 
+                        #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                        #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                        self.QKV_proj = nn.Identity()
+                        
+                        Before_expand_prompt_V = self.QKV_proj(self.deep_QKV_embeddings_V)
+                        Before_expand_prompt_K = self.QKV_proj(self.deep_QKV_embeddings_K)
+                        
+                        layer = Block_SHARED_ACCROSS(Before_expand_prompt_V, Before_expand_prompt_K, qkv_cfg, config, vis)
+                        self.layer.append(copy.deepcopy(layer))
+                        
+                    else:
+                        head_fixed = config.transformer["num_heads"]
+                        head_size_fixed = int(config.hidden_size / head_fixed)
+                        num_patches_QKV = num_tokens
+                        
+                        self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
+                                    head_fixed, num_patches_QKV, head_size_fixed))
+                        if qkv_cfg.ORIGIN_INIT == True:
+                            # xavier_uniform initialization
+                            patch_size = _pair(self.config.patches["size"])
+                            # print('patch_size', patch_size) # 16, 16
+                            val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                            nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
+                        else:
+                            trunc_normal_(self.deep_QKV_embeddings, std=0.02)
+                        # kaiming init (to be continued, untested)
+                        # else:
+                        #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
+
+                        self.QKV_proj = nn.Identity()
+                        
+                        Before_expand_prompt = self.QKV_proj(self.deep_QKV_embeddings)
+
+                        layer = Block_SHARED_ACCROSS(Before_expand_prompt, None, qkv_cfg, config, vis)
+                        self.layer.append(copy.deepcopy(layer))
+                    
+                else:
+                    print('under construction!!!!')
 
 
     def forward(self, hidden_states):

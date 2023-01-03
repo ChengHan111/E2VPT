@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 # make small changes
 
 #  在这里要加一个额外参数 init
-def setup(args, lr, wd, P_value, VK_value, Shared, check_runtime=True, seed=None):
+def setup(args, lr, wd, P_value, VK_value, Shared, Init, check_runtime=True, seed=None):
     """
     Create configs and perform basic setups.
     overwrite the 2 parameters in cfg and args
@@ -39,23 +39,23 @@ def setup(args, lr, wd, P_value, VK_value, Shared, check_runtime=True, seed=None
         P_NUM = P_value
         VK_NUM = VK_value
         SHARED = Shared
-        # INIT = Init
+        INIT = Init
         
         cfg.MODEL.P_VK.SHARE_PARAM_KV = SHARED
         cfg.MODEL.P_VK.NUM_TOKENS_P = P_value
         cfg.MODEL.P_VK.NUM_TOKENS = VK_value
-        # cfg.MODEL.P_VK.ORIGIN_INIT = INIT
+        cfg.MODEL.P_VK.ORIGIN_INIT = INIT
         
         if SHARED == True:
             marker = 1
         else:
             marker = 0
-        # if INIT == True:
-        #     init = 1
-        # else:
-        #     init = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}"
-        # Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}"
+        if INIT == True:
+            init = 1
+        else:
+            init = 0
+        # Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}"
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}"
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
@@ -223,14 +223,24 @@ def MainSelf(args, files, data_name):
     VK_value = int(files.split('VK')[1].split('_SHARED')[0])
     # print('VK_value', VK_value)
     model_name = files.split('SHARED_')[1].split('/')[1]
-    Shared = int(files.split('SHARED_')[1].split(f'/{model_name}')[0])
+    # print(files)
     # print('model_name', model_name)
+    Shared = int(files.split('SHARED_')[1].split('_INIT')[0])
+    # print(Shared)
+    # Init = int(files.split('INIT_')[1].split('_ACC')[0])
+    Init = int(files.split('INIT_')[1].split(f'/{model_name}')[0])
+    # print(Init)
+    # Acc = int(files.split('ACC_')[1].split(f'/{model_name}')[0])
+    # print(Acc)
+    # exit()
+    # .split(f'/{model_name}')[0]
+    
     # print('Shared', Shared)
     random_seeds = [42, 44, 82, 100, 800]
     for run_idx, seed in enumerate(random_seeds):
         try:
             # cfg = setup(args, lr, wd, run_idx=run_idx+1, seed=seed)
-            cfg = setup(args, lr, wd, P_value, VK_value, Shared, seed=seed, check_runtime=True)
+            cfg = setup(args, lr, wd, P_value, VK_value, Shared, Init, seed=seed, check_runtime=True)
         except ValueError:
             continue
         train_main(cfg, args)
@@ -307,8 +317,8 @@ def main(args):
     elif args.train_type == "QKV" or "P_VK":
         # currently available for this branch (P_VK+5runs setup)
         # path to model (before lr{}_wd{} folders)
-        files = '/home/ch7858/vpt/output/StanfordCars_P150_VK20_SHARED_1/sup_vitb16_224'
-        data_name = 'StanfordCars' #val_ 后面的dataset名字 # StanfordDogs
+        files = '/home/ch7858/vpt/output/StanfordDogs_P100_VK5_SHARED_1_INIT_0/sup_vitb16_224'
+        data_name = 'StanfordDogs' #val_ 后面的dataset名字 # StanfordDogs # StanfordCars
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)

@@ -35,9 +35,11 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
     
     # print('???', job_name.split("_"))
+    # print(job_name)
     job_name_split = job_name.split("_")
-    P_value, VK_value, Shared = job_name_split[-4], job_name_split[-3], job_name_split[-1]
-    # print('!!!!!',P_value, VK_value, Shared)
+    P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
+    # print('!!!!!',P_value, VK_value, Shared, Init)
+    # exit()
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]
     # print('???', j_data_lrwd)
@@ -50,7 +52,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     elif dataset_type == 'fgvc':
         data_name = job_root.split("_P")[0].split("/output_fgvc_finalfinal/")[1]
     
-    return data_name, model_name, P_value, VK_value, Shared, lr, wd
+    return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
 
 
 def update_eval(line, eval_dict, data_name):        
@@ -103,7 +105,7 @@ def get_mean_accuracy(job_path, data_name):
 
 def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     # data_name, feat_type, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME)
-    data_name, feat_type, P_value, VK_value, Shared, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME, dataset_type)
+    data_name, feat_type, P_value, VK_value, Shared, lr, wd, Init = get_meta(job_root, job_path, model_type, MODEL_NAME, dataset_type)
     with open(job_path) as f:
         lines = f.readlines()
 
@@ -145,7 +147,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         "batch_size": batch_size,
         "Prompt_length": P_value,
         "VK_length": VK_value,
-        "Shared": Shared
+        "Shared": Shared,
+        "Init": Init
     }
     v_top1, t_top1 = None, None
     return train_loss, eval_dict, meta_dict, (v_top1, t_top1)

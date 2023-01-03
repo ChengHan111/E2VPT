@@ -136,7 +136,7 @@ class Attention(nn.Module):
             self.deep_QKV_embeddings_K = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV_K, head_size_fixed))
             
-            if self.qkv_cfg.ORIGIN_INIT == True:
+            if self.qkv_cfg.ORIGIN_INIT == '0':
                 # xavier_uniform initialization
                 patch_size = _pair(self.config.patches["size"]) # print('patch_size', patch_size) # 16, 16
                 
@@ -144,15 +144,15 @@ class Attention(nn.Module):
                 # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
                 nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
                 nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
-            else:
+            elif self.qkv_cfg.ORIGIN_INIT == '1':
                 # apply timm trunc norm for init
                 trunc_normal_(self.deep_QKV_embeddings_V, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_K, std=0.02)
                 
             # kaiming init # untested(to be continued)
-            # else: 
-            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
-            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
+            else: 
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 
             ''' (Under construction)
             if self.qkv_cfg.DEEP == False:
@@ -175,18 +175,19 @@ class Attention(nn.Module):
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV, head_size_fixed))
-            if self.qkv_cfg.ORIGIN_INIT == True:
+            if self.qkv_cfg.ORIGIN_INIT == '0':
                 # xavier_uniform initialization
                 patch_size = _pair(self.config.patches["size"])
                 # print('patch_size', patch_size) # 16, 16
                 val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
                 # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
                 nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
-            else:
+            elif self.qkv_cfg.ORIGIN_INIT == '1':
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
             # kaiming init (to be continued, untested)
-            # else:
-            #     torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
+            
+            else:
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
 
             
         

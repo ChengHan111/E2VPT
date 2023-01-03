@@ -42,14 +42,17 @@ def setup(args, lr, wd, check_runtime=True):
             marker = 1
         else:
             marker = 0
-        if INIT == True:
+        if INIT == 0:
+            init = 0
+        elif INIT == 1:
             init = 1
         else:
-            init = 0
+            init = 2
         if SHARED_ACC == True:
             shared_acc = 1
         else:
             shared_acc = 0
+        # print(f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}")
         Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}"
     
     # setup output dir

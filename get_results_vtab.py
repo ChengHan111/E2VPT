@@ -11,7 +11,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/output_fgvc_finalfinal/StanfordCars_P150_VK20_SHARED_1"
+root = "/home/ch7858/vpt/output_fgvc_finalfinal/CUB_P5_VK5_SHARED_1_INIT_0_ACC_1"
 dataset_type = 'fgvc' # currently support vtab and fgvc
 
 df_list=[]

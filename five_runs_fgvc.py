@@ -52,10 +52,12 @@ def setup(args, lr, wd, P_value, VK_value, Shared, Init, Acc, check_runtime=True
             marker = 1
         else:
             marker = 0
-        if INIT == True:
+        if INIT == 0:
+            init = 0
+        elif INIT == 1:
             init = 1
         else:
-            init = 0
+            init = 2
         if ACC == True:
             acc = 1
         else:
@@ -321,8 +323,8 @@ def main(args):
     elif args.train_type == "QKV" or "P_VK":
         # currently available for this branch (P_VK+5runs setup)
         # path to model (before lr{}_wd{} folders)
-        files = '/home/ch7858/vpt/output/CUB_P5_VK5_SHARED_1_INIT_0_ACC_1/sup_vitb16_224'
-        data_name = 'CUB' #val_ 后面的dataset名字 # StanfordDogs # StanfordCars # CUB
+        files = '/home/ch7858/vpt/output/StanfordDogs_P60_VK10_SHARED_1_INIT_2_ACC_0/sup_vitb16_224'
+        data_name = 'StanfordDogs' #val_ 后面的dataset名字 # StanfordDogs # StanfordCars # CUB
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":
         # prompt_rn_main(args)

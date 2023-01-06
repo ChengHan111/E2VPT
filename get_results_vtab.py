@@ -11,8 +11,8 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/output_fgvc_finalfinal/CUB_P5_VK5_SHARED_1_INIT_0_ACC_1"
-dataset_type = 'fgvc' # currently support vtab and fgvc
+root = "/home/ch7858/vpt/output_finalfinal/vtab-eurosat_P10_VK5_SHARED_1_INIT_2_ACC_0"
+dataset_type = 'vtab' # currently support vtab and fgvc
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):

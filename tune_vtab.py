@@ -101,15 +101,22 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
+        SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
         if SHARED == True:
             marker = 1
         else:
             marker = 0
-        if INIT == True:
+        if INIT == 0:
+            init = 0
+        elif INIT == 1:
             init = 1
         else:
-            init = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}"
+            init = 2
+        if SHARED_ACC == True:
+            shared_acc = 1
+        else:
+            shared_acc = 0
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}"
 
 
     if not final_runs:

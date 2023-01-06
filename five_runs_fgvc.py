@@ -323,7 +323,7 @@ def main(args):
     elif args.train_type == "QKV" or "P_VK":
         # currently available for this branch (P_VK+5runs setup)
         # path to model (before lr{}_wd{} folders)
-        files = '/home/ch7858/vpt/output/StanfordDogs_P60_VK10_SHARED_1_INIT_2_ACC_0/sup_vitb16_224'
+        files = '/home/ch7858/vpt/output/StanfordDogs_P100_VK5_SHARED_1_INIT_2_ACC_0/sup_vitb16_224'
         data_name = 'StanfordDogs' #val_ 后面的dataset名字 # StanfordDogs # StanfordCars # CUB
         MainSelf(args, files, data_name)
     # elif args.train_type == "QKV_resnet":

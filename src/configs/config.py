@@ -183,7 +183,7 @@ _C.MODEL.P_VK.SHARE_PARAM_KV = True # change it to False to init two parameters
 _C.MODEL.P_VK.ORIGIN_INIT = 1 # 0 for default, 1 for trunc_norm, 2 for kaiming init 
 _C.MODEL.P_VK.SHARED_ACCROSS = False # share vk value accross multi-attn layers
 
-_C.MODEL.P_VK.MASK_CLS_TOKEN = True # set as the main trigger to all cls token masked program.
+_C.MODEL.P_VK.MASK_CLS_TOKEN = True # set as the MAIN trigger to all cls token masked program(prouning and rewind process).
 _C.MODEL.P_VK.NORMALIZE_SCORES_BY_TOKEN = False # new added for normalized token (apply as xprompt)
 _C.MODEL.P_VK.CLS_TOKEN_MASK = True # new added for cls token mask (own or disown whole prompt)
 _C.MODEL.P_VK.CLS_TOKEN_MASK_PERCENT_NUM = None # set specific num of percent to mask
@@ -198,11 +198,11 @@ _C.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN_PIECE = 4 # set the lower boundary to avoid o
 _C.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM = 16 # new added to devided the pieces of token(for cls_token temporarily)
 _C.MODEL.P_VK.MASK_RESERVE = False # reserve the order of mask or not.
 
-_C.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = -1
-_C.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = -1
-_C.MODEL.P_VK.REWIND_STATUS = False
+_C.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = -1 # change correpsondingly during train
+_C.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = -1 # change correpsondingly during train
+_C.MODEL.P_VK.REWIND_STATUS = False # status mark for rewind process
 _C.MODEL.P_VK.REWIND_OUTPUT_DIR = ""
-_C.MODEL.P_VK.SAVE_REWIND_MODEL = False
+_C.MODEL.P_VK.SAVE_REWIND_MODEL = False 
 
 # ----------------------------------------------------------------------
 # Dataset options

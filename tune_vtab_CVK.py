@@ -57,8 +57,6 @@ def find_best_lrwd(files, data_name):
             epoch = len(results_dict) - 1
             val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
             val_result = float(val_result)
-            # print(val_result)
-            # exit()
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue
@@ -147,25 +145,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
     output_dir = cfg.OUTPUT_DIR
-    # if lr is not None and wd is not None:
-    #     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-    #         P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
-    #         VK_NUM = cfg.MODEL.P_VK.NUM_TOKENS
-    #         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
-    #         if SHARED == True:
-    #             marker = 1
-    #         else:
-    #             marker = 0
-    #         # TODO: Add extra "_" before P
-    #         output_folder = os.path.join(
-    #             cfg.DATA.NAME + f"P{P_NUM}_VK{VK_NUM}_SHARED_{marker}", cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    #         )
-    #     else:
-    #         output_folder = os.path.join(
-    #             cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    #         )
-    # if lr is None or wd is None:
-    #     output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{0.000}_wd{0.000}")
     
     output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}")
 
@@ -254,15 +233,10 @@ def train(cfg, args, final_runs):
 
     if train_loader:
         trainer.train_classifier(train_loader, val_loader, test_loader)
-        # save the evaluation results
-        # if cfg.SAVE_VTAB_RESULTS_PTH == True:
-        # Here is a must saved
         torch.save(
             evaluator.results,
             os.path.join(cfg.OUTPUT_DIR, "eval_results.pth")
         )
-        # else:
-        #     print("Self-added: Unsave tune-vtab pth results")
     else:
         print("No train loader presented. Exit")
 

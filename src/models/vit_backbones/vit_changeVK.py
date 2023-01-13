@@ -118,7 +118,6 @@ class Attention(nn.Module):
 
         self.softmax = Softmax(dim=-1)
         
-        
         # self-added
         
         num_layers = self.config.transformer["num_layers"]

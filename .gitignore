@@ -149,3 +149,4 @@ dmypy.json
 /apex
 /output_saved_forexp
 /output_before_pruning
+/output_copy

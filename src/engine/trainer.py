@@ -17,6 +17,7 @@ from ..solver.optimizer import make_optimizer
 from ..solver.losses import build_loss
 from ..utils import logging
 from ..utils.train_utils import AverageMeter, gpu_mem_usage
+import json
 
 logger = logging.get_logger("visual_prompt")
 
@@ -252,12 +253,12 @@ class Trainer():
                 break
 
         # save the last checkpoints
-        # if self.cfg.MODEL.SAVE_CKPT:
-        #     Checkpointer(
-        #         self.model,
-        #         save_dir=self.cfg.OUTPUT_DIR,
-        #         save_to_disk=True
-        #     ).save("last_model")
+        if self.cfg.MODEL.SAVE_CKPT_FINALRUNS:
+            Checkpointer(
+                self.model,
+                save_dir=self.cfg.OUTPUT_DIR,
+                save_to_disk=True
+            ).save("last_model")
 
     @torch.no_grad()
     def save_prompt(self, epoch):
@@ -340,3 +341,181 @@ class Trainer():
             torch.save(out, out_path)
             logger.info(
                 f"Saved logits and targets for {test_name} at {out_path}")
+
+    
+    def calculate_importance(self, cfg, model, train_loader, n_pieces_token=16, n_soft_tokens=20):
+        """
+        Train a classifier using epoch
+        """
+        
+        for name, _ in model.named_parameters():
+            print(name)
+        list(model.parameters())
+        
+        prompt_model = model
+        self.cls_weights = train_loader.dataset.get_class_weights(self.cfg.DATA.CLASS_WEIGHTS_TYPE)
+        # TODO:  其实上面有包含 这里这么写冗余了 之后可以考虑去掉
+        Checkpointer(
+            prompt_model
+        ).load(cfg.OUTPUT_DIR + '/last_model.pth') # /home/ch7858/vpt/output_val/vtab-caltech101_P32_VK5_SHARED_1_INIT_1_ACC_0/sup_vitb16_224/lr12.5_wd0.01/run1/
+        # print('path', cfg.OUTPUT_DIR)
+        prompt_model.eval()
+        soft_tokens_importance = torch.zeros(n_soft_tokens).cuda()
+        soft_tokens_pieces_importance = torch.zeros(n_soft_tokens, n_pieces_token).cuda()
+        
+        total_len = 0
+        for step, inputs in enumerate(train_loader):
+            X, targets = self.get_input(inputs)
+
+            loss, _ = self.forward_one_batch(X, targets, True)
+        
+            # loss = prompt_model(inputs) 
+            # loss.backward()
+            # print('loss!!!', loss)
+            
+        #     # 将对应位置的梯度拿到
+            # soft_tokens_importance += prompt_model.enc.transformer.prompt_embeddings.grad
+            # print(prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad)
+            
+            soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+            for token_i in range(n_soft_tokens):
+                soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad[token_i]
+            total_len += 1
+            
+        soft_tokens_importance /= total_len
+        soft_tokens_pieces_importance /= total_len
+        
+        # normalize_scores_by_token
+        if self.cfg.MODEL.P_VK.NORMALIZE_SCORES_BY_TOKEN:
+            exp = 2
+            norm_by_token = torch.pow(torch.pow(soft_tokens_importance, exp).sum(), 1/exp)
+            soft_tokens_importance /= norm_by_token.unsqueeze(-1) + 1e-20
+            norm_by_token_piece = torch.pow(torch.pow(soft_tokens_pieces_importance, exp).sum(-1), 1/exp)
+            soft_tokens_pieces_importance /= norm_by_token_piece.unsqueeze(-1) + 1e-20
+            
+        return soft_tokens_importance, soft_tokens_pieces_importance
+        
+    def determine_mask_sequence(self, cfg, n_pieces_token=16, n_soft_tokens=20):
+        soft_token_mask_number = cfg.MODEL.P_VK.CLS_TOKEN_MASK_PERCENT_NUM
+        if soft_token_mask_number is None:
+            soft_token_mask_number = []
+            # print(cfg.MODEL.P_VK.CLS_TOKEN_MASK_PERCENT)
+            for prune_percent in cfg.MODEL.P_VK.CLS_TOKEN_MASK_PERCENT:
+                total_soft_tokens = n_soft_tokens
+                n_to_mask = int(total_soft_tokens * prune_percent / 100)
+                if cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN > 0:
+                    if n_to_mask > total_soft_tokens - cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN:
+                        n_to_mask = total_soft_tokens - cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN
+                        soft_token_mask_number.append(n_to_mask)
+                        break
+                soft_token_mask_number.append(n_to_mask)
+        soft_token_mask_number = sorted(soft_token_mask_number)
+        soft_token_mask_sequence = soft_token_mask_number[:]
+        for idx in range(1, len(soft_token_mask_number)):
+            soft_token_mask_sequence[idx] = soft_token_mask_number[idx] - soft_token_mask_number[idx-1]
+        assert soft_token_mask_number[-1] == sum(soft_token_mask_sequence)
+        
+        token_piece_mask_number = cfg.MODEL.P_VK.CLS_TOKEN_PIECE_MASK_PERCENT_NUM
+        if token_piece_mask_number is None:
+            token_piece_mask_number = []
+            for prune_percent in cfg.MODEL.P_VK.CLS_TOKEN_PIECE_MASK_PERCENT:
+                total_soft_tokens_pieces = n_pieces_token
+                n_to_mask = int(total_soft_tokens_pieces * prune_percent / 100)
+                if cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN_PIECE > 0:
+                    if n_to_mask > total_soft_tokens_pieces - cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN_PIECE:
+                        n_to_mask = total_soft_tokens_pieces - cfg.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN_PIECE
+                        token_piece_mask_number.append(n_to_mask)
+                        break
+                token_piece_mask_number.append(n_to_mask)
+        token_piece_mask_number = sorted(token_piece_mask_number)
+        token_piece_mask_sequence = token_piece_mask_number[:]
+        for idx in range(1, len(token_piece_mask_number)):
+            token_piece_mask_sequence[idx] = token_piece_mask_number[idx] - token_piece_mask_number[idx-1]
+        
+        assert token_piece_mask_number[-1] == sum(token_piece_mask_sequence)
+        
+        # print('1', soft_token_mask_sequence)
+        # print('2', token_piece_mask_sequence)
+        # print('3', soft_token_mask_number)
+        # print('4', token_piece_mask_number)
+        return soft_token_mask_sequence, token_piece_mask_sequence
+    
+    def dump(self, path, data, convert_key_type=False):
+        def set_default(obj):
+            if isinstance(obj, set):
+                return list(obj)
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj.item(), np.integer):
+                return int(obj.item())
+            elif isinstance(obj.item(), float):
+                return obj.item()
+            raise TypeError
+
+        if convert_key_type:
+            d = {}
+            for k, v1 in data.items():
+                v1 =  {int(k):v2 for k,v2 in v1.items()}
+                d[int(k)] = v1
+        else:
+            d = data
+        
+        with open(path, 'w') as f:
+            json.dump(d, f, default=set_default)
+    
+    def what_tokens_pieces_to_mask(self,
+                 soft_tokens_pieces_importance, 
+                 n_to_mask, 
+                 soft_tokens_pieces_to_mask, 
+                 min_num_soft_tokens_pieces, 
+                 n_pieces_token = 16, 
+                 n_soft_tokens = 20,
+                 reverse = False
+                ):
+        assert n_soft_tokens == soft_tokens_pieces_importance.size()[0]
+        assert n_pieces_token == soft_tokens_pieces_importance.size()[1]
+        
+        for soft_token_idx in range(n_soft_tokens):
+            score = soft_tokens_pieces_importance[soft_token_idx]
+            
+            if soft_token_idx not in soft_tokens_pieces_to_mask:
+                soft_tokens_pieces_to_mask[soft_token_idx] = set()
+            soft_token_pieces_and_score = [
+                (soft_token_piece, score[soft_token_piece]) 
+                for soft_token_piece in range(n_pieces_token)
+            ]
+            soft_token_pieces_and_score = sorted(soft_token_pieces_and_score, key=lambda x:x[1], reverse=reverse)
+            sorted_soft_token_pieces = [soft_token_piece_and_score[0] for soft_token_piece_and_score in soft_token_pieces_and_score]
+            
+            sorted_soft_token_pieces = [
+                soft_token_piece
+                for soft_token_piece in sorted_soft_token_pieces
+                if soft_token_piece not in soft_tokens_pieces_to_mask[soft_token_idx]
+            ]
+            for soft_token_piece in sorted_soft_token_pieces[:n_to_mask]:
+                soft_tokens_pieces_to_mask[soft_token_idx].add(soft_token_piece)
+    
+        return soft_tokens_pieces_to_mask
+
+
+    def what_tokens_to_mask(self,
+                    soft_tokens_importance, 
+                    n_to_mask, 
+                    soft_tokens_to_mask, 
+                    min_num_soft_tokens, 
+                    n_pieces_token = 16, 
+                    n_soft_tokens = 20,
+                    reverse = False
+                    ):
+        soft_tokens_and_score = [(soft_token, soft_tokens_importance[soft_token]) for soft_token in range(n_soft_tokens)]
+        soft_tokens_and_score = sorted(soft_tokens_and_score, key=lambda x:x[1], reverse=reverse)
+        sorted_soft_tokens = [soft_token_and_score[0] for soft_token_and_score in soft_tokens_and_score]
+        sorted_soft_tokens = [
+                soft_token
+                for soft_token in sorted_soft_tokens
+                if soft_token not in soft_tokens_to_mask
+        ]
+        for soft_token in sorted_soft_tokens[:n_to_mask]:
+            soft_tokens_to_mask.add(soft_token)
+        
+        return soft_tokens_to_mask

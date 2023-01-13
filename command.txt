@@ -181,7 +181,7 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --conf
 # VTAB-1k
 ## Natural
 Caltech101: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "15" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
 Cifar100: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
 dtd: 
@@ -214,9 +214,9 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --conf
 Dmlab: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
 Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
 Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "20" MODEL.P_VK.NUM_TOKENS "20" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
 Kitti_distance: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
 Smallnorb_azimuth: 

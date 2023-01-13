@@ -35,10 +35,10 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
     
     # print('???', job_name.split("_"))
-    # print(job_name)
+    print(job_name)
     job_name_split = job_name.split("_")
     P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
-    # print('!!!!!',P_value, VK_value, Shared, Init)
+    print('!!!!!',P_value, VK_value, Shared, Init)
     # exit()
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]
@@ -61,8 +61,17 @@ def update_eval(line, eval_dict, data_name):
     else:
         metric = "rocauc"
     top1 = float(line.split(": top1:")[-1].split(metric)[0])
+    # print(top1)
     eval_type = line.split(" Classification results with ")[-1].split(": top1")[0] 
     eval_type = "".join(eval_type.split("_" + data_name))
+    
+    # self added to rm '"'
+    eval_type = eval_type.replace('"', "")
+    print('take below line in vis_utils_pvk.py to enable correct output')
+    if 'test' in eval_type:
+        eval_type = 'test'
+    elif 'val' in eval_type:
+        eval_type = 'val'
     eval_dict[eval_type + "_top1"].append(top1)
 
 
@@ -106,6 +115,8 @@ def get_mean_accuracy(job_path, data_name):
 def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     # data_name, feat_type, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME)
     data_name, feat_type, P_value, VK_value, Shared, lr, wd, Init = get_meta(job_root, job_path, model_type, MODEL_NAME, dataset_type)
+    # print(data_name, feat_type, P_value, VK_value, Shared, lr, wd, Init)
+    
     with open(job_path) as f:
         lines = f.readlines()
 
@@ -134,6 +145,7 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
             loss = float(line.split("average train loss: ")[-1])
             train_loss.append(loss)
         if " Classification results with " in line:
+            # print(line)
             update_eval(line, eval_dict, data_name)
 
     meta_dict = {
@@ -188,10 +200,11 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         batch_size = meta_dict["batch_size"]
         
         if len(eval_results) == 0:
-            print(f"job {job_path} not ready")
+            print(f"job {job_path} not ready in eval results")
             continue
+        print('????', len(eval_results["val_top1"]))
         if len(eval_results["val_top1"]) == 0:
-            print(f"job {job_path} not ready")
+            print(f"job {job_path} not ready in eval results 'val_top1'")
             continue
 
         if "val_top1" not in eval_results or "test_top1" not in eval_results:

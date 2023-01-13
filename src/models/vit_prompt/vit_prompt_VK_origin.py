@@ -7,8 +7,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torchvision as tv
-import os
-import json
 
 from functools import reduce
 from operator import mul
@@ -34,6 +32,7 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         
         self.p_vk_config = p_vk_config
         self.vit_config = config
+        
 
         img_size = _pair(img_size)
         patch_size = _pair(config.patches["size"])
@@ -41,31 +40,11 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         num_tokens_P = self.p_vk_config.NUM_TOKENS_P
         self.num_tokens_P = num_tokens_P  # number of prompted tokens (promot 数量)
         
-        if self.p_vk_config.MASK_CLS_TOKEN is True:
-            if self.p_vk_config.CLS_TOKEN_MASK == True:
-            # new added for cls_token masked
-                self.prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P), requires_grad=True)
-            if self.p_vk_config.CLS_TOKEN_MASK_PIECES == True:
-                self.prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P, self.p_vk_config.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
-                self.soft_token_chunks_num_cls_token = int(config.hidden_size/self.p_vk_config.CLS_TOKEN_P_PIECES_NUM)
-
-            if self.p_vk_config.MASK_CLS_TOKEN and self.p_vk_config.REWIND_STATUS:
-                
-                # print('self.p_vk_config.REWIND_OUTPUT_DIR', self.p_vk_config.REWIND_OUTPUT_DIR)
-                # print('self.vit_config.OUTPUT_DIR', self.vit_config.OUTPUT_DIR)
-                soft_token_mask_dir = os.path.join(self.p_vk_config.REWIND_OUTPUT_DIR, 'mask_tokens')
-                assert soft_token_mask_dir is not None
-                # TODO: added for loop for exclusive cover all the possible results
-                soft_token_mask_file = os.path.join(soft_token_mask_dir, "{}_soft_tokens_to_mask.json".format(self.p_vk_config.REWIND_MASK_CLS_TOKEN_NUM))
-                soft_token_to_mask = self.load_soft_token_mask_file(soft_token_mask_file) 
-                self.mask_soft_tokens(soft_token_to_mask)
-            
-            if self.p_vk_config.CLS_TOKEN_MASK_PIECES and self.p_vk_config.REWIND_STATUS:
-                soft_tokens_pieces_mask_dir = os.path.join(self.p_vk_config.REWIND_OUTPUT_DIR, 'mask_tokens_pieces')
-                soft_tokens_pieces_mask_file = os.path.join(soft_tokens_pieces_mask_dir, "{}_soft_tokens_pieces_to_mask.json".format(self.p_vk_config.REWIND_MASK_CLS_TOKEN_PIECE_NUM)) # rewind_mask_token_pieces_number
-                soft_tokens_pieces_to_mask = self.load_soft_tokens_pieces_mask_file(soft_tokens_pieces_mask_file)  
-                self.mask_soft_tokens_pieces(soft_tokens_pieces_to_mask)
         
+        # new added for cls_token masked
+        # self.soft_tokens_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P), requires_grad=True)
+        # self.soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P, self.p_vk_config.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
+
         # add drop-out or not
         self.prompt_dropout = Dropout(self.p_vk_config.DROPOUT_P)
 
@@ -104,25 +83,6 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
 
         else:
             raise ValueError("Other initiation scheme is not supported")
-        
-    def load_soft_token_mask_file(self, path):
-        with open(path) as f:
-            t = json.load(f)
-        
-        soft_token_to_mask = set()
-        for mask_number, soft_token in t.items():
-            for soft_token_i in soft_token:
-                soft_token_to_mask.add(soft_token_i) 
-        
-        return soft_token_to_mask
-
-    def load_soft_tokens_pieces_mask_file(self, path):
-        with open(path) as f:
-            t = json.load(f)
-        soft_tokens_pieces_to_mask = {}
-        for soft_token_idx, soft_token_pieces in t.items():
-            soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
-        return soft_tokens_pieces_to_mask
 
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings
@@ -130,24 +90,9 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         # print('B', B) # 128
         # after CLS token, all before image patches
         x = self.embeddings(x)  # (batch_size, 1 + n_patches, hidden_dim)
-        
-        prompt_embeddings = self.prompt_dropout(self.prompt_proj(self.prompt_embeddings).expand(B, -1, -1))
-        
-        if self.p_vk_config.MASK_CLS_TOKEN is True: 
-            if self.p_vk_config.CLS_TOKEN_MASK_PIECES is True:
-                # print('222', self.soft_tokens_pieces_mask_cls_token.shape) torch.Size([32, 16])
-                prompt_embeddings = prompt_embeddings * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1)
-                print('mark1111', self.prompt_soft_tokens_pieces_mask_cls_token)
-                # print(self.soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1).shape) # torch.Size([32, 768])
-            if self.p_vk_config.CLS_TOKEN_MASK == True:
-                # print(prompt_embeddings.shape)
-                # print('333', self.soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[2]).repeat(B, 1, 1).shape) # torch.Size([64, 32, 768])
-                prompt_embeddings = prompt_embeddings * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[2]).repeat(B, 1, 1)
-                print('mark2222', self.prompt_soft_tokens_mask_cls_token)
-        
         x = torch.cat((
                 x[:, :1, :],
-                prompt_embeddings,
+                self.prompt_dropout(self.prompt_proj(self.prompt_embeddings).expand(B, -1, -1)),
                 x[:, 1:, :]
             ), dim=1)
         # print('11111', self.prompt_proj(self.prompt_embeddings).expand(B, -1, -1).shape) #torch.Size([128, 10, 768])
@@ -176,24 +121,13 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         num_layers = self.vit_config.transformer["num_layers"]
 
         for i in range(num_layers):
-            # print(i)
             if i == 0:
                 hidden_states, weights = self.encoder.layer[i](embedding_output)
             else:
                 if i <= self.deep_prompt_embeddings.shape[0]:
                     deep_prompt_emb = self.prompt_dropout(self.prompt_proj(
                         self.deep_prompt_embeddings[i-1]).expand(B, -1, -1))
-                    
-                    # 层数是通过每一层这样加进去体现的
-                    if self.p_vk_config.MASK_CLS_TOKEN is True: 
-                        if self.p_vk_config.CLS_TOKEN_MASK_PIECES is True:
-                            # print(deep_prompt_emb.shape)
-                            # print(self.soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1).shape)
-                            deep_prompt_emb = deep_prompt_emb * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1)
-                        if self.p_vk_config.CLS_TOKEN_MASK == True:
-                            # print(self.soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.deep_prompt_embeddings.shape[2]).repeat(B, 1, 1))
-                            deep_prompt_emb = deep_prompt_emb * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.deep_prompt_embeddings.shape[2]).repeat(B, 1, 1)
-                    
+
                     hidden_states = torch.cat((
                         hidden_states[:, :1, :],
                         deep_prompt_emb,
@@ -203,7 +137,6 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
 
                 hidden_states, weights = self.encoder.layer[i](hidden_states)
 
-            
             if self.encoder.vis:
                 attn_weights.append(weights)
 
@@ -211,8 +144,9 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         return encoded, attn_weights
 
     def forward(self, x):
-        # this is the default version: 这样的写法是 第一层是单独加进去的 后面层是有deep再加入的
+        # this is the default version:
         embedding_output = self.incorporate_prompt(x)
+        # print('SUCCESSFULLY REPLACE BY SELFMODEL')
 
         if self.p_vk_config.DEEP_P:
             encoded, attn_weights = self.forward_deep_prompt(
@@ -221,21 +155,7 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
             encoded, attn_weights = self.encoder(embedding_output)
 
         return encoded, attn_weights
-    
-    def mask_soft_tokens(self, soft_tokens_to_mask):
-        self.soft_tokens_to_mask = list(soft_tokens_to_mask)
-        for soft_token_idx in self.soft_tokens_to_mask:
-            # print('soft_token_idx',soft_token_idx)
-            self.prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0
-        # Self added no grad during rewind
-        self.prompt_soft_tokens_mask_cls_token.requires_grad_(False)            
-            
-    def mask_soft_tokens_pieces(self, soft_tokens_pieces_to_mask):
-        for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
-            for soft_token_piece in soft_token_pieces:
-                self.prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
-        # Self added no grad during rewind
-        self.prompt_soft_tokens_pieces_mask_cls_token.requires_grad_(False) 
+
 
 class PromptedVisionTransformer_Prompt_VK(VisionTransformer_changedVK):
     def __init__(

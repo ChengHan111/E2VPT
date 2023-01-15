@@ -33,16 +33,16 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_finalfinal/")[1]
     elif dataset_type == 'fgvc':
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
+    elif dataset_type == 'vtab_rewind':
+        job_name = job_root.split("/output_rewind/")[1]
     
-    # print('???', job_name.split("_"))
     print(job_name)
     job_name_split = job_name.split("_")
     P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
     print('!!!!!',P_value, VK_value, Shared, Init)
-    # exit()
+    
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]
-    # print('???', j_data_lrwd)
     # data_name, feat_type, opt_params = j_data[1], j_data[2], j_data[3]
     lr = float(j_data_lrwd.split("_")[0].split("lr")[-1])
     wd = float(j_data_lrwd.split("_")[1].split("wd")[-1])
@@ -51,6 +51,8 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         data_name = job_root.split("_P")[0].split("/output_finalfinal/")[1]
     elif dataset_type == 'fgvc':
         data_name = job_root.split("_P")[0].split("/output_fgvc_finalfinal/")[1]
+    elif dataset_type == 'vtab_rewind':
+        data_name = job_root.split("_P")[0].split("/output_rewind/")[1]
     
     return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
 
@@ -136,7 +138,30 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         if "Total Parameters: " in line:
             total_params = int(line.split("Total Parameters: ")[-1].split("\t")[0])
             gradiented_params = int(line.split("Gradient Parameters: ")[-1].split("\n")[0])
-
+            # for rewind approach, consider subtraction on coresponding parameters.
+            if dataset_type != 'vtab_rewind':
+                print(feat_type)
+                cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
+                cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
+                root_path = job_path.split('/output_rewind')[0]
+                mask_tokens_path = root_path + f'{data_name}_P{P_value}_VK{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                mask_tokens_pieces_path = root_path + f'{data_name}_P{P_value}_VK{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/mask_tokens/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                
+                soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
+                prompt_soft_tokens_mask_cls_token = mask_soft_tokens(P_value, soft_token_to_mask)
+            
+                soft_tokens_pieces_to_mask = load_soft_tokens_pieces_mask_file(mask_tokens_pieces_path) 
+                # TODO: make cfg available here.
+                CLS_TOKEN_P_PIECES_NUM = 16 # same to the config file as 16 
+                prompt_soft_tokens_pieces_mask_cls_token = mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM)
+                
+                
+                
+                # print('111', cls_token_mask, cls_token_pieces_mask)
+                exit()
+                # total_params -= 
+                # gradiented_params -=
+                
         if "Rank of current process:" in line:
             num_jobs += 1
         if num_jobs == 2:
@@ -165,6 +190,41 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     v_top1, t_top1 = None, None
     return train_loss, eval_dict, meta_dict, (v_top1, t_top1)
 
+def load_soft_token_mask_file(path):
+    with open(path) as f:
+        t = json.load(f)
+    
+    soft_token_to_mask = set()
+    for mask_number, soft_token in t.items():
+        for soft_token_i in soft_token:
+            soft_token_to_mask.add(soft_token_i) 
+    
+    return soft_token_to_mask
+
+def load_soft_tokens_pieces_mask_file(path):
+    with open(path) as f:
+        t = json.load(f)
+    soft_tokens_pieces_to_mask = {}
+    for soft_token_idx, soft_token_pieces in t.items():
+        soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
+    return soft_tokens_pieces_to_mask
+
+# torch.Size([12, cls_token_length, 768]) 对于整个来说 
+
+def mask_soft_tokens(P_value, soft_tokens_to_mask):
+    # TODO: 这两块应该也是有参数量的 这是否要考虑进去呢
+    prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(P_value))
+    for soft_token_idx in soft_tokens_to_mask:
+        # print('soft_token_idx',soft_token_idx)
+        prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0   
+    return prompt_soft_tokens_mask_cls_token       
+        
+def mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM=16):
+    prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(P_value, CLS_TOKEN_P_PIECES_NUM))
+    for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
+        for soft_token_piece in soft_token_pieces:
+            prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
+    return prompt_soft_tokens_pieces_mask_cls_token
 
 def get_time(file):
     with open(file) as f:
@@ -255,7 +315,6 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         result_df = pd.DataFrame(pd_dict)
         result_df = result_df.sort_values(['data', "feature", "lr", "wd"])
     return result_df
-
 
 def delete_ckpts(f):
     # delete saved ckpts for re

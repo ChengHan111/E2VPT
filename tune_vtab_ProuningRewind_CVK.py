@@ -84,7 +84,6 @@ def find_best_lrwd(files, data_name):
 def find_best_MtMtp(files, data_name):
     
     t_name = "val_" + data_name
-    # print('t_name:', t_name)
     best_mask_token = None
     best_mask_token_piece = None
     best_val_acc = -1
@@ -94,7 +93,7 @@ def find_best_MtMtp(files, data_name):
             epoch = len(results_dict) - 1
             val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
             val_result = float(val_result)
-            print(val_result)
+            # print(val_result)
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue
@@ -109,6 +108,7 @@ def find_best_MtMtp(files, data_name):
             # 这里不一样的点是选择了尽可能大的mask
             if best_mask_token is not None and best_mask_token < cur_mask_token:
                 # get the smallest lr to break tie for stability
+                print('pass best_mask_token < cur_mask_token situation')
                 best_mask_token = cur_mask_token
                 best_mask_token_piece = cur_mask_token_piece
                 best_val_acc = val_result
@@ -122,6 +122,9 @@ def find_best_MtMtp(files, data_name):
             best_mask_token = int(frag_txt.split("/rewind_")[-1].split('_tokens')[0])
             best_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
             print('best_mask_token', best_mask_token, best_mask_token_piece)
+        
+        else:
+            pass
     return best_mask_token, best_mask_token_piece
 
 
@@ -214,22 +217,27 @@ def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
             mt, mtr = int(mt), int(mtr)
             # lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
         
-        # TODO: support else 
-        # else:
-        #     files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/eval_results.pth")
-        #     # mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
-        #     lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-            
-        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
-        cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
-        cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
-        cfg.MODEL.P_VK.REWIND_STATUS = True
-        # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-        cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-        # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-        # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
-        # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
-        # sleep(10)
+            # TODO: support else 
+            # else:
+            #     files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/eval_results.pth")
+            #     # mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
+            #     lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
+        
+            cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
+            print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
+            sleep(5)
+            cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
+            cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
+            cfg.MODEL.P_VK.REWIND_STATUS = True
+            # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
+            cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
+            # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+            # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
+            # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
+            print('At final runs:', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+            sleep(5)
+        else:
+            print('should not go through this branch for prouning and rewind process!')
     else:
         raise ValueError(
                 f"Unsupported setup config! Check tune_vtab setup for more detail")
@@ -241,7 +249,7 @@ def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
     if final_runs != 'final_runs':
         output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}")
     else:
-        output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}_mt{mt}_mtr{mtr}")
+        output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}_mt{mt}_mtr{mtr}")
         # print(f"lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}_mt{mt}_mtr{mtr}")
         
     # train cfg.RUN_N_TIMES times
@@ -436,7 +444,7 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
     
     print('before cfg setup stage!!!!!!')
     print('cfg.MODEL.P_VK.REWIND_OUTPUT_DIR', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-    sleep(10)
+    sleep(5)
     
     # main training / eval actions here
 
@@ -614,6 +622,8 @@ def main(args):
             os.makedirs(rewind_model_output_dir, exist_ok=True)
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
+    print('Finish rewind process, get final runs')
+    sleep(5)
     
     # get best results on rewind options
     # final run 5 times with fixed seed

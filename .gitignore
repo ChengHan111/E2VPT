@@ -150,3 +150,4 @@ dmypy.json
 /output_saved_forexp
 /output_before_pruning
 /output_copy
+/output_rewind

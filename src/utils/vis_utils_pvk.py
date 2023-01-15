@@ -4,6 +4,8 @@ import glob
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn as nn
+import json
 
 from tqdm import tqdm
 from collections import defaultdict
@@ -139,28 +141,41 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
             total_params = int(line.split("Total Parameters: ")[-1].split("\t")[0])
             gradiented_params = int(line.split("Gradient Parameters: ")[-1].split("\n")[0])
             # for rewind approach, consider subtraction on coresponding parameters.
-            if dataset_type != 'vtab_rewind':
-                print(feat_type)
+            if dataset_type == 'vtab_rewind':
+                # print(feat_type)
                 cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
                 cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
                 root_path = job_path.split('/output_rewind')[0]
-                mask_tokens_path = root_path + f'{data_name}_P{P_value}_VK{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                mask_tokens_pieces_path = root_path + f'{data_name}_P{P_value}_VK{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/mask_tokens/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                print('cls_token_mask', cls_token_mask)
+                print('cls_token_pieces_mask', cls_token_pieces_mask)
+                mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 
                 soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
-                prompt_soft_tokens_mask_cls_token = mask_soft_tokens(P_value, soft_token_to_mask)
+                prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask = mask_soft_tokens(P_value, soft_token_to_mask)
             
                 soft_tokens_pieces_to_mask = load_soft_tokens_pieces_mask_file(mask_tokens_pieces_path) 
                 # TODO: make cfg available here.
                 CLS_TOKEN_P_PIECES_NUM = 16 # same to the config file as 16 
-                prompt_soft_tokens_pieces_mask_cls_token = mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM)
+                prompt_soft_tokens_pieces_mask_cls_token, parameter_cls_token_piece_mask = mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM)
                 
+                # 12, 768 for total_dimension and prompt_dim
+                # notice the difference here, the prompt embeddings should be repeat 12 times as the parameter num.
+                prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768))
+                # print(prompt_embeddings.shape) # torch.Size([12, 10, 768])
+                soft_token_chunks_num_cls_token = int(768/CLS_TOKEN_P_PIECES_NUM)
+                prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
+                print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
+                prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
+                print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
                 
+                prompt_embeddings_parameters = 12 * prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
                 
-                # print('111', cls_token_mask, cls_token_pieces_mask)
-                exit()
-                # total_params -= 
-                # gradiented_params -=
+                prompt_embeddings_parameters_filtered = int(torch.sum(12 * prompt_embeddings))
+                # print(total_params)
+                parameter_added = (parameter_cls_token_mask + parameter_cls_token_piece_mask)
+                total_params += parameter_added #.data[0]
+                gradiented_params -= prompt_embeddings_parameters_filtered
                 
         if "Rank of current process:" in line:
             num_jobs += 1
@@ -213,18 +228,20 @@ def load_soft_tokens_pieces_mask_file(path):
 
 def mask_soft_tokens(P_value, soft_tokens_to_mask):
     # TODO: 这两块应该也是有参数量的 这是否要考虑进去呢
-    prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(P_value))
+    prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(int(P_value[1:])))
     for soft_token_idx in soft_tokens_to_mask:
         # print('soft_token_idx',soft_token_idx)
         prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0   
-    return prompt_soft_tokens_mask_cls_token       
+    parameter_cls_token_mask = int(P_value[1:])
+    return prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask      
         
 def mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM=16):
-    prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(P_value, CLS_TOKEN_P_PIECES_NUM))
+    prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(int(P_value[1:]), int(CLS_TOKEN_P_PIECES_NUM)))
     for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
         for soft_token_piece in soft_token_pieces:
             prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
-    return prompt_soft_tokens_pieces_mask_cls_token
+    parameter_cls_token_piece_mask = int(P_value[1:]) * int(CLS_TOKEN_P_PIECES_NUM)
+    return prompt_soft_tokens_pieces_mask_cls_token, parameter_cls_token_piece_mask
 
 def get_time(file):
     with open(file) as f:
@@ -262,7 +279,7 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         if len(eval_results) == 0:
             print(f"job {job_path} not ready in eval results")
             continue
-        print('????', len(eval_results["val_top1"]))
+        # print('????', len(eval_results["val_top1"]))
         if len(eval_results["val_top1"]) == 0:
             print(f"job {job_path} not ready in eval results 'val_top1'")
             continue

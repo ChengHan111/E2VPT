@@ -106,13 +106,15 @@ def find_best_MtMtp(files, data_name):
             cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
             cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
             # 这里不一样的点是选择了尽可能大的mask
-            if best_mask_token is not None and best_mask_token < cur_mask_token:
+            # change into default setting
+            if best_mask_token is not None and best_mask_token < cur_mask_token :
                 # get the smallest lr to break tie for stability
                 print('pass best_mask_token < cur_mask_token situation')
                 best_mask_token = cur_mask_token
                 best_mask_token_piece = cur_mask_token_piece
                 best_val_acc = val_result
 
+        # larger is better for val results
         elif val_result > best_val_acc:
             print('PASS!!!!')
             best_val_acc = val_result
@@ -123,8 +125,6 @@ def find_best_MtMtp(files, data_name):
             best_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
             print('best_mask_token', best_mask_token, best_mask_token_piece)
         
-        else:
-            pass
     return best_mask_token, best_mask_token_piece
 
 
@@ -202,42 +202,37 @@ def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
         # find the best lr and best wd
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             
-            # print(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/eval_results.pth")
             cfg.SOLVER.BASE_LR = lr
             cfg.SOLVER.WEIGHT_DECAY = wd
             
-            # print('current lr and weight decay', lr, wd)
-            # print(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
-            # sleep(10)
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
+            print('should not be longer than 72', len(files))
             # notice that mask tokens and mask token pieces are selected in this process(before)
             
             # print('length of files (should be 72)', len(files))
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
-            # lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
         
-            # TODO: support else 
-            # else:
-            #     files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/eval_results.pth")
-            #     # mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
-            #     lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-        
-            cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
-            print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
-            sleep(5)
-            cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
-            cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
-            cfg.MODEL.P_VK.REWIND_STATUS = True
-            # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-            cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-            # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-            # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
-            # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
-            print('At final runs:', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-            sleep(5)
         else:
-            print('should not go through this branch for prouning and rewind process!')
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
+            mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
+            mt, mtr = int(mt), int(mtr)
+        
+        print('Go through here (AT least!)')
+        print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
+        sleep(10)
+        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
+        
+        cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
+        cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
+        cfg.MODEL.P_VK.REWIND_STATUS = True
+        # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
+        cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
+        # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+        # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
+        # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
+        print('At final runs:', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+        
     else:
         raise ValueError(
                 f"Unsupported setup config! Check tune_vtab setup for more detail")
@@ -618,7 +613,7 @@ def main(args):
     for run_idx, cls_token_id in enumerate(cls_token_id_list):
         for run_idx_2, cls_token_pieces_id in enumerate(cls_token_pieces_id_list):
             rewind_model_output_dir = os.path.join(
-                cfg.OUTPUT_DIR, f"rewind_{cls_token_id}_tokens_{cls_token_pieces_id}_pieces_to_mask")
+                cfg.OUTPUT_DIR, f"rewind/rewind_{cls_token_id}_tokens_{cls_token_pieces_id}_pieces_to_mask")
             os.makedirs(rewind_model_output_dir, exist_ok=True)
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     

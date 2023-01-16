@@ -93,23 +93,26 @@ def find_best_MtMtp(files, data_name):
             epoch = len(results_dict) - 1
             val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
             val_result = float(val_result)
-            # print(val_result)
+            
+            frag_txt = f.split("run1")[1]
+            cur_mask_token = int(frag_txt.split("/rewind_")[-1].split('_tokens')[0])
+            cur_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
         except Exception as e:
             print(f"Encounter issue: {e} for file {f}")
             continue
 
         if val_result == best_val_acc:
-            frag_txt = f.split("run1")[1]
+            # frag_txt = f.split("run1")[1]
             # cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
             # cur_wd = float(frag_txt.split("_wd")[-1])
 
-            cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
-            cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
+            # cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
+            # cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
             # 这里不一样的点是选择了尽可能大的mask
             # change into default setting
             if best_mask_token is not None and best_mask_token < cur_mask_token :
                 # get the smallest lr to break tie for stability
-                print('pass best_mask_token < cur_mask_token situation')
+                # print('pass best_mask_token < cur_mask_token situation')
                 best_mask_token = cur_mask_token
                 best_mask_token_piece = cur_mask_token_piece
                 best_val_acc = val_result
@@ -121,14 +124,15 @@ def find_best_MtMtp(files, data_name):
             frag_txt = f.split("run1")[1]
             # best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
             # best_wd = float(frag_txt.split("_wd")[-1])
-            best_mask_token = int(frag_txt.split("/rewind_")[-1].split('_tokens')[0])
-            best_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
+            best_mask_token = cur_mask_token
+            best_mask_token_piece = cur_mask_token_piece
+            print('best_val_acc', best_val_acc)
             print('best_mask_token', best_mask_token, best_mask_token_piece)
         
     return best_mask_token, best_mask_token_piece
 
 
-def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
+def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     """
     Create configs and perform basic setups.
     """
@@ -199,14 +203,14 @@ def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
         cfg.RUN_N_TIMES = 5
         cfg.MODEL.SAVE_CKPT_FINALRUNS = False # change this to true to enable model saving
         cfg.MODEL.SAVE_CKPT = False
-        # find the best lr and best wd
+        cfg.SOLVER.BASE_LR = lr
+        cfg.SOLVER.WEIGHT_DECAY = wd
+
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             
-            cfg.SOLVER.BASE_LR = lr
-            cfg.SOLVER.WEIGHT_DECAY = wd
-            
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
             print('should not be longer than 72', len(files))
+            # print(files)
             # notice that mask tokens and mask token pieces are selected in this process(before)
             
             # print('length of files (should be 72)', len(files))
@@ -214,7 +218,7 @@ def setup(args, lr, wd, final_runs='init_train', run_idx=None, seed=None):
             mt, mtr = int(mt), int(mtr)
         
         else:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/rewind_?_tokens_?_pieces_to_mask/eval_results.pth")
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
@@ -628,7 +632,6 @@ def main(args):
             cfg = setup(
                 args, cfg.SOLVER.BASE_LR, cfg.SOLVER.WEIGHT_DECAY, final_runs='final_runs', run_idx=run_idx+1, seed=seed)
         except ValueError:
-            # already ran
             continue
         train(cfg, args, final_runs=True)
 

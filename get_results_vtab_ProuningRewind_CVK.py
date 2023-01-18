@@ -11,7 +11,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/output_rewind/vtab-dtd_P10_VK1_SHARED_1_INIT_2_ACC_0"
+root = "/home/ch7858/vpt/output_rewind/vtab-sun397_P5_VK5_SHARED_1_INIT_2_ACC_0"
 dataset_type = 'vtab_rewind' # currently support vtab and fgvc
 
 df_list=[]

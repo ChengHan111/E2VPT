@@ -38,10 +38,10 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     elif dataset_type == 'vtab_rewind':
         job_name = job_root.split("/output_rewind/")[1]
     
-    print(job_name)
+    # print(job_name)
     job_name_split = job_name.split("_")
     P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
-    print('!!!!!',P_value, VK_value, Shared, Init)
+    # print('!!!!!',P_value, VK_value, Shared, Init)
     
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]

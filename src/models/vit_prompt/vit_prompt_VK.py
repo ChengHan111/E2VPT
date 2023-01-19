@@ -138,11 +138,11 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
                 # print('222', self.soft_tokens_pieces_mask_cls_token.shape) torch.Size([32, 16])
                 prompt_embeddings = prompt_embeddings * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1)
                 # print('mark1', self.prompt_soft_tokens_pieces_mask_cls_token)
-                print('prompt_embeddings', prompt_embeddings)
+                # print('prompt_embeddings', prompt_embeddings)
             if self.p_vk_config.CLS_TOKEN_MASK == True:
                 prompt_embeddings = prompt_embeddings * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[2]).repeat(B, 1, 1)
                 # print('mark2', self.prompt_soft_tokens_mask_cls_token)
-                print('prompt_embeddings', prompt_embeddings)
+                # print('prompt_embeddings', prompt_embeddings)
         
         x = torch.cat((
                 x[:, :1, :],

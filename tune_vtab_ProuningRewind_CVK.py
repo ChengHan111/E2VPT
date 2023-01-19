@@ -153,6 +153,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
+        MASK_ON_VK = cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK
         if SHARED == True:
             marker = 1
         else:
@@ -167,7 +168,11 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             shared_acc = 1
         else:
             shared_acc = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}"
+        if MASK_ON_VK:
+            on_vk = 1
+        else:
+            on_vk = 0
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_ONVK_{on_vk}"
 
 
     if final_runs == 'init_train':
@@ -541,7 +546,7 @@ def get_lrwd_range(args):
             0.5, 0.25, 0.1, 0.05
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
-        # lr_range = [5.0, 2.5]
+        # lr_range = [5.0]
         # wd_range = [0.01, 0.001]
 
     elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":

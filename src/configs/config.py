@@ -196,7 +196,7 @@ _C.MODEL.P_VK.CLS_TOKEN_PIECE_MASK_PERCENT_NUM = None # set specific num of perc
 _C.MODEL.P_VK.CLS_TOKEN_PIECE_MASK_PERCENT = [10, 20, 30, 40, 50, 60, 70, 80, 90] # percentage applied during selected
 _C.MODEL.P_VK.MIN_NUMBER_CLS_TOKEN_PIECE = 4 # set the lower boundary to avoid overkilled
 
-_C.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM = 16 # new added to devided the pieces of token(for cls_token temporarily)
+_C.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM = 16 # new added to devided the pieces of token(for cls_token temporarily) 16
 _C.MODEL.P_VK.MASK_RESERVE = False # reserve the order of mask or not.
 
 _C.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = -1 # change correpsondingly during train
@@ -206,7 +206,7 @@ _C.MODEL.P_VK.REWIND_OUTPUT_DIR = ""
 _C.MODEL.P_VK.SAVE_REWIND_MODEL = False 
 
 # Based on MASK_CLS_TOKEN == True
-_C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = False # mask value and key instead of cls_token
+_C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = True # mask value and key instead of cls_token
 
 # ----------------------------------------------------------------------
 # Dataset options

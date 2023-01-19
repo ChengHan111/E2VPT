@@ -368,30 +368,29 @@ class Trainer():
             X, targets = self.get_input(inputs)
 
             loss, _ = self.forward_one_batch(X, targets, True)
-        
-            # loss = prompt_model(inputs) 
-            # loss.backward()
-            # print('loss!!!', loss)
             
-        #     # 将对应位置的梯度拿到
             # soft_tokens_importance += prompt_model.enc.transformer.prompt_embeddings.grad
             # print(prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad)
             if self.cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK == False:
-                soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                soft_tokens_importance += prompt_model.enc.prompt_soft_tokens_mask_cls_token.grad
                 for token_i in range(n_soft_tokens):
-                    soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad[token_i]
+                    # changed here
+                    soft_tokens_pieces_importance[token_i] += prompt_model.enc.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                 total_len += 1
             else:
                 # 这里也会不一样 layer变了
-                print(prompt_model)
-                print('pass self.cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK at trainer')
-                soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                # print('pass self.cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK at trainer')
+                # print('0', soft_tokens_importance)
+                print('sss', prompt_model.enc.transformer.encoder.prompt_soft_tokens_mask_cls_token.grad)
+                soft_tokens_importance += prompt_model.enc.transformer.encoder.prompt_soft_tokens_mask_cls_token.grad
                 for token_i in range(n_soft_tokens):
-                    soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad[token_i]
+                    print('ggg', prompt_model.enc.transformer.encoder.prompt_soft_tokens_pieces_mask_cls_token.grad)
+                    soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.encoder.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                 total_len += 1
             
         soft_tokens_importance /= total_len
         soft_tokens_pieces_importance /= total_len
+        
         
         # normalize_scores_by_token
         if self.cfg.MODEL.P_VK.NORMALIZE_SCORES_BY_TOKEN:

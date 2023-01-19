@@ -95,7 +95,7 @@ class Attention_Origin_ViT(nn.Module):
 
 
 class Attention(nn.Module):
-    def __init__(self, qkv_cfg, config, vis):
+    def __init__(self, qkv_cfg, config, vis, prompt_soft_tokens_mask_cls_token, prompt_soft_tokens_pieces_mask_cls_token):
         super(Attention, self).__init__()
         self.vis = vis
         self.num_attention_heads = config.transformer["num_heads"]
@@ -107,6 +107,12 @@ class Attention(nn.Module):
         # print('3', self.all_head_size) 768
         self.config = config
         self.qkv_cfg = qkv_cfg
+    
+        self.prompt_soft_tokens_mask_cls_token = prompt_soft_tokens_mask_cls_token
+        self.prompt_soft_tokens_pieces_mask_cls_token = prompt_soft_tokens_pieces_mask_cls_token
+        # print('aaaaa', self.prompt_soft_tokens_mask_cls_token) # torch.Size([10])
+        # print('bbbbb', self.prompt_soft_tokens_pieces_mask_cls_token) # torch.Size([10, 16])
+        self.soft_token_chunks_num_cls_token = self.soft_token_chunks_num_cls_token = int(self.attention_head_size/self.qkv_cfg.CLS_TOKEN_P_PIECES_NUM)
 
         self.query = Linear(config.hidden_size, self.all_head_size)
         self.key = Linear(config.hidden_size, self.all_head_size)
@@ -118,38 +124,11 @@ class Attention(nn.Module):
 
         self.softmax = Softmax(dim=-1)
         
-        # self-added
-        
         num_layers = self.config.transformer["num_layers"]
         num_tokens = self.qkv_cfg.NUM_TOKENS
         print('num_tokens', num_tokens)
         if self.qkv_cfg.NUM_TOKENS_P is not None:
             print('num_tokens_p', self.qkv_cfg.NUM_TOKENS_P)
-            
-        # new added for cls_token masked
-        if self.p_vk_config.MASK_CLS_TOKEN is True and self.p_vk_config.MASK_CLS_TOKEN_ON_VK is True:
-            if self.p_vk_config.CLS_TOKEN_MASK == True:
-                self.prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(num_tokens), requires_grad=True)
-            
-            if self.p_vk_config.CLS_TOKEN_MASK_PIECES == True:
-                self.prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(num_tokens, self.p_vk_config.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
-                self.soft_token_chunks_num_cls_token = int(config.hidden_size/self.p_vk_config.CLS_TOKEN_P_PIECES_NUM)
-
-            # Rewind status mark here.
-            if self.p_vk_config.MASK_CLS_TOKEN and self.p_vk_config.REWIND_STATUS:
-                
-                soft_token_mask_dir = os.path.join(self.p_vk_config.REWIND_OUTPUT_DIR, 'mask_tokens')
-                assert soft_token_mask_dir is not None
-
-                soft_token_mask_file = os.path.join(soft_token_mask_dir, "{}_soft_tokens_to_mask.json".format(self.p_vk_config.REWIND_MASK_CLS_TOKEN_NUM))
-                soft_token_to_mask = self.load_soft_token_mask_file(soft_token_mask_file) 
-                self.mask_soft_tokens(soft_token_to_mask)
-            
-            if self.p_vk_config.CLS_TOKEN_MASK_PIECES and self.p_vk_config.REWIND_STATUS:
-                soft_tokens_pieces_mask_dir = os.path.join(self.p_vk_config.REWIND_OUTPUT_DIR, 'mask_tokens_pieces')
-                soft_tokens_pieces_mask_file = os.path.join(soft_tokens_pieces_mask_dir, "{}_soft_tokens_pieces_to_mask.json".format(self.p_vk_config.REWIND_MASK_CLS_TOKEN_PIECE_NUM)) # rewind_mask_token_pieces_number
-                soft_tokens_pieces_to_mask = self.load_soft_tokens_pieces_mask_file(soft_tokens_pieces_mask_file)  
-                self.mask_soft_tokens_pieces(soft_tokens_pieces_to_mask)
         
         # add vk prompt layers separate
         if self.qkv_cfg.SHARE_PARAM_KV == False:
@@ -213,27 +192,9 @@ class Attention(nn.Module):
             else:
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
 
-            
-        
         self.QKV_proj = nn.Identity()
         # self.prompt_config.DROPOUT
         self.QKV_dropout = Dropout(self.qkv_cfg.DROPOUT) # should add config here
-    
-    def mask_soft_tokens(self, soft_tokens_to_mask):
-        self.soft_tokens_to_mask = list(soft_tokens_to_mask)
-        for soft_token_idx in self.soft_tokens_to_mask:
-            # print('soft_token_idx',soft_token_idx)
-            self.prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0
-        # Self added no grad during rewind
-        self.prompt_soft_tokens_mask_cls_token.requires_grad_(False)            
-            
-    def mask_soft_tokens_pieces(self, soft_tokens_pieces_to_mask):
-        for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
-            for soft_token_piece in soft_token_pieces:
-                self.prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
-        # Self added no grad during rewind
-        self.prompt_soft_tokens_pieces_mask_cls_token.requires_grad_(False) 
-    
 
     def transpose_for_scores(self, x):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
@@ -313,29 +274,28 @@ class Attention(nn.Module):
                 key_layer_prompt = self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))
                 value_layer_prompt = self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))
                 
-                print('111', key_layer_prompt.shape)
-                print('222', value_layer_prompt.shape)
+                # print('111', key_layer_prompt.shape) # torch.Size([64, 12, 10, 64])
+                # print('222', value_layer_prompt.shape) # torch.Size([64, 12, 10, 64])
                                                     
                 # B, num_head, num_patches, head_size                                  
                 # TODO: support for other branch
-                if self.p_vk_config.MASK_CLS_TOKEN is True and self.p_vk_config.MASK_CLS_TOKEN_ON_VK is True: 
-                    if self.p_vk_config.CLS_TOKEN_MASK_PIECES is True:
-                        print('should pass!')
-                        # print('222', self.soft_tokens_pieces_mask_cls_token.shape) torch.Size([32, 16])
+                if self.qkv_cfg.MASK_CLS_TOKEN is True and self.qkv_cfg.MASK_CLS_TOKEN_ON_VK is True: 
+                    if self.qkv_cfg.CLS_TOKEN_MASK_PIECES is True:
+                        # print('should pass!')
+                        # print('1', self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape) #torch.Size([64, 12, 10, 64])
+                        # print('2', self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape) #torch.Size([64, 12, 10, 64])
+                        # print('3', self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape) #torch.Size([64, 12, 10, 64])
+                        # print('4', self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape) #torch.Size([64, 12, 10, 64])
+                        
                         key_layer_prompt = key_layer_prompt * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1)
                         value_layer_prompt = value_layer_prompt * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1)
-                        print(self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape)
-                        print(self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape)
                         
                         # print('key_layer_prompt', key_layer_prompt)
-                    if self.p_vk_config.CLS_TOKEN_MASK == True:
+                    if self.qkv_cfg.CLS_TOKEN_MASK == True:
                         key_layer_prompt = key_layer_prompt * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1)
                         value_layer_prompt = value_layer_prompt * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1)
-                        print(self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape)
-                        print(self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.attention_head_size).repeat(self.num_attention_heads, 1, 1).repeat(B, 1, 1, 1).shape)
                         # print('key_layer_prompt', key_layer_prompt)
                         
-                        exit()
                 
                 key_layer = torch.cat((key_layer_prompt, key_layer), dim=2)
                 value_layer = torch.cat((value_layer_prompt, value_layer), dim=2)
@@ -527,13 +487,13 @@ class Embeddings(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, qkv_cfg, config, vis):
+    def __init__(self, qkv_cfg, config, vis, prompt_soft_tokens_mask_cls_token, prompt_soft_tokens_pieces_mask_cls_token):
         super(Block, self).__init__()
         self.hidden_size = config.hidden_size
         self.attention_norm = LayerNorm(config.hidden_size, eps=1e-6)
         self.ffn_norm = LayerNorm(config.hidden_size, eps=1e-6)
         self.ffn = Mlp(config)
-        self.attn = Attention(qkv_cfg, config, vis)
+        self.attn = Attention(qkv_cfg, config, vis, prompt_soft_tokens_mask_cls_token, prompt_soft_tokens_pieces_mask_cls_token)
 
     def forward(self, x):
         h = x
@@ -708,17 +668,47 @@ class Encoder(nn.Module):
         self.vis = vis
         self.layer = nn.ModuleList()
         self.encoder_norm = LayerNorm(config.hidden_size, eps=1e-6)
-        print('Num_layers:', config.transformer["num_layers"])
+        # print('Num_layers:', config.transformer["num_layers"])
+        
+        self.qkv_cfg = qkv_cfg
+        num_tokens = self.qkv_cfg.NUM_TOKENS
+        self.num_attention_heads = config.transformer["num_heads"]
+        self.attention_head_size = int(config.hidden_size / self.num_attention_heads)
+        
+        # new added for cls_token masked
+        if self.qkv_cfg.MASK_CLS_TOKEN is True and self.qkv_cfg.MASK_CLS_TOKEN_ON_VK is True:
+            if self.qkv_cfg.CLS_TOKEN_MASK == True:
+                self.prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(num_tokens), requires_grad=True)
+            
+            if self.qkv_cfg.CLS_TOKEN_MASK_PIECES == True:
+                self.prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(num_tokens, self.qkv_cfg.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
+                # self.soft_token_chunks_num_cls_token = int(self.attention_head_size/self.qkv_cfg.CLS_TOKEN_P_PIECES_NUM)
+
+            # Rewind status mark here.
+            if self.qkv_cfg.MASK_CLS_TOKEN and self.qkv_cfg.REWIND_STATUS:
+                
+                soft_token_mask_dir = os.path.join(self.qkv_cfg.REWIND_OUTPUT_DIR, 'mask_tokens')
+                assert soft_token_mask_dir is not None
+
+                soft_token_mask_file = os.path.join(soft_token_mask_dir, "{}_soft_tokens_to_mask.json".format(self.qkv_cfg.REWIND_MASK_CLS_TOKEN_NUM))
+                soft_token_to_mask = self.load_soft_token_mask_file(soft_token_mask_file) 
+                self.mask_soft_tokens(soft_token_to_mask)
+            
+            if self.qkv_cfg.CLS_TOKEN_MASK_PIECES and self.qkv_cfg.REWIND_STATUS:
+                soft_tokens_pieces_mask_dir = os.path.join(self.qkv_cfg.REWIND_OUTPUT_DIR, 'mask_tokens_pieces')
+                soft_tokens_pieces_mask_file = os.path.join(soft_tokens_pieces_mask_dir, "{}_soft_tokens_pieces_to_mask.json".format(self.qkv_cfg.REWIND_MASK_CLS_TOKEN_PIECE_NUM)) # rewind_mask_token_pieces_number
+                soft_tokens_pieces_to_mask = self.load_soft_tokens_pieces_mask_file(soft_tokens_pieces_mask_file)  
+                self.mask_soft_tokens_pieces(soft_tokens_pieces_to_mask)
         
         if qkv_cfg.SHARED_ACCROSS == False: 
             for i in range(config.transformer["num_layers"]):
                 if qkv_cfg.DEEP == True:
-                    layer = Block(qkv_cfg, config, vis)
+                    layer = Block(qkv_cfg, config, vis, self.prompt_soft_tokens_mask_cls_token, self.prompt_soft_tokens_pieces_mask_cls_token)
                     self.layer.append(copy.deepcopy(layer))
                 else:
                     if i == 0:
                         print('Apply on' + str(i) + 'layer')
-                        layer = Block(qkv_cfg, config, vis)
+                        layer = Block(qkv_cfg, config, vis, self.prompt_soft_tokens_mask_cls_token, self.prompt_soft_tokens_pieces_mask_cls_token)
                         self.layer.append(copy.deepcopy(layer))
                     else:
                         print('Apply origin layer (for VK shallow)')
@@ -797,6 +787,24 @@ class Encoder(nn.Module):
                 else:
                     print('under construction!!!!')
 
+    def load_soft_token_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        
+        soft_token_to_mask = set()
+        for mask_number, soft_token in t.items():
+            for soft_token_i in soft_token:
+                soft_token_to_mask.add(soft_token_i) 
+        
+        return soft_token_to_mask
+
+    def load_soft_tokens_pieces_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        soft_tokens_pieces_to_mask = {}
+        for soft_token_idx, soft_token_pieces in t.items():
+            soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
+        return soft_tokens_pieces_to_mask
 
     def forward(self, hidden_states):
         attn_weights = []
@@ -875,6 +883,21 @@ class VisionTransformer_changedVK(nn.Module):
     def forward_cls_layerwise(self, x):
         cls_embeds = self.transformer.forward_cls_layerwise(x)
         return cls_embeds
+    
+    def mask_soft_tokens(self, soft_tokens_to_mask):
+        self.soft_tokens_to_mask = list(soft_tokens_to_mask)
+        for soft_token_idx in self.soft_tokens_to_mask:
+            # print('soft_token_idx',soft_token_idx)
+            self.prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0
+        # Self added no grad during rewind
+        self.prompt_soft_tokens_mask_cls_token.requires_grad_(False)            
+            
+    def mask_soft_tokens_pieces(self, soft_tokens_pieces_to_mask):
+        for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
+            for soft_token_piece in soft_token_pieces:
+                self.prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
+        # Self added no grad during rewind
+        self.prompt_soft_tokens_pieces_mask_cls_token.requires_grad_(False) 
 
     def load_from(self, weights):
         with torch.no_grad():

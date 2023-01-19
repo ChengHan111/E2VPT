@@ -375,7 +375,8 @@ def cal_mt_mtp(cfg, args, final_runs):
     # if train_loader and cfg.MODEL.SAVE_CKPT_FINALRUNS is True:
     if train_loader:
         cls_token_pieces_num = cfg.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM
-        cls_token_num = cfg.MODEL.P_VK.NUM_TOKENS_P
+        # cls_token_num = cfg.MODEL.P_VK.NUM_TOKENS_P
+        cls_token_num = cfg.MODEL.P_VK.NUM_TOKENS # change it into num_tokens
         soft_tokens_importance, soft_tokens_pieces_importance = trainer.calculate_importance(
             cfg, model, train_loader, n_pieces_token=cls_token_pieces_num, n_soft_tokens=cls_token_num)
         
@@ -540,14 +541,14 @@ def get_lrwd_range(args):
         wd_range = [0.01, 0.001, 0.0001, 0.0]
     
     elif args.train_type == "QKV" or args.train_type == "P_VK":
-        lr_range = [
-            5.0, 2.5, 1.0,
-            50.0, 25., 10.0,
-            0.5, 0.25, 0.1, 0.05
-        ]
-        wd_range = [0.01, 0.001, 0.0001, 0.0]
-        # lr_range = [5.0, 2.5]
-        # wd_range = [0.01, 0.001]
+        # lr_range = [
+        #     5.0, 2.5, 1.0,
+        #     50.0, 25., 10.0,
+        #     0.5, 0.25, 0.1, 0.05
+        # ]
+        # wd_range = [0.01, 0.001, 0.0001, 0.0]
+        lr_range = [5.0]
+        wd_range = [0.01, 0.001]
 
     elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":
         lr_range = [
@@ -627,7 +628,7 @@ def main(args):
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
     print('Finish rewind process, get final runs')
-    sleep(5)
+    # sleep(5)
     
     # get best results on rewind options
     # final run 5 times with fixed seed

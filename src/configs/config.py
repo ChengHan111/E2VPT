@@ -206,7 +206,7 @@ _C.MODEL.P_VK.REWIND_OUTPUT_DIR = ""
 _C.MODEL.P_VK.SAVE_REWIND_MODEL = False 
 
 # Based on MASK_CLS_TOKEN == True
-_C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = True # mask value and key instead of cls_token
+_C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = False # mask value and key instead of cls_token (unfinished, does not make sense)
 
 # ----------------------------------------------------------------------
 # Dataset options

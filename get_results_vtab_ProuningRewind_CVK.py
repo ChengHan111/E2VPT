@@ -10,8 +10,9 @@ MODEL_NAME = "sup_vitb16_224"
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-# 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/output_rewind/vtab-svhn_P20_VK5_SHARED_1_INIT_2_ACC_0"
+# 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
+# 两个文件夹下:output_before_pruning + output_rewind
+root = "/home/ch7858/vpt/output_rewind/vtab-smallnorb_P100_VK20_SHARED_1_INIT_2_ACC_0_ONVK_0"
 dataset_type = 'vtab_rewind' # currently support vtab and fgvc
 
 df_list=[]
@@ -19,6 +20,7 @@ for idx, seed in enumerate(["42", "44", "82", "100", "800"]):
     run = idx + 1
 
     files = glob.glob(f"{root}/{MODEL_NAME}/*/run{run}/{LOG_NAME}")
+    print(files)
     for f in files:
         df = get_df(
             files, f"run{run}", root, MODEL_NAME, is_best=False, is_last=True, dataset_type=dataset_type)

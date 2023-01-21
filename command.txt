@@ -286,3 +286,7 @@ Smallnorb_azimuth:
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_ProuningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
 Smallnorb_evaluation: 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_ProuningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+
+
+## get results
+python tune_vtab_ProuningRewind_CVK.py

@@ -12,7 +12,7 @@ pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = "/home/ch7858/vpt/output_rewind/vtab-smallnorb_P100_VK20_SHARED_1_INIT_2_ACC_0_ONVK_0"
+root = "/home/ch7858/vpt/output_rewind/vtab-svhn_P10_VK10_SHARED_1_INIT_2_ACC_0"
 dataset_type = 'vtab_rewind' # currently support vtab and fgvc
 
 df_list=[]
@@ -34,7 +34,7 @@ df["type"] = "P_VK"
 print(df)
 
 f_df = average_df(df, metric_names=["l-test_top1"], take_average=True)
-print(f_df)
+# print(f_df)
 
 best_top_1 = pd.to_numeric(f_df["l-test_top1"]).tolist()[0]
 Prompt_length = f_df["Prompt_length"].tolist()[0][1:]

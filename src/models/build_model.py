@@ -49,6 +49,7 @@ def log_model_info(model, verbose=False):
     model_total_params = sum(p.numel() for p in model.parameters())
     model_grad_params = sum(
         p.numel() for p in model.parameters() if p.requires_grad)
+    # TODO: should make changes here (during rewind process not all parameters are counted as learnable in cls_token prompt)
     logger.info("Total Parameters: {0}\t Gradient Parameters: {1}".format(
         model_total_params, model_grad_params))
     logger.info("tuned percent:%.3f"%(model_grad_params/model_total_params*100))

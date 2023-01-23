@@ -71,7 +71,6 @@ def update_eval(line, eval_dict, data_name):
     
     # self added to rm '"'
     eval_type = eval_type.replace('"', "")
-    print('take below line in vis_utils_pvk.py to enable correct output')
     if 'test' in eval_type:
         eval_type = 'test'
     elif 'val' in eval_type:
@@ -140,17 +139,19 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         if "Total Parameters: " in line:
             total_params = int(line.split("Total Parameters: ")[-1].split("\t")[0])
             gradiented_params = int(line.split("Gradient Parameters: ")[-1].split("\n")[0])
+            
             # for rewind approach, consider subtraction on coresponding parameters.
             if dataset_type == 'vtab_rewind':
                 # print(feat_type)
                 cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
                 cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
                 root_path = job_path.split('/output_rewind')[0]
-                print('cls_token_mask', cls_token_mask)
-                print('cls_token_pieces_mask', cls_token_pieces_mask)
+                # print('cls_token_mask', cls_token_mask)
+                # print('cls_token_pieces_mask', cls_token_pieces_mask)
                 # default as onVK = False # if you wanna change, make changes here
-                mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                # ONVK_0
+                mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 
                 soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
                 prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask = mask_soft_tokens(P_value, soft_token_to_mask)
@@ -162,20 +163,26 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                 
                 # 12, 768 for total_dimension and prompt_dim
                 # notice the difference here, the prompt embeddings should be repeat 12 times as the parameter num.
-                prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768))
+                prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768)) # for a single layer
+                
                 # print(prompt_embeddings.shape) # torch.Size([12, 10, 768])
                 soft_token_chunks_num_cls_token = int(768/CLS_TOKEN_P_PIECES_NUM)
                 prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
-                print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
+                # print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
                 prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
-                print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
+                # print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
                 
                 prompt_embeddings_parameters = 12 * prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
                 
-                prompt_embeddings_parameters_filtered = int(torch.sum(12 * prompt_embeddings))
+                # print('prompt_embeddings_origin', prompt_embeddings_origin)
+                # print('masked_percentage:', (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters)
+                
+                masked_percentage = (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters
+                
+                prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))
                 # print(total_params)
                 parameter_added = (parameter_cls_token_mask + parameter_cls_token_piece_mask)
-                total_params += parameter_added #.data[0]
+                # total_params += parameter_added #.data[0] should not add more (already included)
                 gradiented_params -= prompt_embeddings_parameters_filtered
                 
         if "Rank of current process:" in line:
@@ -188,6 +195,16 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         if " Classification results with " in line:
             # print(line)
             update_eval(line, eval_dict, data_name)
+    
+    if dataset_type == 'vtab_rewind':
+        masked_percentage_value = masked_percentage
+        cls_token_mask_value = cls_token_mask
+        cls_token_pieces_mask_value = cls_token_pieces_mask
+    else:
+        masked_percentage_value = None
+        cls_token_mask_value = None
+        cls_token_pieces_mask_value = None
+    
 
     meta_dict = {
         "data": data_name,
@@ -201,7 +218,10 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         "Prompt_length": P_value,
         "VK_length": VK_value,
         "Shared": Shared,
-        "Init": Init
+        "Init": Init,
+        "Masked_Percentage": masked_percentage_value,
+        "Mask_Value": cls_token_mask_value,
+        "Piece_Value": cls_token_pieces_mask_value,
     }
     v_top1, t_top1 = None, None
     return train_loss, eval_dict, meta_dict, (v_top1, t_top1)

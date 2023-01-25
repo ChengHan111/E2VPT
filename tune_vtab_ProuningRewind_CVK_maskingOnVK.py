@@ -229,7 +229,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         
         print('Go through here (AT least!)')
         print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
-        sleep(10)
+        # sleep(10)
         cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
         
         cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt

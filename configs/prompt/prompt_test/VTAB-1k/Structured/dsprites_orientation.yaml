@@ -3,7 +3,7 @@ RUN_N_TIMES: 1
 DATA:
   NAME: vtab-dsprites(predicted_attribute="label_orientation",num_classes=16)
   DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Structured/"  #TODO: need to specify here
-  NUMBER_CLASSES: 4
+  NUMBER_CLASSES: 16
   MULTILABEL: False
 MODEL:
   TYPE: "vit"

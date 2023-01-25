@@ -227,8 +227,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
-        print('Go through here (AT least!)')
-        print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
+        # print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
         sleep(10)
         cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
         

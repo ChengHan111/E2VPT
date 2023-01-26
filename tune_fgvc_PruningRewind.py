@@ -4,18 +4,107 @@ tune lr, wd for fgvc datasets and other datasets with train / val / test splits,
 import os
 import warnings
 
+import torch
+import glob
 from time import sleep
 from random import randint
 
+import src.utils.logging as logging
 from src.configs.config import get_cfg
 from src.utils.file_io import PathManager
+from src.data import loader as data_loader
+from src.engine.evaluator import Evaluator
+from src.engine.trainer import Trainer
+from src.models.build_model import build_model
 
 from train import train as train_main
-from launch import default_argument_parser
+from launch import default_argument_parser, logging_train_setup
 warnings.filterwarnings("ignore")
-# make small changes
 
-def setup(args, lr, wd, final_runs, check_runtime=True):
+def get_loaders(cfg, logger, final_runs=False):
+    # support two training paradims:
+    # 1) train / val / test, using val to tune
+    # 2) train / val: for imagenet
+
+    if not final_runs:
+        logger.info("Loading training data...")
+        train_loader = data_loader.construct_train_loader(cfg)
+
+        logger.info("Loading validation data...")
+        val_loader = data_loader.construct_val_loader(cfg)
+        # not really nessecary to check the results of test set.
+        test_loader = None
+
+    else:
+        logger.info("Loading training data...")
+        train_loader = data_loader.construct_trainval_loader(cfg)
+
+        # not really nessecary to check the results of val set, but the trainer class does not support no-validation loader yet  # noqa
+        logger.info("Loading validation data...")
+        val_loader = data_loader.construct_val_loader(cfg)
+
+        logger.info("Loading test data...")
+        test_loader = data_loader.construct_test_loader(cfg)
+
+    return train_loader, val_loader, test_loader
+
+def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs):
+    # clear up residual cache from previous runs
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    # regenerate related config here: before the config setup stage.
+    cfg.defrost()
+    cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = cls_token_id
+    cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = cls_token_pieces_id
+    cfg.MODEL.P_VK.REWIND_STATUS = True # change rewind status to true to enable rewind process
+    cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = cfg.OUTPUT_DIR
+    cfg.freeze()
+    
+    print('before cfg setup stage!!!!!!')
+    print('cfg.MODEL.P_VK.REWIND_OUTPUT_DIR', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+    # sleep(5)
+    
+    # main training / eval actions here
+
+    # setup training env including loggers
+    logging_train_setup(args, cfg)
+    logger = logging.get_logger("visual_prompt")
+
+    train_loader, val_loader, test_loader = get_loaders(
+        cfg, logger, final_runs)
+    logger.info("Constructing models...")
+    model_init, cur_device_init = build_model(cfg)
+    
+    model = model_init
+    cur_device = cur_device_init
+
+    logger.info("Setting up Evalutator...")
+    evaluator = Evaluator()
+    logger.info("Setting up Eval_self(for masking stage)")
+    trainer = Trainer(cfg, model, evaluator, cur_device)
+    # if cfg.DO_REWIND is True: 
+    logger.info('Rewind & train')
+    
+    # cls_token_pieces_num = cfg.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM
+    # cls_token_num = cfg.MODEL.P_VK.NUM_TOKENS_P
+    
+    # TODO: remove this line in formal ver.
+    # assert cls_token_id and cls_token_pieces_id here for debugging
+    # cls_token_id, cls_token_pieces_id = 3, 1
+            
+    if train_loader:
+        trainer.train_classifier(train_loader, val_loader, test_loader)
+        # save the evaluation results
+        torch.save(
+            evaluator.results,
+            os.path.join(rewind_model_output_dir, "eval_results.pth")
+        )
+    else:
+        print("No train loader presented. Exit")
+
+
+def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None):
     """
     Create configs and perform basic setups.
     overwrite the 2 parameters in cfg and args
@@ -26,9 +115,10 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
 
 
     # overwrite below four parameters
-    lr = lr / 256 * cfg.DATA.BATCH_SIZE  # update lr based on the batchsize
-    cfg.SOLVER.BASE_LR = lr
-    cfg.SOLVER.WEIGHT_DECAY = wd
+    if final_runs != 'final_runs':
+        lr = lr / 256 * cfg.DATA.BATCH_SIZE  # update lr based on the batchsize
+        cfg.SOLVER.BASE_LR = lr
+        cfg.SOLVER.WEIGHT_DECAY = wd
     
     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
         P_NUM = cfg.MODEL.P_VK.NUM_TOKENS_P
@@ -36,6 +126,7 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
+        MASK_ON_VK = cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK
         if SHARED == True:
             marker = 1
         else:
@@ -50,61 +141,42 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
             shared_acc = 1
         else:
             shared_acc = 0
-        # print(f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}")
+        if MASK_ON_VK:
+            on_vk = 1
+        else:
+            on_vk = 0
         Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}"
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
-    output_dir = cfg.OUTPUT_DIR
-    if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-        output_folder = os.path.join(
-        Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-    )
-    else:   
-        output_folder = os.path.join(
-            cfg.DATA.NAME, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}"
-        )
-    # output_folder = os.path.splitext(os.path.basename(args.config_file))[0]
-
+    
     # train cfg.RUN_N_TIMES times
     if final_runs == 'init_train':
-        count = 1
-        print('Should run times:', cfg.RUN_N_TIMES)
-        print('Current time', count)
-        while count <= cfg.RUN_N_TIMES:
-            output_path = os.path.join(output_dir, output_folder, f"run{count}")
-            # pause for a random time, so concurrent process with same setting won't interfere with each other. # noqa
-            sleep(randint(1, 5))
-            if not PathManager.exists(output_path):
-                PathManager.mkdirs(output_path)
-                cfg.OUTPUT_DIR = output_path
-                break
-            else:
-                count += 1
-        if count > cfg.RUN_N_TIMES:
-            raise ValueError(
-                f"Already run {cfg.RUN_N_TIMES} times for {output_folder}, no need to run more")
+        cfg.MODEL.SAVE_CKPT = False
+        cfg.MODEL.SAVE_CKPT_FINALRUNS = False
     
     elif final_runs == 'before_pruning':
+        # print('go through before_pruning')
         cfg.RUN_N_TIMES = 1
         cfg.MODEL.SAVE_CKPT_FINALRUNS = True # enable ckpt saving during 'before_pruning' stage(need gradient during pruning)
         cfg.MODEL.SAVE_CKPT = False
         # find the best lr and best wd
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
-            lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
+            # files = glob.glob(f"{cfg.OUTPUT_DIR}/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/logs.txt")
+            folder = f"{cfg.OUTPUT_DIR}/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}"
+            lr, wd = find_best_lrwd(folder, cfg.DATA.NAME)
             print('!!!!!!!', lr)
             print('@@@@@@', wd)
         else:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
-            lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
+            raise ValueError("Not supported")
             
-        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_before_pruning"
+        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_fgvc_before_pruning"
         cfg.SOLVER.BASE_LR = lr # this change the corresponding lr and wd (no need to change during pruning)
         cfg.SOLVER.WEIGHT_DECAY = wd
 
     # rewind process
     elif final_runs == 'final_runs':
+        cfg.SEED = seed # put input seed here
         cfg.RUN_N_TIMES = 5
         cfg.MODEL.SAVE_CKPT_FINALRUNS = False # change this to true to enable model saving
         cfg.MODEL.SAVE_CKPT = False
@@ -113,7 +185,8 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
 
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_fgvc_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
+            print(f"{cfg.OUTPUT_DIR}_fgvc_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
             print('should not be longer than 72', len(files))
             # print(files)
             # notice that mask tokens and mask token pieces are selected in this process(before)
@@ -123,19 +196,19 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
             mt, mtr = int(mt), int(mtr)
         
         else:
-            files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
+            files = glob.glob(f"{cfg.OUTPUT_DIR}_fgvc_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
         # print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
         sleep(10)
-        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
+        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_fgvc_rewind"
         
         cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
         cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
         cfg.MODEL.P_VK.REWIND_STATUS = True
         # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-        cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
+        cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_fgvc_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
         # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
         # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
         # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
@@ -153,8 +226,7 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
         output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}")
     else:
         output_folder = os.path.join(Data_Name_With_PVK, cfg.DATA.FEATURE, f"lr{lr}_wd{wd}_mt{mt}_mtr{mtr}")
-        # print(f"lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}_mt{mt}_mtr{mtr}")
-        
+
     # train cfg.RUN_N_TIMES times
     if run_idx is None:
         count = 1
@@ -179,9 +251,110 @@ def setup(args, lr, wd, final_runs, check_runtime=True):
         else:
             raise ValueError(
                 f"Already run run-{run_idx} for {output_folder}, no need to run more")
-        
+    
+    
     cfg.freeze()
     return cfg
+
+def find_best_lrwd(files, data_name):
+    best_lr = None
+    best_wd = None
+    best_val_acc = -1
+    for idx, folder in enumerate(os.listdir(str(files))):
+        log_path = files + '/' + folder + '/run1/logs.txt'
+        try:
+            f = open(log_path, encoding="utf-8")
+        except Exception as e:
+            print(f"Encounter issue: {e} for file {f}")
+            continue
+        
+        line = f.readline()
+        cnt = 1
+        while line:
+            # print("Line {}: {}".format(cnt, line.strip()))
+            val_name = 'val_' + data_name
+            if val_name in line: # change test_files here for reference
+                print('exist!')
+                val_result = float(line.split('top1:')[1].split('top5:')[0][1:-1])
+                
+                if val_result == best_val_acc:
+                    frag_txt = folder
+                    cur_lr = float(frag_txt.split("lr")[-1].split("_wd")[0])
+                    cur_wd = float(frag_txt.split("_wd")[-1])
+                    if best_lr is not None and cur_lr < best_lr:
+                        # get the smallest lr to break tie for stability
+                        best_lr = cur_lr
+                        best_wd = cur_wd
+                        best_val_acc = val_result
+
+                elif val_result > best_val_acc:
+                    best_val_acc = val_result
+                    frag_txt = folder
+                    best_lr = float(frag_txt.split("lr")[-1].split("_wd")[0])
+                    best_wd = float(frag_txt.split("_wd")[-1])
+                
+                
+            line = f.readline()
+            cnt += 1
+    
+    # list useful info
+    print('Combinations:', idx + 1)
+    print('best_lr:', best_lr)
+    print('best_wd', best_wd)
+    
+    return best_lr, best_wd     
+
+        
+def find_best_MtMtp(files, data_name):
+
+    t_name = "val_" + data_name
+    print('t_name', t_name)
+    best_mask_token = None
+    best_mask_token_piece = None
+    best_val_acc = -1
+    for f in files:
+        try:
+            results_dict = torch.load(f, "cpu")
+            epoch = len(results_dict) - 1
+            val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
+            val_result = float(val_result)
+            
+            frag_txt = f.split("run1")[1]
+            cur_mask_token = int(frag_txt.split("/rewind_")[-1].split('_tokens')[0])
+            cur_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
+        except Exception as e:
+            print(f"Encounter issue: {e} for file {f}")
+            continue
+
+        if val_result == best_val_acc:
+            # frag_txt = f.split("run1")[1]
+            # cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
+            # cur_wd = float(frag_txt.split("_wd")[-1])
+
+            # cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
+            # cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
+            # 这里不一样的点是选择了尽可能大的mask
+            # change into default setting
+            if best_mask_token is not None and best_mask_token < cur_mask_token :
+                # get the smallest lr to break tie for stability
+                # print('pass best_mask_token < cur_mask_token situation')
+                best_mask_token = cur_mask_token
+                best_mask_token_piece = cur_mask_token_piece
+                best_val_acc = val_result
+
+        # larger is better for val results
+        elif val_result > best_val_acc:
+            print('PASS!!!!')
+            best_val_acc = val_result
+            frag_txt = f.split("run1")[1]
+            # best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
+            # best_wd = float(frag_txt.split("_wd")[-1])
+            best_mask_token = cur_mask_token
+            best_mask_token_piece = cur_mask_token_piece
+            print('best_val_acc', best_val_acc)
+            print('best_mask_token', best_mask_token, best_mask_token_piece)
+        
+    return best_mask_token, best_mask_token_piece  
 
 def cal_mt_mtp(cfg, args, final_runs):
     # clear up residual cache from previous runs
@@ -269,12 +442,17 @@ def cal_mt_mtp(cfg, args, final_runs):
 
 def QKV_main(args):
     # normal lr range and wd_range
+    # lr_range = [
+    #     5.0, 2.5, 1.0,
+    #     50.0, 25., 10.0,
+    #     0.5, 0.25, 0.1,
+    # ]
+    # wd_range = [0.01, 0.001, 0.0001, 0.0]
     lr_range = [
-        5.0, 2.5, 1.0,
-        50.0, 25., 10.0,
-        0.5, 0.25, 0.1,
+        0.5, 0.25
     ]
-    wd_range = [0.01, 0.001, 0.0001, 0.0]
+    wd_range = [0.01]
+    
     for lr in lr_range:
         for wd in wd_range:
             # set up cfg and args
@@ -287,7 +465,7 @@ def QKV_main(args):
     
     # run and save best lr, wd combination model (only 1 time) before pruning
     cfg = setup(args, 0.1, 0.1, final_runs='before_pruning')
-    train(cfg, args, final_runs=False) # originally True here.
+    train_main(cfg, args) # originally True here.
     
     # keep the same config as before_pruning (but create mask token and mask token pieces json.)
     cal_mt_mtp(cfg, args, final_runs=False)
@@ -326,7 +504,6 @@ def QKV_main(args):
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
     print('Finish rewind process, get final runs')
-    # sleep(5)
     
     # get best results on rewind options
     # final run 5 times with fixed seed
@@ -337,7 +514,7 @@ def QKV_main(args):
                 args, cfg.SOLVER.BASE_LR, cfg.SOLVER.WEIGHT_DECAY, final_runs='final_runs', run_idx=run_idx+1, seed=seed)
         except ValueError:
             continue
-        train(cfg, args, final_runs=True)
+        train_main(cfg, args)
 
 
 def QKV_main_largerrange(args):

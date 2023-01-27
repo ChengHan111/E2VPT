@@ -145,9 +145,10 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
             
             # for rewind approach, consider subtraction on coresponding parameters.
             if dataset_type == 'vtab_rewind' or dataset_type == 'fgvc_rewind':
-                # print(feat_type)
+
                 cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
                 cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
+                print('!!!!',cls_token_mask, cls_token_pieces_mask)
                 if dataset_type == 'vtab_rewind':
                     root_path = job_path.split('/output_rewind')[0]# print('cls_token_mask', cls_token_mask)
                     # print('cls_token_pieces_mask', cls_token_pieces_mask)
@@ -157,8 +158,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                     mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 elif dataset_type == 'fgvc_rewind':
                     root_path = job_path.split('/output_fgvc_rewind')[0]
-                    mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                    mask_tokens_pieces_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                    mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 
                 soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
                 prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask = mask_soft_tokens(P_value, soft_token_to_mask)
@@ -192,6 +193,7 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                 # total_params += parameter_added #.data[0] should not add more (already included)
                 gradiented_params -= prompt_embeddings_parameters_filtered
                 
+                
         if "Rank of current process:" in line:
             num_jobs += 1
         if num_jobs == 2:
@@ -203,7 +205,7 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
             # print(line)
             update_eval(line, eval_dict, data_name)
     
-    if dataset_type == 'vtab_rewind':
+    if dataset_type == 'vtab_rewind' or dataset_type == 'fgvc_rewind':
         masked_percentage_value = masked_percentage
         cls_token_mask_value = cls_token_mask
         cls_token_pieces_mask_value = cls_token_pieces_mask

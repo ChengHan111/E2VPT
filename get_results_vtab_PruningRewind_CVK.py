@@ -12,8 +12,8 @@ pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = "/home/ch7858/vpt/output_rewind/vtab-clevr_P20_VK20_SHARED_1_INIT_2_ACC_0_ONVK_0"
-dataset_type = 'vtab_rewind' # currently support vtab and fgvc
+root = "/home/ch7858/vpt/output_copy/output_finalfinal/vtab-cifar(num_classes=100)_P10_VK5_SHARED_1_INIT_0"
+dataset_type = 'vtab' # currently support vtab and fgvc
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):

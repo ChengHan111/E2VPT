@@ -37,11 +37,12 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
         job_name = job_root.split("/output_rewind/")[1]
+    elif dataset_type == 'fgvc_rewind':
+        job_name = job_root.split("/output_fgvc_rewind/")[1]
     
     # print(job_name)
     job_name_split = job_name.split("_")
     P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
-    # print('!!!!!',P_value, VK_value, Shared, Init)
     
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]
@@ -55,6 +56,8 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         data_name = job_root.split("_P")[0].split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
         data_name = job_root.split("_P")[0].split("/output_rewind/")[1]
+    elif dataset_type == 'fgvc_rewind':
+        data_name = job_root.split("_P")[0].split("/output_fgvc_rewind/")[1]
     
     return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
 
@@ -141,17 +144,21 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
             gradiented_params = int(line.split("Gradient Parameters: ")[-1].split("\n")[0])
             
             # for rewind approach, consider subtraction on coresponding parameters.
-            if dataset_type == 'vtab_rewind':
+            if dataset_type == 'vtab_rewind' or dataset_type == 'fgvc_rewind':
                 # print(feat_type)
                 cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
                 cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
-                root_path = job_path.split('/output_rewind')[0]
-                # print('cls_token_mask', cls_token_mask)
-                # print('cls_token_pieces_mask', cls_token_pieces_mask)
-                # default as onVK = False # if you wanna change, make changes here
-                # ONVK_0
-                mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                if dataset_type == 'vtab_rewind':
+                    root_path = job_path.split('/output_rewind')[0]# print('cls_token_mask', cls_token_mask)
+                    # print('cls_token_pieces_mask', cls_token_pieces_mask)
+                    # default as onVK = False # if you wanna change, make changes here
+                    # ONVK_0
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                elif dataset_type == 'fgvc_rewind':
+                    root_path = job_path.split('/output_fgvc_rewind')[0]
+                    mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_ONVK_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 
                 soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
                 prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask = mask_soft_tokens(P_value, soft_token_to_mask)

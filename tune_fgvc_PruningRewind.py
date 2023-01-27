@@ -442,16 +442,16 @@ def cal_mt_mtp(cfg, args, final_runs):
 
 def QKV_main(args):
     # normal lr range and wd_range
-    # lr_range = [
-    #     5.0, 2.5, 1.0,
-    #     50.0, 25., 10.0,
-    #     0.5, 0.25, 0.1,
-    # ]
-    # wd_range = [0.01, 0.001, 0.0001, 0.0]
     lr_range = [
-        0.5, 0.25
+        5.0, 2.5, 1.0,
+        50.0, 25., 10.0,
+        0.5, 0.25, 0.1,
     ]
-    wd_range = [0.01]
+    wd_range = [0.01, 0.001, 0.0001, 0.0]
+    # lr_range = [
+    #     0.5, 0.25
+    # ]
+    # wd_range = [0.01]
     
     for lr in lr_range:
         for wd in wd_range:

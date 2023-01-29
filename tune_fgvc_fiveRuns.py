@@ -269,7 +269,7 @@ def QKV_main_largerrange(args):
             sleep(randint(1, 10))
 
 def main(args):
-    if args.train_type == "QKV" or "P_VK":
+    if args.train_type == "P_VK":
         QKV_main(args)
 
 if __name__ == '__main__':

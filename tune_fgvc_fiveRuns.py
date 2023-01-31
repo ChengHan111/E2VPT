@@ -71,6 +71,7 @@ def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None)
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
+        BS = cfg.DATA.BATCH_SIZE
         if SHARED == True:
             marker = 1
         else:
@@ -85,7 +86,7 @@ def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None)
             shared_acc = 1
         else:
             shared_acc = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_ORIGIN"
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_ORIGIN"
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1
@@ -269,8 +270,8 @@ def QKV_main_largerrange(args):
             sleep(randint(1, 10))
 
 def main(args):
-    if args.train_type == "P_VK":
-        QKV_main(args)
+    # default for train_type=='P_VK' (design for it)
+    QKV_main(args)
 
 if __name__ == '__main__':
     args = default_argument_parser().parse_args()

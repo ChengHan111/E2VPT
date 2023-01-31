@@ -14,6 +14,7 @@ from .vit_prompt.vit_exp_self import PromptedVisionTransformer_EXPSELF
 from .vit_prompt.swin_transformer import PromptedSwinTransformer
 from .vit_prompt.vit_moco import vit_base as prompt_vit_base
 from .vit_prompt.vit_mae import build_model as prompt_mae_vit_model
+from .vit_prompt.vit_mae_prompt_VK import build_model as prompt_VK_mae_vit_model # new added
 
 # from .vit_prompt.vit_ablations import PromptedAblationVisionTransformer 通过这行可以加入vpt的ablations
 # 先暂时不加 先弄一个vpt的原始版本来进行测试
@@ -49,12 +50,16 @@ MODEL_ZOO = {
 
 
 def build_mae_model(
-    model_type, crop_size, prompt_cfg, model_root, adapter_cfg=None
-):
+    model_type, crop_size, prompt_cfg, p_vk_cfg, model_root, adapter_cfg=None
+): # new added p_vk_cfg
     if prompt_cfg is not None:
         model = prompt_mae_vit_model(model_type, prompt_cfg)
     elif adapter_cfg is not None:
         model = adapter_mae_vit_model(model_type, adapter_cfg)
+    elif p_vk_cfg is not None:
+        print('3. Go through P_VK_cfg --- build_mae_model.py') 
+        # print('should be None (True)', prompt_cfg)
+        model = prompt_VK_mae_vit_model(model_type, p_vk_cfg)
     else:
         model = mae_vit_model(model_type)
     out_dim = model.embed_dim

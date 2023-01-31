@@ -100,6 +100,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
+        BS = cfg.DATA.BATCH_SIZE
         if SHARED == True:
             marker = 1
         else:
@@ -114,7 +115,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             shared_acc = 1
         else:
             shared_acc = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}"
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_ORIGIN"
 
 
     if not final_runs:

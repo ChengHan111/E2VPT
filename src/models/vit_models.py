@@ -313,8 +313,9 @@ class SSLViT(ViT):
 
     def __init__(self, cfg):
         super(SSLViT, self).__init__(cfg)
-
-    def build_backbone(self, prompt_cfg, cfg, adapter_cfg, load_pretrain, vis):
+    # self, prompt_cfg, cfg, adapter_cfg, qkv_cfg, p_vk_cfg, load_pretrain, vis
+    # self, prompt_cfg, cfg, adapter_cfg, load_pretrain, vis
+    def build_backbone(self, prompt_cfg, cfg, adapter_cfg, qkv_cfg, p_vk_cfg, load_pretrain, vis):
         if "moco" in cfg.DATA.FEATURE:
             build_fn = build_mocov3_model
         elif "mae" in cfg.DATA.FEATURE:
@@ -322,7 +323,7 @@ class SSLViT(ViT):
 
         self.enc, self.feat_dim = build_fn(
             cfg.DATA.FEATURE, cfg.DATA.CROPSIZE,
-            prompt_cfg, cfg.MODEL.MODEL_ROOT, adapter_cfg=adapter_cfg
+            prompt_cfg, p_vk_cfg, cfg.MODEL.MODEL_ROOT, adapter_cfg=adapter_cfg
         )
 
         transfer_type = cfg.MODEL.TRANSFER_TYPE
@@ -377,6 +378,14 @@ class SSLViT(ViT):
                 if "adapter" not in k:
                     p.requires_grad = False
 
+        elif transfer_type == "P_VK": # add bias term here for exp.
+            for k, p in self.enc.named_parameters():
+                print('#####', k)
+                if "QKV" not in k and 'prompt' not in k: 
+                    p.requires_grad = False
+                    print(p.requires_grad)
+        
+        
         else:
             raise ValueError("transfer type {} is not supported".format(
                 transfer_type))

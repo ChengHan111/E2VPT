@@ -1,0 +1,12 @@
+_BASE_: "../../../../base-prompt_changed_P_VK_ssl.yaml"
+RUN_N_TIMES: 1
+DATA:
+  NAME: "vtab-svhn"
+  DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Natural/"  #TODO: need to specify here
+  NUMBER_CLASSES: 10
+  MULTILABEL: False
+MODEL:
+  TYPE: "ssl-vit"
+SOLVER:
+  BASE_LR: 0.01
+  WEIGHT_DECAY: 0.001

@@ -151,3 +151,5 @@ dmypy.json
 /output_before_pruning
 /output_copy
 /output_rewind
+/output_fgvc_before_pruning
+/output_fgvc_rewind

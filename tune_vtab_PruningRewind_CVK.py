@@ -193,8 +193,8 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
             lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-            print('!!!!!!!', lr)
-            print('@@@@@@', wd)
+            # print('!!!!!!!', lr)
+            # print('@@@@@@', wd)
         else:
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
             lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
@@ -538,7 +538,8 @@ def get_lrwd_range(args):
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
     
-    elif args.train_type == "QKV" or args.train_type == "P_VK":
+    # elif args.train_type == "QKV" or args.train_type == "P_VK":
+    elif args.train_type == "P_VK":
         lr_range = [
             5.0, 2.5, 1.0,
             50.0, 25., 10.0,

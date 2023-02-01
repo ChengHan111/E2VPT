@@ -1,0 +1,12 @@
+_BASE_: "../../../base-prompt_changed_P_VK_ssl_moco.yaml"
+RUN_N_TIMES: 1
+DATA:
+  NAME: "nabirds"
+  DATAPATH: "/shared/kgcoe-research/spl/fgvc/nabirds"  #TODO: need to specify here
+  NUMBER_CLASSES: 555
+  MULTILABEL: False
+MODEL:
+  TYPE: "ssl-vit"
+SOLVER:
+  BASE_LR: 0.1
+  WEIGHT_DECAY: 0.01

@@ -153,7 +153,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         SHARED = cfg.MODEL.P_VK.SHARE_PARAM_KV
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
-        MASK_ON_VK = cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK
+        BS = cfg.DATA.BATCH_SIZE
         if SHARED == True:
             marker = 1
         else:
@@ -168,11 +168,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             shared_acc = 1
         else:
             shared_acc = 0
-        if MASK_ON_VK:
-            on_vk = 1
-        else:
-            on_vk = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_ONVK_{on_vk}"
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}"
 
 
     if final_runs == 'init_train':

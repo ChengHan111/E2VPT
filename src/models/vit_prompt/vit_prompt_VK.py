@@ -175,7 +175,7 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
         num_layers = self.vit_config.transformer["num_layers"]
 
         for i in range(num_layers):
-            # print(i)
+
             if i == 0:
                 hidden_states, weights = self.encoder.layer[i](embedding_output)
             else:

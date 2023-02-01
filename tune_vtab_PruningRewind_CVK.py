@@ -154,6 +154,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         INIT = cfg.MODEL.P_VK.ORIGIN_INIT
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
         BS = cfg.DATA.BATCH_SIZE
+        LAYER_BEHIND = cfg.MODEL.P_VK.LAYER_BEHIND
         if SHARED == True:
             marker = 1
         else:
@@ -168,7 +169,11 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             shared_acc = 1
         else:
             shared_acc = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}"
+        if LAYER_BEHIND == True:
+            layer_behind = 1
+        else:
+            layer_behind = 0
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}"
 
 
     if final_runs == 'init_train':

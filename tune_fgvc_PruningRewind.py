@@ -128,6 +128,7 @@ def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None)
         SHARED_ACC = cfg.MODEL.P_VK.SHARED_ACCROSS
         MASK_ON_VK = cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK
         BS = cfg.DATA.BATCH_SIZE
+        LAYER_BEHIND = cfg.MODEL.P_VK.LAYER_BEHIND
         if SHARED == True:
             marker = 1
         else:
@@ -146,7 +147,11 @@ def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None)
             on_vk = 1
         else:
             on_vk = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}"
+        if LAYER_BEHIND == True:
+            layer_behind = 1
+        else:
+            layer_behind = 0
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}"
     
     # setup output dir
     # output_dir / data_name / feature_name / lr_wd / run1

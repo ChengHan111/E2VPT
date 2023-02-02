@@ -49,6 +49,34 @@ class PromptedVisionTransformerMoCo_Prompt_VK(VisionTransformerMoCo):
 
         else:
             raise ValueError("Other initiation scheme is not supported")
+        
+        # new added for cls_token masked
+        if self.p_vk_cfg.MASK_CLS_TOKEN is True:
+            if self.p_vk_cfg.CLS_TOKEN_MASK == True:
+                self.prompt_soft_tokens_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P), requires_grad=True)
+            
+            if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES == True:
+                self.prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(self.num_tokens_P, self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
+                self.soft_token_chunks_num_cls_token = int(self.embed_dim/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
+
+            # Rewind status mark here.
+            if self.p_vk_cfg.MASK_CLS_TOKEN and self.p_vk_cfg.REWIND_STATUS:
+                
+                soft_token_mask_dir = os.path.join(self.p_vk_cfg.REWIND_OUTPUT_DIR, 'mask_tokens')
+                assert soft_token_mask_dir is not None
+
+                soft_token_mask_file = os.path.join(soft_token_mask_dir, "{}_soft_tokens_to_mask.json".format(self.p_vk_cfg.REWIND_MASK_CLS_TOKEN_NUM))
+                soft_token_to_mask = self.load_soft_token_mask_file(soft_token_mask_file) 
+                self.mask_soft_tokens(soft_token_to_mask)
+            
+            if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES and self.p_vk_cfg.REWIND_STATUS:
+                soft_tokens_pieces_mask_dir = os.path.join(self.p_vk_cfg.REWIND_OUTPUT_DIR, 'mask_tokens_pieces')
+                soft_tokens_pieces_mask_file = os.path.join(soft_tokens_pieces_mask_dir, "{}_soft_tokens_pieces_to_mask.json".format(self.p_vk_cfg.REWIND_MASK_CLS_TOKEN_PIECE_NUM)) # rewind_mask_token_pieces_number
+                soft_tokens_pieces_to_mask = self.load_soft_tokens_pieces_mask_file(soft_tokens_pieces_mask_file)  
+                self.mask_soft_tokens_pieces(soft_tokens_pieces_to_mask)
+        
+        # add drop-out or not
+        self.prompt_dropout = Dropout(self.p_vk_cfg.DROPOUT_P)
 
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings

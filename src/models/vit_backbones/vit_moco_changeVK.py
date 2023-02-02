@@ -30,14 +30,14 @@ class VisionTransformerMoCo(VisionTransformer_changeVK):
         
         ##
         self.p_vk_cfg = p_vk_cfg
-        print('p_vk_cfg in VisionTransformerMoCo', p_vk_cfg)      
-          
+        # print('p_vk_cfg in VisionTransformerMoCo', p_vk_cfg)      
         del self.blocks
         
-        print(self.depth, self.num_heads, self.mlp_ratio,
-              self.qkv_bias, self.drop_rate, self.attn_drop_rate,
-              self.dpr, self.norm_layer,self.act_layer)
+        # print(self.depth, self.num_heads, self.mlp_ratio,
+        #       self.qkv_bias, self.drop_rate, self.attn_drop_rate,
+        #       self.dpr, self.norm_layer,self.act_layer)
         
+        # redefine blocks
         self.blocks = nn.Sequential(*[
             Block_VK(
                 p_vk_cfg=p_vk_cfg, dim=self.embed_dim, num_heads=self.num_heads, mlp_ratio=self.mlp_ratio, qkv_bias=self.qkv_bias, drop=self.drop_rate,

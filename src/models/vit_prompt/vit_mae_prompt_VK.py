@@ -101,6 +101,21 @@ class PromptedVisionTransformer_Prompt_VK(VisionTransformer):
             soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
         return soft_tokens_pieces_to_mask
 
+    def mask_soft_tokens(self, soft_tokens_to_mask):
+        self.soft_tokens_to_mask = list(soft_tokens_to_mask)
+        for soft_token_idx in self.soft_tokens_to_mask:
+            # print('soft_token_idx',soft_token_idx)
+            self.prompt_soft_tokens_mask_cls_token.data[soft_token_idx] = 0
+        # Self added no grad during rewind
+        self.prompt_soft_tokens_mask_cls_token.requires_grad_(False)            
+            
+    def mask_soft_tokens_pieces(self, soft_tokens_pieces_to_mask):
+        for soft_token_id, soft_token_pieces in soft_tokens_pieces_to_mask.items():
+            for soft_token_piece in soft_token_pieces:
+                self.prompt_soft_tokens_pieces_mask_cls_token.data[soft_token_id][soft_token_piece] = 0
+        # Self added no grad during rewind
+        self.prompt_soft_tokens_pieces_mask_cls_token.requires_grad_(False) 
+
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings
         B = x.shape[0]

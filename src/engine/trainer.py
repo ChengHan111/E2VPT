@@ -372,10 +372,22 @@ class Trainer():
             # soft_tokens_importance += prompt_model.enc.transformer.prompt_embeddings.grad
             # print(prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad)
             if self.cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK == False:
-                soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                if cfg.MODEL.TYPE == "vit":
+                    soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                elif cfg.MODEL.TYPE == "ssl-vit":
+                    soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                else:
+                    ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens")
+                    
                 for token_i in range(n_soft_tokens):
                     # changed here
-                    soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
+                    if cfg.MODEL.TYPE == "vit":
+                        soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
+                    elif cfg.MODEL.TYPE == "ssl-vit":
+                        soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
+                    else:
+                        ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens_pieces")
+                
                 total_len += 1
             else:
                 # 这里也会不一样 layer变了

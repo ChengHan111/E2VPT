@@ -119,7 +119,6 @@ def find_best_MtMtp(files, data_name):
 
         # larger is better for val results
         elif val_result > best_val_acc:
-            print('PASS!!!!')
             best_val_acc = val_result
             frag_txt = f.split("run1")[1]
             # best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
@@ -228,8 +227,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
-        # print('cfg.OUTPUT_DIR', cfg.OUTPUT_DIR)
-        sleep(10)
         cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
         
         cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
@@ -237,9 +234,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         cfg.MODEL.P_VK.REWIND_STATUS = True
         # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
         cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-        # print('00000', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-        # print('11111', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM)
-        # print('22222', cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM)
         print('At final runs:', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
         
     else:
@@ -448,7 +442,6 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
     
     print('before cfg setup stage!!!!!!')
     print('cfg.MODEL.P_VK.REWIND_OUTPUT_DIR', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
-    # sleep(5)
     
     # main training / eval actions here
 

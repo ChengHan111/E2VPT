@@ -12,14 +12,14 @@ from operator import mul
 from torch.nn import Conv2d, Dropout
 from timm.models.vision_transformer import _cfg
 
-from ..vit_backbones.vit_moco import VisionTransformerMoCo
+from ..vit_backbones.vit_moco_changeVK import VisionTransformerMoCo
 from ...utils import logging
 logger = logging.get_logger("visual_prompt")
 
 
 class PromptedVisionTransformerMoCo_Prompt_VK(VisionTransformerMoCo):
     def __init__(self, p_vk_cfg, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(p_vk_cfg, **kwargs)
         self.p_vk_cfg = p_vk_cfg
 
         if self.p_vk_cfg.DEEP and self.p_vk_cfg.LOCATION not in ["prepend", ]:

@@ -10,7 +10,7 @@ from torch.nn import Dropout
 from functools import partial, reduce
 from operator import mul
 
-from timm.models.vision_transformer import VisionTransformer_changeVK, _cfg
+from timm.models.vision_transformer_changeVK import VisionTransformer_changeVK, _cfg
 from timm.models.layers.helpers import to_2tuple
 from timm.models.layers import PatchEmbed
 
@@ -22,8 +22,8 @@ __all__ = [
 ]
 
 
-class VisionTransformerMoCo(VisionTransformer):
-    def __init__(self, stop_grad_conv1=False, **kwargs):
+class VisionTransformerMoCo(VisionTransformer_changeVK):
+    def __init__(self, p_vk_cfg, stop_grad_conv1=False, **kwargs):
         super().__init__(**kwargs)
         # Use fixed 2D sin-cos position embedding
         self.build_2d_sincos_position_embedding()

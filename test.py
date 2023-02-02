@@ -45,3 +45,630 @@ def determine_mask_sequence(n_pieces_token=16, n_soft_tokens=20):
     return soft_token_mask_sequence, token_piece_mask_sequence
 
 # determine_mask_sequence()
+
+
+1. should pass here!
+2. go through vit_models.py -- P_VK(Prompt with value and key)
+3. Go through P_VK_cfg --- build_mocov3_model.py
+##### cls_token
+False
+##### pos_embed
+False
+##### prompt_embeddings
+##### deep_prompt_embeddings
+##### prompt_soft_tokens_mask_cls_token
+##### prompt_soft_tokens_pieces_mask_cls_token
+##### patch_embed.proj.weight
+False
+##### patch_embed.proj.bias
+False
+##### blocks.0.norm1.weight
+False
+##### blocks.0.norm1.bias
+False
+##### blocks.0.attn.qkv.weight
+False
+##### blocks.0.attn.qkv.bias
+False
+##### blocks.0.attn.proj.weight
+False
+##### blocks.0.attn.proj.bias
+False
+##### blocks.0.norm2.weight
+False
+##### blocks.0.norm2.bias
+False
+##### blocks.0.mlp.fc1.weight
+False
+##### blocks.0.mlp.fc1.bias
+False
+##### blocks.0.mlp.fc2.weight
+False
+##### blocks.0.mlp.fc2.bias
+False
+##### blocks.1.norm1.weight
+False
+##### blocks.1.norm1.bias
+False
+##### blocks.1.attn.qkv.weight
+False
+##### blocks.1.attn.qkv.bias
+False
+##### blocks.1.attn.proj.weight
+False
+##### blocks.1.attn.proj.bias
+False
+##### blocks.1.norm2.weight
+False
+##### blocks.1.norm2.bias
+False
+##### blocks.1.mlp.fc1.weight
+False
+##### blocks.1.mlp.fc1.bias
+False
+##### blocks.1.mlp.fc2.weight
+False
+##### blocks.1.mlp.fc2.bias
+False
+##### blocks.2.norm1.weight
+False
+##### blocks.2.norm1.bias
+False
+##### blocks.2.attn.qkv.weight
+False
+##### blocks.2.attn.qkv.bias
+False
+##### blocks.2.attn.proj.weight
+False
+##### blocks.2.attn.proj.bias
+False
+##### blocks.2.norm2.weight
+False
+##### blocks.2.norm2.bias
+False
+##### blocks.2.mlp.fc1.weight
+False
+##### blocks.2.mlp.fc1.bias
+False
+##### blocks.2.mlp.fc2.weight
+False
+##### blocks.2.mlp.fc2.bias
+False
+##### blocks.3.norm1.weight
+False
+##### blocks.3.norm1.bias
+False
+##### blocks.3.attn.qkv.weight
+False
+##### blocks.3.attn.qkv.bias
+False
+##### blocks.3.attn.proj.weight
+False
+##### blocks.3.attn.proj.bias
+False
+##### blocks.3.norm2.weight
+False
+##### blocks.3.norm2.bias
+False
+##### blocks.3.mlp.fc1.weight
+False
+##### blocks.3.mlp.fc1.bias
+False
+##### blocks.3.mlp.fc2.weight
+False
+##### blocks.3.mlp.fc2.bias
+False
+##### blocks.4.norm1.weight
+False
+##### blocks.4.norm1.bias
+False
+##### blocks.4.attn.qkv.weight
+False
+##### blocks.4.attn.qkv.bias
+False
+##### blocks.4.attn.proj.weight
+False
+##### blocks.4.attn.proj.bias
+False
+##### blocks.4.norm2.weight
+False
+##### blocks.4.norm2.bias
+False
+##### blocks.4.mlp.fc1.weight
+False
+##### blocks.4.mlp.fc1.bias
+False
+##### blocks.4.mlp.fc2.weight
+False
+##### blocks.4.mlp.fc2.bias
+False
+##### blocks.5.norm1.weight
+False
+##### blocks.5.norm1.bias
+False
+##### blocks.5.attn.qkv.weight
+False
+##### blocks.5.attn.qkv.bias
+False
+##### blocks.5.attn.proj.weight
+False
+##### blocks.5.attn.proj.bias
+False
+##### blocks.5.norm2.weight
+False
+##### blocks.5.norm2.bias
+False
+##### blocks.5.mlp.fc1.weight
+False
+##### blocks.5.mlp.fc1.bias
+False
+##### blocks.5.mlp.fc2.weight
+False
+##### blocks.5.mlp.fc2.bias
+False
+##### blocks.6.norm1.weight
+False
+##### blocks.6.norm1.bias
+False
+##### blocks.6.attn.qkv.weight
+False
+##### blocks.6.attn.qkv.bias
+False
+##### blocks.6.attn.proj.weight
+False
+##### blocks.6.attn.proj.bias
+False
+##### blocks.6.norm2.weight
+False
+##### blocks.6.norm2.bias
+False
+##### blocks.6.mlp.fc1.weight
+False
+##### blocks.6.mlp.fc1.bias
+False
+##### blocks.6.mlp.fc2.weight
+False
+##### blocks.6.mlp.fc2.bias
+False
+##### blocks.7.norm1.weight
+False
+##### blocks.7.norm1.bias
+False
+##### blocks.7.attn.qkv.weight
+False
+##### blocks.7.attn.qkv.bias
+False
+##### blocks.7.attn.proj.weight
+False
+##### blocks.7.attn.proj.bias
+False
+##### blocks.7.norm2.weight
+False
+##### blocks.7.norm2.bias
+False
+##### blocks.7.mlp.fc1.weight
+False
+##### blocks.7.mlp.fc1.bias
+False
+##### blocks.7.mlp.fc2.weight
+False
+##### blocks.7.mlp.fc2.bias
+False
+##### blocks.8.norm1.weight
+False
+##### blocks.8.norm1.bias
+False
+##### blocks.8.attn.qkv.weight
+False
+##### blocks.8.attn.qkv.bias
+False
+##### blocks.8.attn.proj.weight
+False
+##### blocks.8.attn.proj.bias
+False
+##### blocks.8.norm2.weight
+False
+##### blocks.8.norm2.bias
+False
+##### blocks.8.mlp.fc1.weight
+False
+##### blocks.8.mlp.fc1.bias
+False
+##### blocks.8.mlp.fc2.weight
+False
+##### blocks.8.mlp.fc2.bias
+False
+##### blocks.9.norm1.weight
+False
+##### blocks.9.norm1.bias
+False
+##### blocks.9.attn.qkv.weight
+False
+##### blocks.9.attn.qkv.bias
+False
+##### blocks.9.attn.proj.weight
+False
+##### blocks.9.attn.proj.bias
+False
+##### blocks.9.norm2.weight
+False
+##### blocks.9.norm2.bias
+False
+##### blocks.9.mlp.fc1.weight
+False
+##### blocks.9.mlp.fc1.bias
+False
+##### blocks.9.mlp.fc2.weight
+False
+##### blocks.9.mlp.fc2.bias
+False
+##### blocks.10.norm1.weight
+False
+##### blocks.10.norm1.bias
+False
+##### blocks.10.attn.qkv.weight
+False
+##### blocks.10.attn.qkv.bias
+False
+##### blocks.10.attn.proj.weight
+False
+##### blocks.10.attn.proj.bias
+False
+##### blocks.10.norm2.weight
+False
+##### blocks.10.norm2.bias
+False
+##### blocks.10.mlp.fc1.weight
+False
+##### blocks.10.mlp.fc1.bias
+False
+##### blocks.10.mlp.fc2.weight
+False
+##### blocks.10.mlp.fc2.bias
+False
+##### blocks.11.norm1.weight
+False
+##### blocks.11.norm1.bias
+False
+##### blocks.11.attn.qkv.weight
+False
+##### blocks.11.attn.qkv.bias
+False
+##### blocks.11.attn.proj.weight
+False
+##### blocks.11.attn.proj.bias
+False
+##### blocks.11.norm2.weight
+False
+##### blocks.11.norm2.bias
+False
+##### blocks.11.mlp.fc1.weight
+False
+##### blocks.11.mlp.fc1.bias
+False
+##### blocks.11.mlp.fc2.weight
+False
+##### blocks.11.mlp.fc2.bias
+False
+##### norm.weight
+False
+##### norm.bias
+False
+
+
+##### cls_token
+False
+##### pos_embed
+False
+##### prompt_embeddings
+##### deep_prompt_embeddings
+##### prompt_soft_tokens_mask_cls_token
+##### prompt_soft_tokens_pieces_mask_cls_token
+##### patch_embed.proj.weight
+False
+##### patch_embed.proj.bias
+False
+##### blocks.0.norm1.weight
+False
+##### blocks.0.norm1.bias
+False
+##### blocks.0.attn.deep_QKV_embeddings
+##### blocks.0.attn.qkv.weight
+False
+##### blocks.0.attn.qkv.bias
+False
+##### blocks.0.attn.proj.weight
+False
+##### blocks.0.attn.proj.bias
+False
+##### blocks.0.norm2.weight
+False
+##### blocks.0.norm2.bias
+False
+##### blocks.0.mlp.fc1.weight
+False
+##### blocks.0.mlp.fc1.bias
+False
+##### blocks.0.mlp.fc2.weight
+False
+##### blocks.0.mlp.fc2.bias
+False
+##### blocks.1.norm1.weight
+False
+##### blocks.1.norm1.bias
+False
+##### blocks.1.attn.deep_QKV_embeddings
+##### blocks.1.attn.qkv.weight
+False
+##### blocks.1.attn.qkv.bias
+False
+##### blocks.1.attn.proj.weight
+False
+##### blocks.1.attn.proj.bias
+False
+##### blocks.1.norm2.weight
+False
+##### blocks.1.norm2.bias
+False
+##### blocks.1.mlp.fc1.weight
+False
+##### blocks.1.mlp.fc1.bias
+False
+##### blocks.1.mlp.fc2.weight
+False
+##### blocks.1.mlp.fc2.bias
+False
+##### blocks.2.norm1.weight
+False
+##### blocks.2.norm1.bias
+False
+##### blocks.2.attn.deep_QKV_embeddings
+##### blocks.2.attn.qkv.weight
+False
+##### blocks.2.attn.qkv.bias
+False
+##### blocks.2.attn.proj.weight
+False
+##### blocks.2.attn.proj.bias
+False
+##### blocks.2.norm2.weight
+False
+##### blocks.2.norm2.bias
+False
+##### blocks.2.mlp.fc1.weight
+False
+##### blocks.2.mlp.fc1.bias
+False
+##### blocks.2.mlp.fc2.weight
+False
+##### blocks.2.mlp.fc2.bias
+False
+##### blocks.3.norm1.weight
+False
+##### blocks.3.norm1.bias
+False
+##### blocks.3.attn.deep_QKV_embeddings
+##### blocks.3.attn.qkv.weight
+False
+##### blocks.3.attn.qkv.bias
+False
+##### blocks.3.attn.proj.weight
+False
+##### blocks.3.attn.proj.bias
+False
+##### blocks.3.norm2.weight
+False
+##### blocks.3.norm2.bias
+False
+##### blocks.3.mlp.fc1.weight
+False
+##### blocks.3.mlp.fc1.bias
+False
+##### blocks.3.mlp.fc2.weight
+False
+##### blocks.3.mlp.fc2.bias
+False
+##### blocks.4.norm1.weight
+False
+##### blocks.4.norm1.bias
+False
+##### blocks.4.attn.deep_QKV_embeddings
+##### blocks.4.attn.qkv.weight
+False
+##### blocks.4.attn.qkv.bias
+False
+##### blocks.4.attn.proj.weight
+False
+##### blocks.4.attn.proj.bias
+False
+##### blocks.4.norm2.weight
+False
+##### blocks.4.norm2.bias
+False
+##### blocks.4.mlp.fc1.weight
+False
+##### blocks.4.mlp.fc1.bias
+False
+##### blocks.4.mlp.fc2.weight
+False
+##### blocks.4.mlp.fc2.bias
+False
+##### blocks.5.norm1.weight
+False
+##### blocks.5.norm1.bias
+False
+##### blocks.5.attn.deep_QKV_embeddings
+##### blocks.5.attn.qkv.weight
+False
+##### blocks.5.attn.qkv.bias
+False
+##### blocks.5.attn.proj.weight
+False
+##### blocks.5.attn.proj.bias
+False
+##### blocks.5.norm2.weight
+False
+##### blocks.5.norm2.bias
+False
+##### blocks.5.mlp.fc1.weight
+False
+##### blocks.5.mlp.fc1.bias
+False
+##### blocks.5.mlp.fc2.weight
+False
+##### blocks.5.mlp.fc2.bias
+False
+##### blocks.6.norm1.weight
+False
+##### blocks.6.norm1.bias
+False
+##### blocks.6.attn.deep_QKV_embeddings
+##### blocks.6.attn.qkv.weight
+False
+##### blocks.6.attn.qkv.bias
+False
+##### blocks.6.attn.proj.weight
+False
+##### blocks.6.attn.proj.bias
+False
+##### blocks.6.norm2.weight
+False
+##### blocks.6.norm2.bias
+False
+##### blocks.6.mlp.fc1.weight
+False
+##### blocks.6.mlp.fc1.bias
+False
+##### blocks.6.mlp.fc2.weight
+False
+##### blocks.6.mlp.fc2.bias
+False
+##### blocks.7.norm1.weight
+False
+##### blocks.7.norm1.bias
+False
+##### blocks.7.attn.deep_QKV_embeddings
+##### blocks.7.attn.qkv.weight
+False
+##### blocks.7.attn.qkv.bias
+False
+##### blocks.7.attn.proj.weight
+False
+##### blocks.7.attn.proj.bias
+False
+##### blocks.7.norm2.weight
+False
+##### blocks.7.norm2.bias
+False
+##### blocks.7.mlp.fc1.weight
+False
+##### blocks.7.mlp.fc1.bias
+False
+##### blocks.7.mlp.fc2.weight
+False
+##### blocks.7.mlp.fc2.bias
+False
+##### blocks.8.norm1.weight
+False
+##### blocks.8.norm1.bias
+False
+##### blocks.8.attn.deep_QKV_embeddings
+##### blocks.8.attn.qkv.weight
+False
+##### blocks.8.attn.qkv.bias
+False
+##### blocks.8.attn.proj.weight
+False
+##### blocks.8.attn.proj.bias
+False
+##### blocks.8.norm2.weight
+False
+##### blocks.8.norm2.bias
+False
+##### blocks.8.mlp.fc1.weight
+False
+##### blocks.8.mlp.fc1.bias
+False
+##### blocks.8.mlp.fc2.weight
+False
+##### blocks.8.mlp.fc2.bias
+False
+##### blocks.9.norm1.weight
+False
+##### blocks.9.norm1.bias
+False
+##### blocks.9.attn.deep_QKV_embeddings
+##### blocks.9.attn.qkv.weight
+False
+##### blocks.9.attn.qkv.bias
+False
+##### blocks.9.attn.proj.weight
+False
+##### blocks.9.attn.proj.bias
+False
+##### blocks.9.norm2.weight
+False
+##### blocks.9.norm2.bias
+False
+##### blocks.9.mlp.fc1.weight
+False
+##### blocks.9.mlp.fc1.bias
+False
+##### blocks.9.mlp.fc2.weight
+False
+##### blocks.9.mlp.fc2.bias
+False
+##### blocks.10.norm1.weight
+False
+##### blocks.10.norm1.bias
+False
+##### blocks.10.attn.deep_QKV_embeddings
+##### blocks.10.attn.qkv.weight
+False
+##### blocks.10.attn.qkv.bias
+False
+##### blocks.10.attn.proj.weight
+False
+##### blocks.10.attn.proj.bias
+False
+##### blocks.10.norm2.weight
+False
+##### blocks.10.norm2.bias
+False
+##### blocks.10.mlp.fc1.weight
+False
+##### blocks.10.mlp.fc1.bias
+False
+##### blocks.10.mlp.fc2.weight
+False
+##### blocks.10.mlp.fc2.bias
+False
+##### blocks.11.norm1.weight
+False
+##### blocks.11.norm1.bias
+False
+##### blocks.11.attn.deep_QKV_embeddings
+##### blocks.11.attn.qkv.weight
+False
+##### blocks.11.attn.qkv.bias
+False
+##### blocks.11.attn.proj.weight
+False
+##### blocks.11.attn.proj.bias
+False
+##### blocks.11.norm2.weight
+False
+##### blocks.11.norm2.bias
+False
+##### blocks.11.mlp.fc1.weight
+False
+##### blocks.11.mlp.fc1.bias
+False
+##### blocks.11.mlp.fc2.weight
+False
+##### blocks.11.mlp.fc2.bias
+False
+##### fc_norm.weight
+False
+##### fc_norm.bias
+False

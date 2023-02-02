@@ -13,11 +13,13 @@ from torch.nn import Conv2d, Dropout
 from timm.models.vision_transformer import _cfg
 
 # from ..vit_backbones.vit_mae import VisionTransformer
+import os
+import json
 from ..vit_backbones.vit_mae_changeVK import VisionTransformer
 from ...utils import logging
 logger = logging.get_logger("visual_prompt")
 
-
+#TODO add mae for the title
 class PromptedVisionTransformer_Prompt_VK(VisionTransformer):
     def __init__(self, p_vk_cfg, **kwargs):
         super().__init__(p_vk_cfg, **kwargs)
@@ -79,6 +81,25 @@ class PromptedVisionTransformer_Prompt_VK(VisionTransformer):
         
         # add drop-out or not
         self.prompt_dropout = Dropout(self.p_vk_cfg.DROPOUT_P)
+    
+    def load_soft_token_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        
+        soft_token_to_mask = set()
+        for mask_number, soft_token in t.items():
+            for soft_token_i in soft_token:
+                soft_token_to_mask.add(soft_token_i) 
+        
+        return soft_token_to_mask
+
+    def load_soft_tokens_pieces_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        soft_tokens_pieces_to_mask = {}
+        for soft_token_idx, soft_token_pieces in t.items():
+            soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
+        return soft_tokens_pieces_to_mask
 
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings
@@ -189,7 +210,6 @@ class PromptedVisionTransformer_Prompt_VK(VisionTransformer):
 
 
 def build_model(model_type, p_vk_cfg):
-    # print('p_vk_cfg', p_vk_cfg)
     if "vitb" in model_type:
         return vit_base_patch16(p_vk_cfg)
     elif "vitl" in model_type:

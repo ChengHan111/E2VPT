@@ -12,6 +12,8 @@ from operator import mul
 from torch.nn import Conv2d, Dropout
 from timm.models.vision_transformer import _cfg
 
+import os
+import json
 from ..vit_backbones.vit_moco_changeVK import VisionTransformerMoCo
 from ...utils import logging
 logger = logging.get_logger("visual_prompt")
@@ -78,6 +80,25 @@ class PromptedVisionTransformerMoCo_Prompt_VK(VisionTransformerMoCo):
         # add drop-out or not
         self.prompt_dropout = Dropout(self.p_vk_cfg.DROPOUT_P)
 
+    def load_soft_token_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        
+        soft_token_to_mask = set()
+        for mask_number, soft_token in t.items():
+            for soft_token_i in soft_token:
+                soft_token_to_mask.add(soft_token_i) 
+        
+        return soft_token_to_mask
+
+    def load_soft_tokens_pieces_mask_file(self, path):
+        with open(path) as f:
+            t = json.load(f)
+        soft_tokens_pieces_to_mask = {}
+        for soft_token_idx, soft_token_pieces in t.items():
+            soft_tokens_pieces_to_mask[int(soft_token_idx)] = set(soft_token_pieces)
+        return soft_tokens_pieces_to_mask
+    
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings
         B = x.shape[0]

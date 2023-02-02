@@ -375,7 +375,9 @@ class Trainer():
                 if cfg.MODEL.TYPE == "vit":
                     soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
                 elif cfg.MODEL.TYPE == "ssl-vit":
-                    soft_tokens_importance += prompt_model.enc.transformer.prompt_soft_tokens_mask_cls_token.grad
+                    # print('ssl-vit model', model)
+                    # don't have the self.transformer
+                    soft_tokens_importance += prompt_model.enc.prompt_soft_tokens_mask_cls_token.grad
                 else:
                     ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens")
                     
@@ -384,7 +386,7 @@ class Trainer():
                     if cfg.MODEL.TYPE == "vit":
                         soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                     elif cfg.MODEL.TYPE == "ssl-vit":
-                        soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
+                        soft_tokens_pieces_importance[token_i] += prompt_model.enc.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                     else:
                         ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens_pieces")
                 

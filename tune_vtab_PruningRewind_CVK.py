@@ -461,7 +461,7 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
     evaluator = Evaluator()
     logger.info("Setting up Eval_self(for masking stage)")
     trainer = Trainer(cfg, model, evaluator, cur_device)
-    # if cfg.DO_REWIND is True: 
+
     logger.info('Rewind & train')
     
     # cls_token_pieces_num = cfg.MODEL.P_VK.CLS_TOKEN_P_PIECES_NUM
@@ -549,13 +549,6 @@ def get_lrwd_range(args):
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
 
-    # elif args.train_type == "prompt_resnet":
-    #     lr_range = [
-    #         0.05, 0.025, 0.01, 0.5, 0.25, 0.1,
-    #         1.0, 2.5, 5.
-    #     ]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-
     return lr_range, wd_range
 
 
@@ -592,8 +585,6 @@ def main(args):
     for cls_token_pieces_file_name in os.listdir(cls_token_pieces_id_dir):
         cls_token_pieces_id_list.append(int(cls_token_pieces_file_name.split('_soft')[0]))
     
-    # print('cls_token_id_list', cls_token_id_list)
-    # print('cls_token_pieces_id_list', cls_token_pieces_id_list)
     
     assert cls_token_id_list is not None
     assert cls_token_pieces_id_list is not None

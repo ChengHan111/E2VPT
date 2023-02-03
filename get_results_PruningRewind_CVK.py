@@ -6,14 +6,14 @@ import pandas as pd
 from src.utils.vis_utils_pvk import get_df, average_df
 
 LOG_NAME = "logs.txt"
-MODEL_NAME = "sup_vitb16_224"
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = "/home/ch7858/vpt/output_rewind/vtab-dtd_P10_VK1_SHARED_1_INIT_2_ACC_0_BS64_LB0"
-dataset_type = 'vtab_rewind' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind
+root = "/home/ch7858/vpt/output_fgvc_rewind/StanfordCars_P5_VK5_SHARED_1_INIT_2_ACC_0_BS128"
+dataset_type = 'fgvc_rewind' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind
+MODEL_NAME = "sup_vitb16_224" #sup_vitb16_224 #mae_vitb16
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):

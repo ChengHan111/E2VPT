@@ -90,6 +90,7 @@ def build_mocov3_model(
     else:
         model = vit_base()
     out_dim = 768
+    print('load_ckpt mocov3_linear-vit-b-300ep.pth.tar')
     ckpt = os.path.join(model_root,"mocov3_linear-vit-b-300ep.pth.tar")
 
     checkpoint = torch.load(ckpt, map_location="cpu")

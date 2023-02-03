@@ -139,7 +139,7 @@ _C.MODEL.QKV_insert.DEEP = True # "whether do deep QKV or not, only for prepend 
 #     # imgprompt_pool: pool everything but the cls token
 _C.MODEL.QKV_insert.VIT_POOL_TYPE = "original"
 _C.MODEL.QKV_insert.DROPOUT = 0.0
-_C.MODEL.QKV_insert.LAYER_BEHIND = True # to put layers behind new-added prompt in key/value
+_C.MODEL.QKV_insert.LAYER_BEHIND = False # to put layers behind new-added prompt in key/value
 _C.MODEL.QKV_insert.SHARE_PARAM_KV = True # change it to False to init two parameters
 # _C.MODEL.QKV_insert.SAVE_FOR_EACH_EPOCH = False
 

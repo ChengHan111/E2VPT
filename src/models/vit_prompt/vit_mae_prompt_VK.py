@@ -20,7 +20,7 @@ from ...utils import logging
 logger = logging.get_logger("visual_prompt")
 
 #TODO add mae for the title
-class PromptedVisionTransformer_Prompt_VK(VisionTransformer):
+class PromptedVisionTransformerMAE_Prompt_VK(VisionTransformer):
     def __init__(self, p_vk_cfg, **kwargs):
         super().__init__(p_vk_cfg, **kwargs)
         self.p_vk_cfg = p_vk_cfg
@@ -234,7 +234,7 @@ def build_model(model_type, p_vk_cfg):
 
 
 def vit_base_patch16(p_vk_cfg, **kwargs):
-    model = PromptedVisionTransformer_Prompt_VK(
+    model = PromptedVisionTransformerMAE_Prompt_VK(
         p_vk_cfg,
         drop_path_rate=0.1, global_pool=True,  # using default settings for mae-finetune
         patch_size=16, embed_dim=768, depth=12, num_heads=12,
@@ -244,7 +244,7 @@ def vit_base_patch16(p_vk_cfg, **kwargs):
 
 
 def vit_large_patch16(p_vk_cfg, **kwargs):
-    model = PromptedVisionTransformer_Prompt_VK(
+    model = PromptedVisionTransformerMAE_Prompt_VK(
         p_vk_cfg,
         drop_path_rate=0.1, global_pool=True,  # using default settings for mae-finetune
         patch_size=16, embed_dim=1024, depth=24, num_heads=16,
@@ -254,7 +254,7 @@ def vit_large_patch16(p_vk_cfg, **kwargs):
 
 
 def vit_huge_patch14(p_vk_cfg, **kwargs):
-    model = PromptedVisionTransformer_Prompt_VK(
+    model = PromptedVisionTransformerMAE_Prompt_VK(
         p_vk_cfg,
         drop_path_rate=0.1, global_pool=True,  # using default settings for mae-finetune
         patch_size=14, embed_dim=1280, depth=32, num_heads=16,

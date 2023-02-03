@@ -359,7 +359,7 @@ class BasicLayer(nn.Module):
                  downsample=None, use_checkpoint=False,
                  block_module=SwinTransformerBlock,
                  # add two more parameters for prompt
-                 num_prompts=None, prompt_location=None, deep_prompt=None,
+                 num_prompts=None, prompt_location=None, deep_prompt=None, p_vk_cfg=None
         ):
 
         super().__init__()
@@ -369,7 +369,7 @@ class BasicLayer(nn.Module):
         self.use_checkpoint = use_checkpoint
 
         # build blocks
-        if num_prompts is not None:
+        if num_prompts is not None and p_vk_cfg is None:
             self.blocks = nn.ModuleList([
                 block_module(
                     num_prompts, prompt_location,
@@ -387,6 +387,27 @@ class BasicLayer(nn.Module):
             self.prompt_location = prompt_location
             if self.deep_prompt and self.prompt_location != "prepend":
                 raise ValueError("deep prompt mode for swin is only applicable to prepend")
+        if num_prompts is not None and p_vk_cfg is not None:
+            self.blocks = nn.ModuleList([
+                block_module(
+                    p_vk_cfg, num_prompts, prompt_location,
+                    dim=dim, input_resolution=input_resolution,
+                    num_heads=num_heads, window_size=window_size,
+                    shift_size=0 if (i % 2 == 0) else window_size // 2,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias, qk_scale=qk_scale,
+                    drop=drop, attn_drop=attn_drop,
+                    drop_path=drop_path[i] if isinstance(drop_path, list) else drop_path,  # noqa
+                    norm_layer=norm_layer)
+                for i in range(depth)])
+            self.p_vk_cfg = p_vk_cfg
+            self.deep_prompt = deep_prompt
+            self.num_prompts = num_prompts
+            self.prompt_location = prompt_location
+            if self.deep_prompt and self.prompt_location != "prepend":
+                raise ValueError("deep prompt mode for swin is only applicable to prepend")
+        
+        
         else:
             self.blocks = nn.ModuleList([
                 block_module(

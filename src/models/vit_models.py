@@ -26,7 +26,6 @@ class ViT(nn.Module):
 
         # 是通过cfg里面的这个输入来确定model的
         if "prompt" in cfg.MODEL.TRANSFER_TYPE:
-            print('should not pop out here!')
             prompt_cfg = cfg.MODEL.PROMPT
         else:
             prompt_cfg = None
@@ -246,12 +245,12 @@ class Swin(ViT):
 
     def __init__(self, cfg):
         super(Swin, self).__init__(cfg)
-
-    def build_backbone(self, prompt_cfg, cfg, adapter_cfg, load_pretrain, vis):
+    
+    def build_backbone(self, prompt_cfg, cfg, adapter_cfg, qkv_cfg, p_vk_cfg, load_pretrain, vis):
         transfer_type = cfg.MODEL.TRANSFER_TYPE
         self.enc, self.feat_dim = build_swin_model(
             cfg.DATA.FEATURE, cfg.DATA.CROPSIZE,
-            prompt_cfg, cfg.MODEL.MODEL_ROOT
+            prompt_cfg, p_vk_cfg, cfg.MODEL.MODEL_ROOT
         )
 
         # linear, prompt, cls, cls+prompt, partial_1
@@ -299,6 +298,13 @@ class Swin(ViT):
             for k, p in self.enc.named_parameters():
                 if "prompt" not in k and 'bias' not in k:
                     p.requires_grad = False
+                    
+        elif transfer_type == "P_VK":
+            for k, p in self.enc.named_parameters():
+                print('#####', k)
+                if "QKV" not in k and 'prompt' not in k: 
+                    p.requires_grad = False
+                    print(p.requires_grad)
 
         elif transfer_type == "end2end":
             logger.info("Enable all parameters update during training")

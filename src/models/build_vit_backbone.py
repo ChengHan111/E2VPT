@@ -12,6 +12,7 @@ from .vit_prompt.vit import PromptedVisionTransformer
 from .vit_prompt.vit_prompt_VK import PromptedVisionTransformer_Prompt_VK
 from .vit_prompt.vit_exp_self import PromptedVisionTransformer_EXPSELF
 from .vit_prompt.swin_transformer import PromptedSwinTransformer
+from .vit_prompt.swin_transformer_prompt_VK import PromptedSwinTransformer_Prompt_VK
 from .vit_prompt.vit_moco import vit_base as prompt_vit_base
 from .vit_prompt.vit_mae import build_model as prompt_mae_vit_model
 from .vit_prompt.vit_mae_prompt_VK import build_model as prompt_VK_mae_vit_model # new added
@@ -108,15 +109,157 @@ def build_mocov3_model(
     return model, out_dim
 
 
-def build_swin_model(model_type, crop_size, prompt_cfg, model_root):
+def build_swin_model(model_type, crop_size, prompt_cfg, p_vk_cfg, model_root):
     if prompt_cfg is not None:
         return _build_prompted_swin_model(
-            model_type, crop_size, prompt_cfg, model_root)
+            model_type, crop_size, prompt_cfg, p_vk_cfg, model_root)
+    elif p_vk_cfg is not None:
+        return _build_promptedVK_swin_model(
+            model_type, crop_size, prompt_cfg, p_vk_cfg, model_root)
     else:
         return _build_swin_model(model_type, crop_size, model_root)
 
+def _build_promptedVK_swin_model(model_type, crop_size, prompt_cfg, p_vk_cfg, model_root):
+    if model_type == "swint_imagenet":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=96,
+            depths=[2, 2, 6, 2],
+            num_heads=[3, 6, 12, 24],
+            window_size=7,
+            drop_path_rate=0.2,
+            num_classes=-1,
+        )
+        embed_dim = 96
+        num_layers = 4
+    elif model_type == "swint_imagenet_ssl":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=96,
+            depths=[2, 2, 6, 2],
+            num_heads=[3, 6, 12, 24],
+            window_size=7,
+            drop_path_rate=0.2,
+            num_classes=-1,
+        )
+        embed_dim = 96
+        num_layers = 4
 
-def _build_prompted_swin_model(model_type, crop_size, prompt_cfg, model_root):
+    elif model_type == "swins_imagenet":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=96,
+            depths=[2, 2, 18, 2],
+            num_heads=[3, 6, 12, 24],
+            window_size=7,
+            drop_path_rate=0.3,
+            num_classes=-1,
+        )
+        embed_dim = 96
+        num_layers = 4
+    elif model_type == "swinb_imagenet_224":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=128,
+            depths=[2, 2, 18, 2],
+            num_heads=[4, 8, 16, 32],
+            window_size=7,
+            drop_path_rate=0.5,
+            num_classes=-1,
+        )
+        embed_dim = 128
+        num_layers = 4
+    elif model_type == "swinb_imagenet_384":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=384,
+            embed_dim=128,
+            depths=[2, 2, 18, 2],
+            num_heads=[4, 8, 16, 32],
+            window_size=12,
+            drop_path_rate=0.5,
+            num_classes=-1,
+        )
+        embed_dim = 128
+        num_layers = 4
+
+    elif model_type == "swinb_imagenet22k_224":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=128,
+            depths=[2, 2, 18, 2],
+            num_heads=[4, 8, 16, 32],
+            window_size=7,
+            drop_path_rate=0.5,
+            num_classes=-1,
+        )
+        embed_dim = 128
+        num_layers = 4
+    elif model_type == "swinb_imagenet22k_384":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=384,
+            embed_dim=128,
+            depths=[2, 2, 18, 2],
+            num_heads=[4, 8, 16, 32],
+            window_size=12,
+            drop_path_rate=0.5,
+            num_classes=-1,
+        )
+        embed_dim = 128
+        num_layers = 4
+    elif model_type == "swinl_imagenet22k_224":
+        model = PromptedSwinTransformer_Prompt_VK(
+            p_vk_cfg,
+            img_size=crop_size,
+            embed_dim=192,
+            depths=[2, 2, 18, 2],
+            num_heads=[6, 12, 24, 48],
+            window_size=7,
+            drop_path_rate=0.5,
+            num_classes=-1,
+        )
+        embed_dim = 192
+        num_layers = 4
+
+    feat_dim = int(embed_dim * 2 ** (num_layers - 1))
+    # load checkpoint
+    model_w = os.path.join(model_root, MODEL_ZOO[model_type])
+    checkpoint = torch.load(model_w, map_location='cpu')
+    state_dict = checkpoint['model']
+
+    if crop_size == 448:
+        for k in list(state_dict.keys()):
+            if "attn_mask" not in k:
+                # remove prefix
+                state_dict[k] = state_dict[k]
+            # delete renamed or unused k
+            else:
+                del state_dict[k]
+
+    # rename some keys for ssl models
+    if model_type.endswith("ssl"):
+        # rename moco pre-trained keys
+        for k in list(state_dict.keys()):
+            # retain only encoder_q up to before the embedding layer
+            if k.startswith('encoder.'):
+                # remove prefix
+                state_dict[k[len("encoder."):]] = state_dict[k]
+            # delete renamed or unused k
+            del state_dict[k]
+
+    model.load_state_dict(state_dict, strict=False)
+
+    return model, feat_dim
+
+
+
+def _build_prompted_swin_model(model_type, crop_size, prompt_cfg, p_vk_cfg, model_root):
     if model_type == "swint_imagenet":
         model = PromptedSwinTransformer(
             prompt_cfg,

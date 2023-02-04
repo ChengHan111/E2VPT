@@ -357,7 +357,7 @@ class Trainer():
         # TODO:  其实上面有包含 这里这么写冗余了 之后可以考虑去掉
         Checkpointer(
             prompt_model
-        ).load(cfg.OUTPUT_DIR + '/last_model.pth') # /home/ch7858/vpt/output_val/vtab-caltech101_P32_VK5_SHARED_1_INIT_1_ACC_0/sup_vitb16_224/lr12.5_wd0.01/run1/
+        ).load(cfg.OUTPUT_DIR + '/last_model.pth') 
         # print('path', cfg.OUTPUT_DIR)
         prompt_model.eval()
         soft_tokens_importance = torch.zeros(n_soft_tokens).cuda()
@@ -378,6 +378,9 @@ class Trainer():
                     # print('ssl-vit model', model)
                     # don't have the self.transformer
                     soft_tokens_importance += prompt_model.enc.prompt_soft_tokens_mask_cls_token.grad
+                elif cfg.MODEL.TYPE == "swin":
+                    print(prompt_model)
+                    soft_tokens_importance += prompt_model.enc.prompt_soft_tokens_mask_cls_token.grad
                 else:
                     ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens")
                     
@@ -387,12 +390,13 @@ class Trainer():
                         soft_tokens_pieces_importance[token_i] += prompt_model.enc.transformer.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                     elif cfg.MODEL.TYPE == "ssl-vit":
                         soft_tokens_pieces_importance[token_i] += prompt_model.enc.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
+                    elif cfg.MODEL.TYPE == "swin":
+                        soft_tokens_pieces_importance[token_i] += prompt_model.enc.prompt_soft_tokens_pieces_mask_cls_token.grad[token_i]
                     else:
                         ValueError(f"Unsupported cfg.MODEL.TYPE at soft_tokens_pieces")
                 
                 total_len += 1
             else:
-                # 这里也会不一样 layer变了
                 # print('pass self.cfg.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK at trainer')
                 # print('0', soft_tokens_importance)
                 # print('sss', prompt_model.enc.transformer.encoder.prompt_soft_tokens_mask_cls_token.grad)

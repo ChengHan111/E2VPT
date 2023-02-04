@@ -2,6 +2,8 @@
 """
 swin transformer with prompt
 """
+import os
+import json
 import math
 import torch
 import torch.nn as nn
@@ -55,7 +57,7 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
             
             if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES == True:
                 self.prompt_soft_tokens_pieces_mask_cls_token = nn.Parameter(torch.ones(num_tokens_P, self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM), requires_grad=True)
-                self.soft_token_chunks_num_cls_token = int(self.embed_dim/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
+                self.soft_token_chunks_num_cls_token_layer1 = int(self.embed_dim/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
 
             # Rewind status mark here.
             if self.p_vk_cfg.MASK_CLS_TOKEN and self.p_vk_cfg.REWIND_STATUS:
@@ -235,10 +237,10 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
             if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
                 if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:
 
-                    prompt_embd = prompt_embd * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1)
+                    prompt_embd = prompt_embd * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token_layer1)).repeat(B, 1, 1)
 
                 if self.p_vk_cfg.CLS_TOKEN_MASK == True:
-                    prompt_embd = prompt_embd * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[2]).repeat(B, 1, 1)
+                    prompt_embd = prompt_embd * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.prompt_embeddings.shape[2]).repeat(B, 1, 1)
             
             x = torch.cat((
                     prompt_embd, x
@@ -318,23 +320,23 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
         if self.p_vk_cfg.LOCATION == "prepend" and self.p_vk_cfg.DEEP_P:
             for layer, deep_prompt_embd in zip(
                 self.layers, [
-                    self.deep_prompt_embeddings_0,
-                    self.deep_prompt_embeddings_1,
-                    self.deep_prompt_embeddings_2,
-                    self.deep_prompt_embeddings_3
+                    self.deep_prompt_embeddings_0, # torch.Size([1, 32, 128])
+                    self.deep_prompt_embeddings_1, # torch.Size([2, 32, 256])
+                    self.deep_prompt_embeddings_2, # torch.Size([18, 32, 512])
+                    self.deep_prompt_embeddings_3  # torch.Size([2, 32, 1024])
                 ]
             ):
                 deep_prompt_embd = self.prompt_dropout(deep_prompt_embd)
                 
+                B = deep_prompt_embd.shape[0]
+                repeat_shape = int(deep_prompt_embd.shape[-1]/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
                 if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
                     if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:
-
-                        deep_prompt_emb = deep_prompt_emb * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token)).repeat(B, 1, 1)
-                    
+                        deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,repeat_shape)).repeat(B, 1, 1)
                     if self.p_vk_cfg.CLS_TOKEN_MASK == True:
-
-                        deep_prompt_emb = deep_prompt_emb * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.deep_prompt_embeddings.shape[2]).repeat(B, 1, 1)
-                
+                        
+                        deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, deep_prompt_embd.shape[2]).repeat(B, 1, 1)
+                        
                 x = layer(x, deep_prompt_embd)
 
         else:
@@ -543,8 +545,6 @@ class PromptedWindowAttention(WindowAttention):
         print('num_tokens_VK', num_tokens)
         if self.p_vk_cfg.NUM_TOKENS_P is not None:
             print('num_tokens_p', self.p_vk_cfg.NUM_TOKENS_P)
-        
-        print(self.p_vk_cfg)
 
         # add vk prompt layers jointly
         if self.p_vk_cfg.SHARE_PARAM_KV == True:
@@ -564,11 +564,29 @@ class PromptedWindowAttention(WindowAttention):
             else:
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
         else:
-            raise ValueError("Not supported for unshare VK in MAE setting! Under construction")
+            raise ValueError("Not supported for unshare VK in swin setting! Under construction")
 
         self.QKV_proj = nn.Identity()
         self.QKV_dropout = Dropout(self.p_vk_cfg.DROPOUT) # should add config here
 
+        # if self.p_vk_cfg.SHARE_PARAM_KV == True:
+        #     self.relative_position_bias_table_QKV_prompt = nn.Parameter(num_heads, 
+        #         torch.zeros((2 * window_size[0] - 1) * (2 * window_size[1] - 1) + num_tokens))  # 2*Wh-1 * 2*Ww-1, nH
+            
+        #     if self.p_vk_cfg.ORIGIN_INIT == '0':
+        #         # xavier_uniform initialization
+        #         patch_size = _pair(self.config.patches["size"])
+
+        #         val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+        #         nn.init.uniform_(self.relative_position_bias_table_QKV_prompt.data, -val, val)
+
+        #     elif self.p_vk_cfg.ORIGIN_INIT == '1':
+        #         trunc_normal_(self.relative_position_bias_table_QKV_prompt, std=0.02)
+        #     else:
+        #         torch.nn.init.kaiming_uniform_(self.relative_position_bias_table_QKV_prompt, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        # else:
+        #     raise ValueError("Not supported for unshare VK in MAE setting! Under construction")
+        
     def forward(self, x, mask=None):
         """
         Args:
@@ -583,18 +601,18 @@ class PromptedWindowAttention(WindowAttention):
         if self.p_vk_cfg.SHARE_PARAM_KV == True:
             if self.p_vk_cfg.LAYER_BEHIND == False:
 
-                k = torch.cat((k, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
-                v = torch.cat((v, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                k = torch.cat((k, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B_, -1, -1, -1))), dim=2)
+                v = torch.cat((v, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B_, -1, -1, -1))), dim=2)
             else:
                 
-                k = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), k), dim=2)
-                v = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), v), dim=2)
+                k = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B_, -1, -1, -1)), k), dim=2)
+                v = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B_, -1, -1, -1)), v), dim=2)
         else:
-            raise ValueError("Not supported for unshare VK in MAE setting! Under construction")
+            raise ValueError("Not supported for unshare VK in swin setting! Under construction")
         
         q = q * self.scale
         attn = (q @ k.transpose(-2, -1))
-
+        
         relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)  # Wh*Ww,Wh*Ww,nH
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
@@ -612,11 +630,12 @@ class PromptedWindowAttention(WindowAttention):
                 relative_position_bias
                 ), dim=1)
             relative_position_bias = torch.cat((
-                torch.zeros(_C, _H + self.num_prompts, self.num_prompts, device=attn.device),
+                torch.zeros(_C, _H + self.num_prompts, self.num_prompts + self.p_vk_cfg.NUM_TOKENS, device=attn.device),
                 relative_position_bias
                 ), dim=-1)
-
-        attn = attn + relative_position_bias.unsqueeze(0)
+        
+        relative_position_bias = relative_position_bias.unsqueeze(0)
+        attn = attn + relative_position_bias
 
         if mask is not None:
             # incorporate prompt
@@ -627,15 +646,16 @@ class PromptedWindowAttention(WindowAttention):
                 mask = torch.cat((
                     torch.zeros(nW, self.num_prompts, _W, device=attn.device),
                     mask), dim=1)
+                # with extra padding
                 mask = torch.cat((
                     torch.zeros(
-                        nW, _H + self.num_prompts, self.num_prompts,
+                        nW, _H + self.num_prompts, self.num_prompts + self.p_vk_cfg.NUM_TOKENS,
                         device=attn.device),
                     mask), dim=-1)
             # logger.info("before", attn.shape)
-            attn = attn.view(B_ // nW, nW, self.num_heads, N, N) + mask.unsqueeze(1).unsqueeze(0)
+            attn = attn.view(B_ // nW, nW, self.num_heads, N, N + self.p_vk_cfg.NUM_TOKENS) + mask.unsqueeze(1).unsqueeze(0)
             # logger.info("after", attn.shape)
-            attn = attn.view(-1, self.num_heads, N, N)
+            attn = attn.view(-1, self.num_heads, N, N + self.p_vk_cfg.NUM_TOKENS)
             attn = self.softmax(attn)
         else:
             attn = self.softmax(attn)
@@ -645,4 +665,5 @@ class PromptedWindowAttention(WindowAttention):
         x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
+        # print('!!!', x.shape) #  torch.Size([4096, 81, 128])
         return x

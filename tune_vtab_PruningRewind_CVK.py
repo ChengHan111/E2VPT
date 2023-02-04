@@ -534,14 +534,14 @@ def get_lrwd_range(args):
     
     # elif args.train_type == "QKV" or args.train_type == "P_VK":
     elif args.train_type == "P_VK":
-        # lr_range = [
-        #     5.0, 2.5, 1.0,
-        #     50.0, 25., 10.0,
-        #     0.5, 0.25, 0.1, 0.05
-        # ]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-        lr_range = [5.0]
-        wd_range = [0.01, 0.001]
+        lr_range = [
+            5.0, 2.5, 1.0,
+            50.0, 25., 10.0,
+            0.5, 0.25, 0.1, 0.05
+        ]
+        wd_range = [0.01, 0.001, 0.0001, 0.0]
+        # lr_range = [5.0]
+        # wd_range = [0.01, 0.001]
 
     elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":
         lr_range = [

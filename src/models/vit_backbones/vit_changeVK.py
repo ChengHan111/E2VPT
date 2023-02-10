@@ -274,7 +274,8 @@ class Attention(nn.Module):
             else:
                 key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=2)
                 value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), value_layer), dim=2)
-        
+                
+                
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) # B, num_head, num_patches, num_patches (turn into patches*patches)                    
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
         # 接着做softmax了 和论文中的一致
@@ -469,11 +470,20 @@ class Block(nn.Module):
         self.ffn_norm = LayerNorm(config.hidden_size, eps=1e-6)
         self.ffn = Mlp(config)
         self.attn = Attention(qkv_cfg, config, vis)
+        # self.qkv_cfg = qkv_cfg
+        # if self.qkv_cfg.MASK_QUERY == True:
+            # self.Linear_Projection_QKV = Linear()
 
     def forward(self, x):
         h = x
         x = self.attention_norm(x)
         x, weights = self.attn(x)
+        # print('x', x.shape) # batchsize_patchsize+pad_dim attention map size changed
+        # print('h', h.shape) # batchsize_patchsize_dim
+        # if self.qkv_cfg.MASK_QUERY == True:
+        #     x = x.view(x.shape[0], -1).contiguous()
+        #     x = self.Linear_Projection_QKV(x)
+        #     x = x.reshape(64, )
         x = x + h
 
         h = x

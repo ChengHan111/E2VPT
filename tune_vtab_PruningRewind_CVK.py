@@ -440,8 +440,8 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
     cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = cfg.OUTPUT_DIR
     cfg.freeze()
     
-    print('before cfg setup stage!!!!!!')
-    print('cfg.MODEL.P_VK.REWIND_OUTPUT_DIR', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
+    print('before cfg setup stage')
+    # print('cfg.MODEL.P_VK.REWIND_OUTPUT_DIR', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
     
     # main training / eval actions here
 

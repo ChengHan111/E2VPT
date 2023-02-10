@@ -78,7 +78,6 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
         # add drop-out or not
         self.prompt_dropout = Dropout(self.p_vk_cfg.DROPOUT_P)
 
-        self.prompt_dropout = Dropout(self.p_vk_cfg.DROPOUT_P)
         # if project the prompt embeddings
         if self.p_vk_cfg.PROJECT > -1:
             # only for prepend / add
@@ -234,6 +233,13 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
             prompt_embd = self.prompt_dropout(
                 self.prompt_embeddings.expand(B, -1, -1))
             
+            # print(self.embed_dim) #128
+            # print(prompt_embd.shape) # torch.Size([80, prompt_token_length, 128])
+            # print(self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token_layer1)).repeat(B, 1, 1).shape)
+            # print(self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.prompt_embeddings.shape[2]).repeat(B, 1, 1).shape)
+            # print(self.soft_token_chunks_num_cls_token_layer1) #8
+            # exit()
+            
             if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
                 if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:
 
@@ -328,14 +334,17 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
             ):
                 deep_prompt_embd = self.prompt_dropout(deep_prompt_embd)
                 
-                B = deep_prompt_embd.shape[0]
-                repeat_shape = int(deep_prompt_embd.shape[-1]/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
-                if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
-                    if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:
-                        deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,repeat_shape)).repeat(B, 1, 1)
-                    if self.p_vk_cfg.CLS_TOKEN_MASK == True:
+                # The performance drops seriously using masking on deep_prompt_embd.
+                # B = deep_prompt_embd.shape[0]
+                # repeat_shape = int(deep_prompt_embd.shape[-1]/self.p_vk_cfg.CLS_TOKEN_P_PIECES_NUM)
+                # if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
+                #     if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:
                         
-                        deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, deep_prompt_embd.shape[2]).repeat(B, 1, 1)
+                #         deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,repeat_shape)).repeat(B, 1, 1)
+                    
+                #     if self.p_vk_cfg.CLS_TOKEN_MASK == True:
+                        
+                #         deep_prompt_embd = deep_prompt_embd * self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, deep_prompt_embd.shape[2]).repeat(B, 1, 1)
                         
                 x = layer(x, deep_prompt_embd)
 
@@ -569,24 +578,6 @@ class PromptedWindowAttention(WindowAttention):
         self.QKV_proj = nn.Identity()
         self.QKV_dropout = Dropout(self.p_vk_cfg.DROPOUT) # should add config here
 
-        # if self.p_vk_cfg.SHARE_PARAM_KV == True:
-        #     self.relative_position_bias_table_QKV_prompt = nn.Parameter(num_heads, 
-        #         torch.zeros((2 * window_size[0] - 1) * (2 * window_size[1] - 1) + num_tokens))  # 2*Wh-1 * 2*Ww-1, nH
-            
-        #     if self.p_vk_cfg.ORIGIN_INIT == '0':
-        #         # xavier_uniform initialization
-        #         patch_size = _pair(self.config.patches["size"])
-
-        #         val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-        #         nn.init.uniform_(self.relative_position_bias_table_QKV_prompt.data, -val, val)
-
-        #     elif self.p_vk_cfg.ORIGIN_INIT == '1':
-        #         trunc_normal_(self.relative_position_bias_table_QKV_prompt, std=0.02)
-        #     else:
-        #         torch.nn.init.kaiming_uniform_(self.relative_position_bias_table_QKV_prompt, a=0, mode='fan_in', nonlinearity='leaky_relu')
-        # else:
-        #     raise ValueError("Not supported for unshare VK in MAE setting! Under construction")
-        
     def forward(self, x, mask=None):
         """
         Args:
@@ -665,5 +656,4 @@ class PromptedWindowAttention(WindowAttention):
         x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
-        # print('!!!', x.shape) #  torch.Size([4096, 81, 128])
         return x

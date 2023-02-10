@@ -154,8 +154,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                     # print('cls_token_pieces_mask', cls_token_pieces_mask)
                     # default as onVK = False # if you wanna change, make changes here
                     # ONVK_0 BS64_LB0
-                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS80_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS80_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 elif dataset_type == 'fgvc_rewind':
                     root_path = job_path.split('/output_fgvc_rewind')[0]
                     mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
@@ -169,28 +169,42 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                 CLS_TOKEN_P_PIECES_NUM = 16 # same to the config file as 16 
                 prompt_soft_tokens_pieces_mask_cls_token, parameter_cls_token_piece_mask = mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM)
                 
-                # 12, 768 for total_dimension and prompt_dim
-                # notice the difference here, the prompt embeddings should be repeat 12 times as the parameter num.
-                prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768)) # for a single layer
                 
-                # print(prompt_embeddings.shape) # torch.Size([12, 10, 768])
-                soft_token_chunks_num_cls_token = int(768/CLS_TOKEN_P_PIECES_NUM)
-                prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
-                # print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
-                prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
-                # print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
-                
-                prompt_embeddings_parameters = 12 * prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
-                
-                # print('prompt_embeddings_origin', prompt_embeddings_origin)
-                # print('masked_percentage:', (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters)
-                
-                masked_percentage = (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters
-                
-                prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))
-                # print(total_params)
-                parameter_added = (parameter_cls_token_mask + parameter_cls_token_piece_mask)
-                # total_params += parameter_added #.data[0] should not add more (already included)
+                if "swin" not in feat_type:
+                    # 12, 768 for total_dimension and prompt_dim
+                    # notice the difference here, the prompt embeddings should be repeat 12 times as the parameter num.
+                    prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768)) # for a single layer
+                    
+                    # print(prompt_embeddings.shape) # torch.Size([12, 10, 768])
+                    soft_token_chunks_num_cls_token = int(768/CLS_TOKEN_P_PIECES_NUM)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
+                    # print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
+                    # print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
+                    
+                    prompt_embeddings_parameters = 12 * prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
+                    
+                    # print('prompt_embeddings_origin', prompt_embeddings_origin)
+                    # print('masked_percentage:', (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters)
+                    
+                    masked_percentage = (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters
+                    
+                    prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))
+                    # print(total_params)
+                    parameter_added = (parameter_cls_token_mask + parameter_cls_token_piece_mask)
+                    # total_params += parameter_added #.data[0] should not add more (already included)
+                else:
+                    # 1, 128 for total_dimension and prompt dim
+                    # only pass the first layer, the layers after that are not covered.
+                    prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 128)) # for a single layer
+                    soft_token_chunks_num_cls_token = int(128/CLS_TOKEN_P_PIECES_NUM)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
+                    prompt_embeddings_parameters = prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
+                    masked_percentage = (prompt_embeddings_parameters - int(torch.sum(1 * prompt_embeddings))) / prompt_embeddings_parameters
+                    prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(1 * prompt_embeddings))
+
+
                 gradiented_params -= prompt_embeddings_parameters_filtered
                 
                 

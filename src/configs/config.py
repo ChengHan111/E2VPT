@@ -139,7 +139,7 @@ _C.MODEL.QKV_insert.DEEP = True # "whether do deep QKV or not, only for prepend 
 #     # imgprompt_pool: pool everything but the cls token
 _C.MODEL.QKV_insert.VIT_POOL_TYPE = "original"
 _C.MODEL.QKV_insert.DROPOUT = 0.0
-_C.MODEL.QKV_insert.LAYER_BEHIND = False # to put layers behind new-added prompt in key/value
+_C.MODEL.QKV_insert.LAYER_BEHIND = True # to put layers behind new-added prompt in key/value
 _C.MODEL.QKV_insert.SHARE_PARAM_KV = True # change it to False to init two parameters
 # _C.MODEL.QKV_insert.SAVE_FOR_EACH_EPOCH = False
 
@@ -178,7 +178,7 @@ _C.MODEL.P_VK.SAVE_FOR_EACH_EPOCH = False
 _C.MODEL.P_VK.NUM_TOKENS = 5
 _C.MODEL.P_VK.DEEP = True # "whether do deep QKV or not, only for prepend location"
 _C.MODEL.P_VK.DROPOUT = 0.0
-_C.MODEL.P_VK.LAYER_BEHIND = False # to put layers behind new-added prompt in key/value
+_C.MODEL.P_VK.LAYER_BEHIND = True # to put layers behind new-added prompt in key/value
 _C.MODEL.P_VK.SHARE_PARAM_KV = True # change it to False to init two parameters
 _C.MODEL.P_VK.ORIGIN_INIT = 2 # 0 for default, 1 for trunc_norm, 2 for kaiming init 
 _C.MODEL.P_VK.SHARED_ACCROSS = False # share vk value accross multi-attn layers
@@ -207,6 +207,7 @@ _C.MODEL.P_VK.SAVE_REWIND_MODEL = False
 
 # Based on MASK_CLS_TOKEN == True
 _C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = False # mask value and key instead of cls_token (unfinished, does not make sense)
+# _C.MODEL.P_VK.MASK_QUERY = False # does not make sense (attention map size changed, should apply linear projection to reduce dim)
 
 # ----------------------------------------------------------------------
 # Dataset options

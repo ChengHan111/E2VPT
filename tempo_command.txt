@@ -61,3 +61,21 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc_fiveRuns.py --config-file con
 
 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_swin/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "80" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.LAYER_BEHIND "True"
+
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python train.py \
+    --config-file configs/prompt/cub.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.PROMPT.NUM_TOKENS "10" \
+    MODEL.PROMPT.DEEP "True" \
+    MODEL.PROMPT.DROPOUT "0.1" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.NAME "CUB" \
+    DATA.NUMBER_CLASSES "200" \
+    SOLVER.BASE_LR "10.0" \
+    SOLVER.WEIGHT_DECAY "0.001" \
+    SEED 42 \
+    MODEL.MODEL_ROOT "/home/ch7858/vpt/models" \
+    DATA.DATAPATH "/shared/kgcoe-research/spl/fgvc/CUB_200_2011" \
+    OUTPUT_DIR "output/seed42" 

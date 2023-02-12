@@ -549,7 +549,7 @@ def build_vit_sup_models(
     # self changes here
     if prompt_cfg is not None:
         # For further changes in [cls] token
-        print('this should not be printed out!!! In build_vit_backbone.py')
+        print('3. Go through Origin Prompt --- build_vit_backbone.py')
         model = PromptedVisionTransformer_EXPSELF(
             prompt_cfg, model_type,
             crop_size, num_classes=-1, vis=vis

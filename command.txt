@@ -468,16 +468,31 @@ CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-
 
 ########## Documented Version (ssl moco FGVC)
 CUB
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/cub.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/cub.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 NA Birds
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/nabirds.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/nabirds.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 Oxford_flowers102
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/flowers.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/flowers.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 Stanford Dogs
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/dogs.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/dogs.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 Stanford Cars
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/cars.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 
+
+## for 384 resolution 
+add DATA_CROPSIZE "384" to the end of the command, notice for OOM problem (By default, all settings are under batchsize=32)
+
+## for full fine-tune (FGVC for visualization propose)
+CUB
+python train.py --config-file configs/finetune/cub.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
+NA Birds
+python train.py --config-file configs/finetune/nabirds.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
+Oxford_flowers102
+python train.py --config-file configs/finetune/flowers.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.001" SOLVER.WEIGHT_DECAY "0.0001"
+Stanford Dogs
+python train.py --config-file configs/finetune/dogs.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.005" SOLVER.WEIGHT_DECAY "0.0"
+Stanford Cars
+python train.py --config-file configs/finetune/cars.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0005" SOLVER.WEIGHT_DECAY "0.01"
 
 
 ## get results

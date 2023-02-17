@@ -495,5 +495,6 @@ Stanford Cars
 python train.py --config-file configs/finetune/cars.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0005" SOLVER.WEIGHT_DECAY "0.01"
 
 
+
 ## get results
 python get_results_PruningRewind_CVK.py

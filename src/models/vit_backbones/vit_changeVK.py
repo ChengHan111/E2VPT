@@ -195,7 +195,6 @@ class Attention(nn.Module):
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_addition, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_secondDim, std=0.02)
-            # kaiming init (to be continued, untested)
             
             else:
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
@@ -233,9 +232,7 @@ class Attention(nn.Module):
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
-    def forward(self, hidden_states):
-        # print('mark', hidden_states)
-        
+    def forward(self, hidden_states):        
         mixed_query_layer = self.query(hidden_states) # B, num_patches, head_size*num_head
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
@@ -329,8 +326,7 @@ class Attention(nn.Module):
         # print('after', value_layer.shape) 
         elif self.qkv_cfg.QUERY_PROMPT_MODE == 2:
             # prompt on Quert-Key
-            # New init QKV embeddings
-            # print('new', self.deep_QKV_embeddings.shape)
+            # New init QKV embeddings (different from above QKV embedding inits)
             if self.qkv_cfg.LAYER_BEHIND == False: 
                 query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
                 key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)

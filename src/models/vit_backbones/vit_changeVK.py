@@ -127,6 +127,7 @@ class Attention(nn.Module):
             print('num_tokens_p', self.qkv_cfg.NUM_TOKENS_P)
         
         # add vk prompt layers separate
+        # print(self.qkv_cfg.QUERY_PROMPT_MODE == 3)
         if self.qkv_cfg.SHARE_PARAM_KV == False:
             head_fixed, num_patches_QKV_V, num_patches_QKV_K, head_size_fixed = self.num_attention_heads, num_tokens, num_tokens, self.attention_head_size
 
@@ -135,7 +136,7 @@ class Attention(nn.Module):
             self.deep_QKV_embeddings_K = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV_K, head_size_fixed))
             
-            if self.qkv_cfg.ORIGIN_INIT == '0':
+            if self.qkv_cfg.ORIGIN_INIT == 0:
                 # xavier_uniform initialization
                 patch_size = _pair(self.config.patches["size"]) # print('patch_size', patch_size) # 16, 16
                 
@@ -143,7 +144,7 @@ class Attention(nn.Module):
                 # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
                 nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
                 nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
-            elif self.qkv_cfg.ORIGIN_INIT == '1':
+            elif self.qkv_cfg.ORIGIN_INIT == 1:
                 # apply timm trunc norm for init
                 trunc_normal_(self.deep_QKV_embeddings_V, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_K, std=0.02)
@@ -153,43 +154,73 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 
-            ''' (Under construction)
-            if self.qkv_cfg.DEEP == False:
-                # self.num_attention_heads set this to 1 for the first attention head.
-                head_fixed, num_patches_QKV_V, num_patches_QKV_K, head_size_fixed = 1, num_tokens, num_tokens, self.attention_head_size
-
-                self.deep_QKV_embeddings_V = nn.Parameter(torch.zeros(
-                            head_fixed, num_patches_QKV_V, head_size_fixed))
-                self.deep_QKV_embeddings_K = nn.Parameter(torch.zeros(
-                            head_fixed, num_patches_QKV_K, head_size_fixed))
-                # xavier_uniform initialization
-                patch_size = _pair(self.config.patches["size"])
-                # print('patch_size', patch_size) # 16, 16
-                val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
-                nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
-                nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
-            '''  
-        else:
+        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 0:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV, head_size_fixed))
-            if self.qkv_cfg.ORIGIN_INIT == '0':
+            if self.qkv_cfg.ORIGIN_INIT == 0:
                 # xavier_uniform initialization
                 patch_size = _pair(self.config.patches["size"])
                 # print('patch_size', patch_size) # 16, 16
                 val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
                 # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
                 nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
-            elif self.qkv_cfg.ORIGIN_INIT == '1':
+            elif self.qkv_cfg.ORIGIN_INIT == 1:
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
             # kaiming init (to be continued, untested)
             
             else:
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
 
+        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 3:
+            # print('should pass for mode3')
+            head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
+            # 197 as the input dimension
+            self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
+                        head_fixed, 197 + self.qkv_cfg.NUM_TOKENS_P, num_patches_QKV))
+            self.deep_QKV_embeddings_addition = nn.Parameter(torch.zeros(
+                        head_fixed, num_patches_QKV, head_size_fixed))
+            self.deep_QKV_embeddings_secondDim = nn.Parameter(torch.zeros(
+                        head_fixed, 197 + self.qkv_cfg.NUM_TOKENS_P + num_patches_QKV, num_patches_QKV))
+            if self.qkv_cfg.ORIGIN_INIT == 0:
+                # xavier_uniform initialization
+                patch_size = _pair(self.config.patches["size"])
+                # print('patch_size', patch_size) # 16, 16
+                val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
+                nn.init.uniform_(self.deep_QKV_embeddings_addition.data, -val, val)
+                nn.init.uniform_(self.deep_QKV_embeddings_secondDim.data, -val, val)
+            elif self.qkv_cfg.ORIGIN_INIT == 1:
+                trunc_normal_(self.deep_QKV_embeddings, std=0.02)
+                trunc_normal_(self.deep_QKV_embeddings_addition, std=0.02)
+                trunc_normal_(self.deep_QKV_embeddings_secondDim, std=0.02)
+            # kaiming init (to be continued, untested)
             
+            else:
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_addition, a=0, mode='fan_in', nonlinearity='leaky_relu')
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_secondDim, a=0, mode='fan_in', nonlinearity='leaky_relu')
         
+        else:
+            head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
+            # 197 as the input dimension
+            self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
+                        head_fixed, 197 + self.qkv_cfg.NUM_TOKENS_P, num_patches_QKV))
+            if self.qkv_cfg.ORIGIN_INIT == 0:
+                # xavier_uniform initialization
+                patch_size = _pair(self.config.patches["size"])
+                # print('patch_size', patch_size) # 16, 16
+                val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
+                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
+            elif self.qkv_cfg.ORIGIN_INIT == 1:
+                trunc_normal_(self.deep_QKV_embeddings, std=0.02)
+            # kaiming init (to be continued, untested)
+            
+            else:
+                torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
+
         
         self.QKV_proj = nn.Identity()
         # self.prompt_config.DROPOUT
@@ -216,7 +247,6 @@ class Attention(nn.Module):
         # print('1', query_layer.shape) torch.Size([128, 12, 197, 64])
         # print('2', key_layer.shape) torch.Size([128, 12, 197, 64])
         # print('3', value_layer.shape) torch.Size([128, 12, 197, 64])
-        
         """        
         # self-added
         B = query_layer.shape[0]
@@ -258,27 +288,97 @@ class Attention(nn.Module):
         # torch.Size([128, 12, 16, 64])
         # print('4', self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1)).shape)
         
+        # print('before', query_layer.shape) torch.Size([64, 12, 198, 64])
+        # print('before', key_layer.shape) torch.Size([64, 12, 198, 64])
+        # print('before', value_layer.shape) torch.Size([64, 12, 198, 64])
+        # add ablative study on Query Prompt
         B = query_layer.shape[0]
-        if self.qkv_cfg.SHARE_PARAM_KV == False:
-            # B, num_head, num_patches, head_size
-            if self.qkv_cfg.LAYER_BEHIND == False:
-                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1))), dim=2)
-                value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1))), dim=2)
+        if self.qkv_cfg.QUERY_PROMPT_MODE == 0:
+            if self.qkv_cfg.SHARE_PARAM_KV == False:
+                # B, num_head, num_patches, head_size
+                if self.qkv_cfg.LAYER_BEHIND == False:
+                    key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1))), dim=2)
+                    value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1))), dim=2)
+                else:
+                    key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1)), key_layer), dim=2)
+                    value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1)), value_layer), dim=2)
             else:
-                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_K).expand(B, -1, -1, -1)), key_layer), dim=2)
-                value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_V).expand(B, -1, -1, -1)), value_layer), dim=2)
+                if self.qkv_cfg.LAYER_BEHIND == False:
+                    key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                    value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                else:
+                    key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=2)
+                    value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), value_layer), dim=2)
+        
+        # Prompt on query and value (transpose ver.)
+        elif self.qkv_cfg.QUERY_PROMPT_MODE == 1:
+            # print('before', query_layer.shape) # torch.Size([64, 12, 202, 64])
+            # print('before', value_layer.shape)
+            # Currently support for shared-settings
+            if self.qkv_cfg.SHARE_PARAM_KV == True:
+                if self.qkv_cfg.LAYER_BEHIND == False:
+                    query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                    value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                    # key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+                else:
+                    query_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), query_layer), dim=2)
+                    value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), value_layer), dim=2)
+                    # key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=2)
+
+        # print('after', query_layer.shape) # torch.Size([64, 12, 212, 64])
+        # print('after', value_layer.shape) 
+        elif self.qkv_cfg.QUERY_PROMPT_MODE == 2:
+            # prompt on Quert-Key
+            # New init QKV embeddings
+            # print('new', self.deep_QKV_embeddings.shape)
+            if self.qkv_cfg.LAYER_BEHIND == False: 
+                query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
+                # key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+                # value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+            else:
+                query_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), query_layer), dim=3)
+                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=3)
+                # key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), key_layer), dim=3)
+                # value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), value_layer), dim=3)
+
+            # print('after', query_layer.shape)
+            # print('after', key_layer.shape)
+            # print('after', value_layer.shape)
+        
         else:
-            if self.qkv_cfg.LAYER_BEHIND == False:
-                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
-                value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=2)
+            # print('new', self.deep_QKV_embeddings.shape)
+            if self.qkv_cfg.LAYER_BEHIND == False: 
+                query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+                value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
             else:
-                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=2)
-                value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), value_layer), dim=2)
-                
-                
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) # B, num_head, num_patches, num_patches (turn into patches*patches)                    
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-        # 接着做softmax了 和论文中的一致
+                # for query: 64-12-198-64 --> 64-12-198-(64+visual)
+                # for key: 64-12-198-64 --> 64-12-(198+visual)-64 -- > 64-12-(198+visual)-(64+visual)
+                # for value: 64-12-198-64 --> 64-12-(198+visual)-64 share the first prompting strategy
+                query_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), query_layer), dim=3)
+                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), key_layer), dim=2)
+                key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_secondDim).expand(B, -1, -1, -1)), key_layer), dim=3)
+                value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), value_layer), dim=2)
+
+            # print('after', query_layer.shape)
+            # print('after', key_layer.shape)
+            # print('after', value_layer.shape)
+        
+        if self.qkv_cfg.QUERY_PROMPT_MODE == 1:
+            # two ways to get the attention scores.  (transpose ver.)          
+            # attention_scores = torch.matmul(key_layer, query_layer.transpose(-1, -2))
+            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+            attention_scores = attention_scores.transpose(-1, -2)
+            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+            # print(attention_scores.shape)
+            
+        else: #standard ver.
+            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) # B, num_head, num_patches, num_patches (turn into patches*patches)                    
+            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+        # print(attention_scores.shape)
+        
         attention_probs = self.softmax(attention_scores) # B, num_head, num_patches(query), num_patches(key)
         weights = attention_probs if self.vis else None
         attention_probs = self.attn_dropout(attention_probs)
@@ -286,7 +386,6 @@ class Attention(nn.Module):
         # print('1', attention_probs.shape) # torch.Size([B, 12, 197, 197+(num_token)])
         # print('2', value_layer.shape) # torch.Size([B, 12, 197+(num_token), 64])
         context_layer = torch.matmul(attention_probs, value_layer) # B, num_head, num_patches, head_size 
-        
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
         context_layer = context_layer.view(*new_context_layer_shape)
@@ -692,7 +791,7 @@ class Encoder(nn.Module):
                             patch_size = _pair(self.config.patches["size"]) # print('patch_size', patch_size) # 16, 16
                             
                             val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-                            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                            # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) 
                             nn.init.uniform_(self.deep_QKV_embeddings_V.data, -val, val)
                             nn.init.uniform_(self.deep_QKV_embeddings_K.data, -val, val)
                         else:

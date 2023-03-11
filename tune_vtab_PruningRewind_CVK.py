@@ -155,6 +155,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         BS = cfg.DATA.BATCH_SIZE
         LAYER_BEHIND = cfg.MODEL.P_VK.LAYER_BEHIND
         RESOLUTION = cfg.DATA.CROPSIZE
+        QUERY_PROMPT_MODE = cfg.MODEL.P_VK.QUERY_PROMPT_MODE
         if SHARED == True:
             marker = 1
         else:
@@ -173,7 +174,11 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             layer_behind = 1
         else:
             layer_behind = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}_RS{RESOLUTION}"
+        # if QUERY_PROMPT == True:
+        #     query_prompt = 1
+        # else:
+        #     query_prompt = 0
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}_RS{RESOLUTION}_QKV{QUERY_PROMPT_MODE}"
 
 
     if final_runs == 'init_train':
@@ -190,6 +195,8 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         cfg.RUN_N_TIMES = 1
         cfg.MODEL.SAVE_CKPT_FINALRUNS = True # enable ckpt saving during 'before_pruning' stage(need gradient during pruning)
         cfg.MODEL.SAVE_CKPT = False
+        # sleep(10) # for complete saving of eval_results
+        
         # find the best lr and best wd
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
@@ -211,15 +218,17 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         cfg.MODEL.SAVE_CKPT = False
         cfg.SOLVER.BASE_LR = lr
         cfg.SOLVER.WEIGHT_DECAY = wd
+        # sleep(10) # sleep for complete saving of eval_results.pth
 
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             
             files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
-            print('should not be longer than 72', len(files))
+            # print('should not be longer than 72', len(files))
             # print(files)
             # notice that mask tokens and mask token pieces are selected in this process(before)
             
-            # print('length of files (should be 72)', len(files))
+            # print('1', cfg.DATA.NAME)
+            # print('2', files)
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
@@ -541,8 +550,8 @@ def get_lrwd_range(args):
             0.5, 0.25, 0.1, 0.05
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
-        # lr_range = [5.0]
-        # wd_range = [0.01, 0.001]
+        # lr_range = [50.0]
+        # wd_range = [0.01, 0.0001]
 
     elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":
         lr_range = [
@@ -598,9 +607,9 @@ def main(args):
     # os.makedirs(rewind_model_output_dir, exist_ok=True)
     # rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
-    # cls_token_id, cls_token_pieces_id = 6, 3
+    # cls_token_id, cls_token_pieces_id = 4, 1
     # rewind_model_output_dir = os.path.join(
-    # cfg.OUTPUT_DIR, f"rewind_{cls_token_id}_tokens_{cls_token_pieces_id}_pieces_to_mask")
+    # cfg.OUTPUT_DIR, f"rewind/rewind_{cls_token_id}_tokens_{cls_token_pieces_id}_pieces_to_mask")
     # os.makedirs(rewind_model_output_dir, exist_ok=True)
     # rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
@@ -613,7 +622,7 @@ def main(args):
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
     print('Finish rewind process, get final runs')
-    # sleep(5)
+    # sleep(10)
     
     # get best results on rewind options
     # final run 5 times with fixed seed

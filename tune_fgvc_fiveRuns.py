@@ -124,8 +124,8 @@ def setup(args, lr, wd, final_runs, check_runtime=True, run_idx=None, seed=None)
     elif final_runs == 'final_runs':
         cfg.SEED = seed # put input seed here
         cfg.RUN_N_TIMES = 5
-        cfg.MODEL.SAVE_CKPT_FINALRUNS = False # change this to true to enable model saving
-        cfg.MODEL.SAVE_CKPT = False
+        cfg.MODEL.SAVE_CKPT_FINALRUNS = True # change this to true to enable model saving
+        cfg.MODEL.SAVE_CKPT = True
         cfg.SOLVER.BASE_LR = lr
         cfg.SOLVER.WEIGHT_DECAY = wd
         print('lr', lr)

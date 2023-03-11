@@ -146,7 +146,6 @@ class PromptedTransformer_Prompt_VK(Transformer_changeVK):
     def forward(self, x):
         # this is the default version:
         embedding_output = self.incorporate_prompt(x)
-        # print('SUCCESSFULLY REPLACE BY SELFMODEL')
 
         if self.p_vk_config.DEEP_P:
             encoded, attn_weights = self.forward_deep_prompt(

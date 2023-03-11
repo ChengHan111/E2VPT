@@ -154,3 +154,8 @@ dmypy.json
 /output_fgvc_before_pruning
 /output_fgvc_rewind
 /nabirds
+*.png
+*.csv
+results_heatmap.py
+plot.py
+train_save.py

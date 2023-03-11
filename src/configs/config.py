@@ -178,7 +178,7 @@ _C.MODEL.P_VK.SAVE_FOR_EACH_EPOCH = False
 _C.MODEL.P_VK.NUM_TOKENS = 5
 _C.MODEL.P_VK.DEEP = True # "whether do deep QKV or not, only for prepend location"
 _C.MODEL.P_VK.DROPOUT = 0.0
-_C.MODEL.P_VK.LAYER_BEHIND = True # to put layers behind new-added prompt in key/value
+_C.MODEL.P_VK.LAYER_BEHIND = True # True: prompt + layer; False: layer + prompt
 _C.MODEL.P_VK.SHARE_PARAM_KV = True # change it to False to init two parameters
 _C.MODEL.P_VK.ORIGIN_INIT = 2 # 0 for default, 1 for trunc_norm, 2 for kaiming init 
 _C.MODEL.P_VK.SHARED_ACCROSS = False # share vk value accross multi-attn layers
@@ -208,6 +208,7 @@ _C.MODEL.P_VK.SAVE_REWIND_MODEL = False
 # Based on MASK_CLS_TOKEN == True
 _C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = False # mask value and key instead of cls_token (unfinished, does not make sense)
 # _C.MODEL.P_VK.MASK_QUERY = False # does not make sense (attention map size changed, should apply linear projection to reduce dim)
+_C.MODEL.P_VK.QUERY_PROMPT_MODE = 0 # 0, 1, 2, 3 (disable query-prompt/ query transpose/query-key prompt(dim=3)/query-key-value prompt (2-dimension prompt))
 
 # ----------------------------------------------------------------------
 # Dataset options

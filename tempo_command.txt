@@ -62,20 +62,81 @@ CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_fiveRuns.py --config-file con
 
 CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_swin/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "80" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.LAYER_BEHIND "True"
 
-
+# Cars
 CUDA_VISIBLE_DEVICES=0 PORT=20000 python train.py \
-    --config-file configs/prompt/cub.yaml \
+    --config-file configs/prompt/cars.yaml \
     MODEL.TYPE "vit" \
-    DATA.BATCH_SIZE "128" \
-    MODEL.PROMPT.NUM_TOKENS "10" \
+    DATA.BATCH_SIZE "64" \
+    MODEL.PROMPT.NUM_TOKENS "200" \
     MODEL.PROMPT.DEEP "True" \
     MODEL.PROMPT.DROPOUT "0.1" \
     DATA.FEATURE "sup_vitb16_imagenet21k" \
-    DATA.NAME "CUB" \
-    DATA.NUMBER_CLASSES "200" \
-    SOLVER.BASE_LR "10.0" \
-    SOLVER.WEIGHT_DECAY "0.001" \
+    DATA.NAME "StanfordCars" \
+    DATA.NUMBER_CLASSES "196" \
+    SOLVER.BASE_LR "5.0" \
+    SOLVER.WEIGHT_DECAY "0.0001" \
     SEED 42 \
     MODEL.MODEL_ROOT "/home/ch7858/vpt/models" \
-    DATA.DATAPATH "/shared/kgcoe-research/spl/fgvc/CUB_200_2011" \
-    OUTPUT_DIR "output/seed42" 
+    DATA.DATAPATH "/shared/kgcoe-research/spl/fgvc/Stanford-cars" \
+    OUTPUT_DIR "output/pretrained_origin_prompt_cars" 
+
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python train.py \
+    --config-file configs/prompt/nabirds.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.PROMPT.NUM_TOKENS "50" \
+    MODEL.PROMPT.DEEP "True" \
+    MODEL.PROMPT.DROPOUT "0.1" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.NAME "nabirds" \
+    DATA.NUMBER_CLASSES "555" \
+    SOLVER.BASE_LR "50.0" \
+    SOLVER.WEIGHT_DECAY "0.0001" \
+    SEED 42 \
+    MODEL.MODEL_ROOT "/home/ch7858/vpt/models" \
+    DATA.DATAPATH "/shared/kgcoe-research/spl/fgvc/nabirds" \
+    OUTPUT_DIR "output/pretrained_origin_prompt_nabirds" 
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python train.py \
+    --config-file configs/prompt/flowers.yaml \
+    MODEL.TYPE "vit" \
+    DATA.BATCH_SIZE "128" \
+    MODEL.PROMPT.NUM_TOKENS "5" \
+    MODEL.PROMPT.DEEP "True" \
+    MODEL.PROMPT.DROPOUT "0.1" \
+    DATA.FEATURE "sup_vitb16_imagenet21k" \
+    DATA.NAME "OxfordFlowers" \
+    DATA.NUMBER_CLASSES "102" \
+    SOLVER.BASE_LR "25.0" \
+    SOLVER.WEIGHT_DECAY "0.0001" \
+    SEED 42 \
+    MODEL.MODEL_ROOT "/home/ch7858/vpt/models" \
+    DATA.DATAPATH "/shared/kgcoe-research/spl/fgvc/OxfordFlower" \
+    OUTPUT_DIR "output/pretrained_origin_prompt_flowers" 
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "32" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "20" MODEL.P_VK.NUM_TOKENS "20" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "32" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "40" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "150" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+
+vtab-dsprites(predicted_attribute="label_x_position",num_classes=16)_P10_VK5_SHARED_1_INIT_2_ACC_0_ONVK_0
+vtab-dsprites(predicted_attribute="label_orientation",num_classes=16)_P5_VK1_SHARED_1_INIT_2_ACC_0_BS128_LB1_RS224
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+
+CUDA_VISIBLE_DEVICES=0 PORT=10000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "50" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
+
+
+
+CUDA_VISIBLE_DEVICES=1 PORT=30000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.QUERY_PROMPT "True"

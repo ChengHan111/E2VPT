@@ -43,8 +43,8 @@ def setup(args):
     wd = cfg.SOLVER.WEIGHT_DECAY
     
     # turn these two lines to True to enable final model saving.
-    # cfg.MODEL.SAVE_CKPT_FINALRUNS = False 
-    # cfg.MODEL.SAVE_CKPT = False
+    # cfg.MODEL.SAVE_CKPT_FINALRUNS = True 
+    # cfg.MODEL.SAVE_CKPT = True
     
     current_time = time.strftime("%H:%M:%S", time.localtime())
     print("Self-added Current time (Applied for debugging), In train.py")

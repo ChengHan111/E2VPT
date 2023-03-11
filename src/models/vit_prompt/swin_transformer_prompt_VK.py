@@ -238,7 +238,6 @@ class PromptedSwinTransformer_Prompt_VK(SwinTransformer):
             # print(self.prompt_soft_tokens_pieces_mask_cls_token.repeat((1,self.soft_token_chunks_num_cls_token_layer1)).repeat(B, 1, 1).shape)
             # print(self.prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, self.prompt_embeddings.shape[2]).repeat(B, 1, 1).shape)
             # print(self.soft_token_chunks_num_cls_token_layer1) #8
-            # exit()
             
             if self.p_vk_cfg.MASK_CLS_TOKEN is True: 
                 if self.p_vk_cfg.CLS_TOKEN_MASK_PIECES is True:

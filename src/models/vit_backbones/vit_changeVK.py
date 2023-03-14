@@ -154,7 +154,7 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 
-        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 0:
+        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 0 or self.qkv_cfg.QUERY_PROMPT_MODE == 1:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV, head_size_fixed))
@@ -195,13 +195,13 @@ class Attention(nn.Module):
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_addition, std=0.02)
                 trunc_normal_(self.deep_QKV_embeddings_secondDim, std=0.02)
-            # kaiming init (to be continued, untested)
             
             else:
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_addition, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_secondDim, a=0, mode='fan_in', nonlinearity='leaky_relu')
         
+        # elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 2:
         else:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             # 197 as the input dimension
@@ -233,9 +233,7 @@ class Attention(nn.Module):
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
-    def forward(self, hidden_states):
-        # print('mark', hidden_states)
-        
+    def forward(self, hidden_states):        
         mixed_query_layer = self.query(hidden_states) # B, num_patches, head_size*num_head
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
@@ -328,31 +326,37 @@ class Attention(nn.Module):
         # print('after', query_layer.shape) # torch.Size([64, 12, 212, 64])
         # print('after', value_layer.shape) 
         elif self.qkv_cfg.QUERY_PROMPT_MODE == 2:
+            # print('should pass2')
             # prompt on Quert-Key
-            # New init QKV embeddings
-            # print('new', self.deep_QKV_embeddings.shape)
+            # New init QKV embeddings (different from above QKV embedding inits)
             if self.qkv_cfg.LAYER_BEHIND == False: 
                 query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
                 key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
                 # key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
                 # value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
             else:
+                # print(query_layer.shape)
+                # print(key_layer.shape)
                 query_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), query_layer), dim=3)
                 key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=3)
                 # key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), key_layer), dim=3)
                 # value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), value_layer), dim=3)
-
+                # print('after',query_layer.shape)
+                # print('after', key_layer.shape)
+                
             # print('after', query_layer.shape)
             # print('after', key_layer.shape)
             # print('after', value_layer.shape)
         
         else:
+            # print('should pass3')
             # print('new', self.deep_QKV_embeddings.shape)
             if self.qkv_cfg.LAYER_BEHIND == False: 
                 query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
-                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
                 key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_secondDim).expand(B, -1, -1, -1))), dim=3)
                 value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+
             else:
                 # for query: 64-12-198-64 --> 64-12-198-(64+visual)
                 # for key: 64-12-198-64 --> 64-12-(198+visual)-64 -- > 64-12-(198+visual)-(64+visual)

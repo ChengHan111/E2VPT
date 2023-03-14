@@ -51,13 +51,13 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     wd = float(j_data_lrwd.split("_")[1].split("wd")[-1])
     # return data_name, feat_type, lr, wd
     if dataset_type == 'vtab':
-        data_name = job_root.split("_P")[0].split("/output_finalfinal/")[1]
+        data_name = job_root.split(f"_{P_value}")[0].split("/output_finalfinal/")[1]
     elif dataset_type == 'fgvc':
-        data_name = job_root.split("_P")[0].split("/output_fgvc_finalfinal/")[1]
+        data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
-        data_name = job_root.split("_P")[0].split("/output_rewind/")[1]
+        data_name = job_root.split(f"_{P_value}")[0].split("/output_rewind/")[1]
     elif dataset_type == 'fgvc_rewind':
-        data_name = job_root.split("_P")[0].split("/output_fgvc_rewind/")[1]
+        data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_rewind/")[1]
     
     return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
 
@@ -154,8 +154,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                     # print('cls_token_pieces_mask', cls_token_pieces_mask)
                     # default as onVK = False # if you wanna change, make changes here
                     # ONVK_0 BS64_LB0
-                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB1_RS224/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB1_RS224/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV2/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV2/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 elif dataset_type == 'fgvc_rewind':
                     root_path = job_path.split('/output_fgvc_rewind')[0]
                     mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'

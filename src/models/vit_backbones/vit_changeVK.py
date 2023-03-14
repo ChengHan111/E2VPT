@@ -154,7 +154,7 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_V, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_K, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 
-        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 0:
+        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 0 or self.qkv_cfg.QUERY_PROMPT_MODE == 1:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, num_patches_QKV, head_size_fixed))
@@ -201,7 +201,7 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_addition, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_secondDim, a=0, mode='fan_in', nonlinearity='leaky_relu')
         
-        else:
+        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 2:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             # 197 as the input dimension
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
@@ -325,6 +325,7 @@ class Attention(nn.Module):
         # print('after', query_layer.shape) # torch.Size([64, 12, 212, 64])
         # print('after', value_layer.shape) 
         elif self.qkv_cfg.QUERY_PROMPT_MODE == 2:
+            # print('should pass2')
             # prompt on Quert-Key
             # New init QKV embeddings (different from above QKV embedding inits)
             if self.qkv_cfg.LAYER_BEHIND == False: 
@@ -333,22 +334,28 @@ class Attention(nn.Module):
                 # key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
                 # value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
             else:
+                # print(query_layer.shape)
+                # print(key_layer.shape)
                 query_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), query_layer), dim=3)
                 key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1)), key_layer), dim=3)
                 # key_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), key_layer), dim=3)
                 # value_layer = torch.cat((self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1)), value_layer), dim=3)
-
+                # print('after',query_layer.shape)
+                # print('after', key_layer.shape)
+                
             # print('after', query_layer.shape)
             # print('after', key_layer.shape)
             # print('after', value_layer.shape)
         
         else:
+            # print('should pass3')
             # print('new', self.deep_QKV_embeddings.shape)
             if self.qkv_cfg.LAYER_BEHIND == False: 
                 query_layer = torch.cat((query_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
-                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings).expand(B, -1, -1, -1))), dim=3)
                 key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+                key_layer = torch.cat((key_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_secondDim).expand(B, -1, -1, -1))), dim=3)
                 value_layer = torch.cat((value_layer, self.QKV_dropout(self.QKV_proj(self.deep_QKV_embeddings_addition).expand(B, -1, -1, -1))), dim=2)
+
             else:
                 # for query: 64-12-198-64 --> 64-12-198-(64+visual)
                 # for key: 64-12-198-64 --> 64-12-(198+visual)-64 -- > 64-12-(198+visual)-(64+visual)

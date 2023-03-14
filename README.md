@@ -1,12 +1,9 @@
-# Visual Prompt Tuning 
-
-https://arxiv.org/abs/2203.12119 
-
+# E$^2$VPT: An Effective and Efficient Approach for Visual Prompt Tuning
 ------
 
-This repository contains the official PyTorch implementation for Visual Prompt Tuning.
+This repository contains the official PyTorch implementation for E$^2$VPT: An Effective and Efficient Approach for Visual Prompt Tuning.
 
-![vpt_teaser](https://github.com/KMnP/vpt/blob/main/imgs/teaser.png)
+<!-- ![vpt_teaser](https://github.com/KMnP/vpt/blob/main/imgs/teaser.png) -->
 
 ## Environment settings
 

@@ -201,7 +201,8 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_addition, a=0, mode='fan_in', nonlinearity='leaky_relu')
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings_secondDim, a=0, mode='fan_in', nonlinearity='leaky_relu')
         
-        elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 2:
+        # elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 2:
+        else:
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
             # 197 as the input dimension
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(

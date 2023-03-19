@@ -1,13 +1,15 @@
 # E$^2$VPT: An Effective and Efficient Approach for Visual Prompt Tuning
 ------
 
-This repository contains the official PyTorch implementation for E$^2$VPT: An Effective and Efficient Approach for Visual Prompt Tuning.
+This repository contains the official PyTorch implementation for E$^2$VPT: An Effective and Efficient Approach for Visual Prompt Tuning. Our work is based on Visual Prompt Tuning, and we thank the great work of them. 
 
 <!-- ![vpt_teaser](https://github.com/KMnP/vpt/blob/main/imgs/teaser.png) -->
 
 ## Environment settings
 
 See `env_setup.sh`
+
+Note that you need to add a file (which is put in timm_added folder) to timm/models with path `anaconda3/envs/[envs-name]/lib/python3.7/site-packages/timm/models`, and init it in `__init__.py` by adding `from .vision_transformer_changeVK import *`.
 
 ## Structure of the this repo (key files are marked with 👉):
 

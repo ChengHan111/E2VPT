@@ -22,5 +22,5 @@ DATA:
   NUMBER_CLASSES: -1
   DATAPATH: ""
   FEATURE: "sup_vitb16_224"
-  BATCH_SIZE: 384
+  BATCH_SIZE: 224 # original batch size is 384
   NUM_WORKERS: 8

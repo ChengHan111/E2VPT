@@ -1,0 +1,12 @@
+_BASE_: "../../base-finetune.yaml" # applied changed version of base-prompt here (Origin VisionTransformer)
+RUN_N_TIMES: 1
+DATA:
+  NAME: "vtab-cifar(num_classes=100)"
+  DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Natural/"  #TODO: need to specify here
+  NUMBER_CLASSES: 100
+  MULTILABEL: False
+MODEL:
+  TYPE: "vit"
+SOLVER:
+  BASE_LR: 2.5
+  WEIGHT_DECAY: 0.01

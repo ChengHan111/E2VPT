@@ -178,7 +178,7 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         #     query_prompt = 1
         # else:
         #     query_prompt = 0
-        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}_RS{RESOLUTION}_QKV{QUERY_PROMPT_MODE}"
+        Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}_RS{RESOLUTION}_QKV{QUERY_PROMPT_MODE}" #_jointUpdate
 
 
     if final_runs == 'init_train':

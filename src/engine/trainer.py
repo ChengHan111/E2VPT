@@ -354,11 +354,11 @@ class Trainer():
         
         prompt_model = model
         self.cls_weights = train_loader.dataset.get_class_weights(self.cfg.DATA.CLASS_WEIGHTS_TYPE)
-        # TODO:  其实上面有包含 这里这么写冗余了 之后可以考虑去掉
+
         Checkpointer(
             prompt_model
         ).load(cfg.OUTPUT_DIR + '/last_model.pth') 
-        # print('path', cfg.OUTPUT_DIR)
+
         prompt_model.eval()
         soft_tokens_importance = torch.zeros(n_soft_tokens).cuda()
         soft_tokens_pieces_importance = torch.zeros(n_soft_tokens, n_pieces_token).cuda()

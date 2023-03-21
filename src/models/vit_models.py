@@ -146,6 +146,7 @@ class ViT(nn.Module):
         elif transfer_type == "P_VK": # add bias term here for exp.
             for k, p in self.enc.named_parameters():
                 print('#####', k)
+                # print('this mark appears when all layers+prompts are updated jointly')
                 if "QKV" not in k and 'prompt' not in k: 
                     p.requires_grad = False
                     print(p.requires_grad)

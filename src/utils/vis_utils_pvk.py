@@ -39,10 +39,16 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_rewind/")[1]
     elif dataset_type == 'fgvc_rewind':
         job_name = job_root.split("/output_fgvc_rewind/")[1]
+    # elif job_name == 'vtab_finetune':
+    else:
+        job_name = job_root.split("/_finalfinal/")[1]
     
     # print(job_name)
     job_name_split = job_name.split("_")
-    P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
+    if dataset_type != 'vtab_finetune':
+        P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
+    else:
+        P_value, VK_value, Shared, Init = None, None, None, None
     
     j_data = job_path.split("/run")[0].split(str(model_name) + "/")
     j_data_lrwd = j_data[1]
@@ -58,7 +64,12 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         data_name = job_root.split(f"_{P_value}")[0].split("/output_rewind/")[1]
     elif dataset_type == 'fgvc_rewind':
         data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_rewind/")[1]
-    
+    else:
+        # print(data_name)
+        print('111', job_root)
+        data_name = job_root.split("/_finalfinal/")[1]  
+          
+        
     return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
 
 
@@ -129,6 +140,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     # get training loss per epoch, 
     # cls results for both val and test
     train_loss = []
+    test_loss = []
+    val_loss = []
     eval_dict = defaultdict(list)
 #     best_epoch = -1
     num_jobs = 0
@@ -154,8 +167,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                     # print('cls_token_pieces_mask', cls_token_pieces_mask)
                     # default as onVK = False # if you wanna change, make changes here
                     # ONVK_0 BS64_LB0
-                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV2/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV2/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 elif dataset_type == 'fgvc_rewind':
                     root_path = job_path.split('/output_fgvc_rewind')[0]
                     mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
@@ -213,8 +226,14 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         if num_jobs == 2:
             break
         if "average train loss:" in line:
-            loss = float(line.split("average train loss: ")[-1])
-            train_loss.append(loss)
+            loss_train = float(line.split("average train loss: ")[-1])
+            train_loss.append(loss_train)
+        if "average loss:" in line and "Inference (val):" in line:
+            loss_val = float(line.split("average loss: ")[-1])
+            val_loss.append(loss_val)
+        if "average loss:" in line and "Inference (test):" in line:
+            loss_test = float(line.split("verage loss: ")[-1])
+            test_loss.append(loss_test)
         if " Classification results with " in line:
             # print(line)
             update_eval(line, eval_dict, data_name)
@@ -247,7 +266,7 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
         "Piece_Value": cls_token_pieces_mask_value,
     }
     v_top1, t_top1 = None, None
-    return train_loss, eval_dict, meta_dict, (v_top1, t_top1)
+    return train_loss, val_loss, test_loss, eval_dict, meta_dict, (v_top1, t_top1)
 
 def load_soft_token_mask_file(path):
     with open(path) as f:
@@ -317,8 +336,14 @@ def get_time(file):
 def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_epoch=300, dataset_type='vtab'):
     pd_dict = defaultdict(list)
     for job_path in tqdm(files, desc=model_type):
-        train_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME, dataset_type)
+        train_loss, val_loss, test_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME, dataset_type)
         batch_size = meta_dict["batch_size"]
+        
+        # print('train_loss', train_loss)
+        # print('val_loss', val_loss)
+        # print('test_loss', test_loss)
+        # exit()
+
         
         if len(eval_results) == 0:
             print(f"job {job_path} not ready in eval results")
@@ -337,6 +362,11 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         
         metric_b = "val_top1"
         best_epoch = np.argmax(eval_results[metric_b])
+        # print('best_epoch', best_epoch)
+        
+        train_loss_atbest = train_loss[best_epoch]
+        val_loss_atbest = val_loss[best_epoch]
+        test_loss_atbest = test_loss[best_epoch]
 
         if is_best:
             for name, val in eval_results.items():
@@ -370,6 +400,9 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         pd_dict["file"].append(job_path)
         total_time, _, _ = get_time(job_path)
         pd_dict["total_time"].append(total_time)
+        pd_dict['train_loss_atbest'].append(train_loss_atbest)
+        pd_dict['val_loss_atbest'].append(val_loss_atbest)
+        pd_dict['test_loss_atbest'].append(test_loss_atbest)
 
     result_df = None
     if len(pd_dict) > 0:

@@ -12,8 +12,8 @@ pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = '/home/ch7858/vpt/_finalfinal/vtab-diabetic_retinopathy(config="btgraham-300")'
-dataset_type = 'vtab_finetune' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind
+root = '/home/ch7858/vpt/output_rewind/vtab-svhn_P20_VK5_SHARED_1_INIT_2_ACC_0_BS64_LB1_RS224_QKV0_finetuned_update'
+dataset_type = 'vtab_rewind' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
 MODEL_NAME = "sup_vitb16_224" # sup_vitb16_224 # mae_vitb16 # mocov3_vitb # swinb_imagenet22k_224
 
 df_list=[]

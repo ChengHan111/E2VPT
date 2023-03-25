@@ -35,7 +35,8 @@ MODEL_ZOO = {
     "swinb_imagenet22k_384": "swin_base_patch4_window12_384_22k.pth",
     "swinl_imagenet22k_224": "swin_large_patch4_window7_224_22k.pth",
     "sup_vitb8": "ViT-B_8.npz",
-    "sup_vitb16_224": "ViT-B_16-224.npz",
+    # "sup_vitb16_224": "ViT-B_16-224.npz",
+    "sup_vitb16_224": '/home/ch7858/vpt/_finalfinal/vtab-diabetic_retinopathy(config="btgraham-300")/sup_vitb16_224/lr0.0005_wd0.0/run2/last_model.pth',
     "sup_vitb16": "ViT-B_16.npz",
     "sup_vitl16_224": "ViT-L_16-224.npz",
     "sup_vitl16": "ViT-L_16.npz",
@@ -67,6 +68,7 @@ def build_mae_model(
     out_dim = model.embed_dim
 
     ckpt = os.path.join(model_root, MODEL_ZOO[model_type])
+
     checkpoint = torch.load(ckpt, map_location="cpu")
     state_dict = checkpoint['model']
 
@@ -91,7 +93,7 @@ def build_mocov3_model(
     else:
         model = vit_base()
     out_dim = 768
-    print('load_ckpt mocov3_linear-vit-b-300ep.pth.tar')
+    # print('load_ckpt mocov3_linear-vit-b-300ep.pth.tar')
     ckpt = os.path.join(model_root,"mocov3_linear-vit-b-300ep.pth.tar")
 
     checkpoint = torch.load(ckpt, map_location="cpu")
@@ -575,7 +577,29 @@ def build_vit_sup_models(
             model_type, crop_size, num_classes=-1, vis=vis)
     
     if load_pretrain:
-        model.load_from(np.load(os.path.join(model_root, MODEL_ZOO[model_type])))
+        
+        # load checkpoint
+        Remove_head_during_finetune = True
+        # make changes here! Note to restore the original code
+        ckpt = MODEL_ZOO[model_type]
+        checkpoint = torch.load(ckpt, map_location="cpu")
+        state_dict = checkpoint['model']
+        # create a dictionary to map the old keys to the new keys
+        
+        new_keys = {}
+        for key in state_dict.keys():
+            new_key = key.replace("enc.transformer", "transformer")
+            new_keys[key] = new_key
+
+        # create a new state dict with the updated keys
+        new_state_dict = {new_keys[k]: v for k, v in state_dict.items()}
+        new_state_dict = {k:v for k,v in new_state_dict.items() if not k.startswith('head')}
+        
+        model.load_state_dict(new_state_dict, strict=False)
+        # model.load_state_dict(state_dict, strict=True)
+        
+        # This is the origin version of loading the model
+        # model.load_from(np.load(os.path.join(model_root, MODEL_ZOO[model_type])))
 
     return model, m2featdim[model_type]
 

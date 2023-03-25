@@ -5,6 +5,9 @@ import torch
 from torch.utils.data.distributed import DistributedSampler
 import torchvision
 from torch.utils.data.sampler import RandomSampler
+from torch.utils.data.sampler import WeightedRandomSampler
+import random
+
 
 from ..utils import logging
 from .datasets.json_dataset import (
@@ -53,17 +56,47 @@ def _construct_loader(cfg, split, batch_size, shuffle, drop_last):
             ])
             imagenet_data_train = torchvision.datasets.ImageFolder(imagenet_path, 
                     transform=train_transform)
+            
+            if cfg.DATA.RAMDOM_TRAIN:
+                if cfg.SEED is not None:
+                    random.seed(cfg.SEED)
+                else:
+                    random.seed(cfg.DATA.RANDOM_SEED)
+                    
+                num_samples_per_class = cfg.DATA.RANDOM_TRAIN_IMAGE_NUM
+                # Select a fixed number of samples from each class randomly using the fixed random seed
+                class_indices = dict()
+                for idx, (image, label) in enumerate(imagenet_data_train):
+                    if label not in class_indices:
+                        class_indices[label] = [idx]
+                    else:
+                        class_indices[label].append(idx)
+                samples_indices = []
+                for indices in class_indices.values():
+                    samples_indices += random.sample(indices, num_samples_per_class)
+                samples_dataset = torch.utils.data.Subset(imagenet_data_train, samples_indices)
 
-            sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
 
-            # create a loader
-            train_dataloader = torch.utils.data.DataLoader(imagenet_data_train,
-                                            batch_size=batch_size,
-                                            shuffle=(False if sampler else shuffle),
-                                            sampler=sampler,
-                                            num_workers=cfg.DATA.NUM_WORKERS,
-                                            pin_memory=cfg.DATA.PIN_MEMORY,
-                                            drop_last=drop_last,)
+                # create a loader
+                test_dataloader = torch.utils.data.DataLoader(samples_dataset,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
+            else:
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+
+                # create a loader
+                train_dataloader = torch.utils.data.DataLoader(imagenet_data_train,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
             return train_dataloader
     
         elif split == "val":
@@ -77,16 +110,47 @@ def _construct_loader(cfg, split, batch_size, shuffle, drop_last):
             imagenet_data_val = torchvision.datasets.ImageFolder(imagenet_path, 
                     transform=val_transform)
             
-            sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+            if cfg.DATA.RAMDOM_VAL:
+                if cfg.SEED is not None:
+                    random.seed(cfg.SEED)
+                else:
+                    random.seed(cfg.DATA.RANDOM_SEED)
+                num_samples_per_class = cfg.DATA.RANDOM_VAL_IMAGE_NUM
+                # Select a fixed number of samples from each class randomly using the fixed random seed
+                class_indices = dict()
+                for idx, (image, label) in enumerate(imagenet_data_val):
+                    if label not in class_indices:
+                        class_indices[label] = [idx]
+                    else:
+                        class_indices[label].append(idx)
+                samples_indices = []
+                for indices in class_indices.values():
+                    samples_indices += random.sample(indices, num_samples_per_class)
+                samples_dataset = torch.utils.data.Subset(imagenet_data_val, samples_indices)
 
-            # create a loader
-            val_dataloader = torch.utils.data.DataLoader(imagenet_data_val,
-                                            batch_size=batch_size,
-                                            shuffle=(False if sampler else shuffle),
-                                            sampler=sampler,
-                                            num_workers=cfg.DATA.NUM_WORKERS,
-                                            pin_memory=cfg.DATA.PIN_MEMORY,
-                                            drop_last=drop_last,)
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+
+                # create a loader
+                test_dataloader = torch.utils.data.DataLoader(samples_dataset,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
+                                                             
+            
+            else:
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+
+                # create a loader
+                val_dataloader = torch.utils.data.DataLoader(imagenet_data_val,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
             return val_dataloader
         
         elif split == "test":
@@ -99,17 +163,46 @@ def _construct_loader(cfg, split, batch_size, shuffle, drop_last):
             ])
             imagenet_data_test = torchvision.datasets.ImageFolder(imagenet_path, 
                     transform=test_transform)
+            
+            if cfg.DATA.RAMDOM_TEST:
+                if cfg.SEED is not None:
+                    random.seed(cfg.SEED)
+                else:
+                    random.seed(cfg.DATA.RANDOM_SEED)
+                num_samples_per_class = cfg.DATA.RANDOM_TEST_IMAGE_NUM
+                # Select a fixed number of samples from each class randomly using the fixed random seed
+                class_indices = dict()
+                for idx, (image, label) in enumerate(imagenet_data_test):
+                    if label not in class_indices:
+                        class_indices[label] = [idx]
+                    else:
+                        class_indices[label].append(idx)
+                samples_indices = []
+                for indices in class_indices.values():
+                    samples_indices += random.sample(indices, num_samples_per_class)
+                samples_dataset = torch.utils.data.Subset(imagenet_data_test, samples_indices)
 
-            sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
 
-            # create a loader
-            test_dataloader = torch.utils.data.DataLoader(imagenet_data_test,
-                                            batch_size=batch_size,
-                                            shuffle=(False if sampler else shuffle),
-                                            sampler=sampler,
-                                            num_workers=cfg.DATA.NUM_WORKERS,
-                                            pin_memory=cfg.DATA.PIN_MEMORY,
-                                            drop_last=drop_last,)
+                # create a loader
+                test_dataloader = torch.utils.data.DataLoader(samples_dataset,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
+            else:
+                sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+
+                # create a loader
+                test_dataloader = torch.utils.data.DataLoader(imagenet_data_test,
+                                                batch_size=batch_size,
+                                                shuffle=(False if sampler else shuffle),
+                                                sampler=sampler,
+                                                num_workers=cfg.DATA.NUM_WORKERS,
+                                                pin_memory=cfg.DATA.PIN_MEMORY,
+                                                drop_last=drop_last,)
             return test_dataloader
         
     else:

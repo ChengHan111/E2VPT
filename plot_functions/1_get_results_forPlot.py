@@ -2,9 +2,9 @@ import glob
 import pandas as pd
 import statistics
 
-# from src.utils.vis_utils import get_df, average_df
-
-from src.utils.vis_utils_pvk import get_df, average_df
+import sys
+sys.path.insert(0, '..')  # Add parent folder to the path
+from src.utils.vis_utils_pvk import get_df_forPlot, average_df
 
 LOG_NAME = "logs.txt"
 pd.set_option('display.max_columns', None)
@@ -15,6 +15,7 @@ pd.set_option('display.max_rows', None)
 root = '/home/ch7858/vpt/output_copy/output_25/output_rewind/vtab-sun397_P5_VK5_SHARED_1_INIT_2_ACC_0_BS64_LB1'
 dataset_type = 'vtab_rewind' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
 MODEL_NAME = "sup_vitb16_224" # sup_vitb16_224 # mae_vitb16 # mocov3_vitb # swinb_imagenet22k_224
+train_mode = 'PromptTuning' # Finetune # PromptTuning # MixedOneStep # TwoSteps
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):
@@ -23,8 +24,8 @@ for idx, seed in enumerate(["42", "44", "82", "100", "800"]):
     files = glob.glob(f"{root}/{MODEL_NAME}/*/run{run}/{LOG_NAME}")
     print(files)
     for f in files:
-        df = get_df(
-            files, f"run{run}", root, MODEL_NAME, is_best=False, is_last=True, dataset_type=dataset_type)
+        df = get_df_forPlot(
+            files, f"run{run}", root, MODEL_NAME, is_best=False, is_last=True, dataset_type=dataset_type, train_mode=train_mode)
         if df is None:
             continue
         df["seed"] = seed
@@ -53,7 +54,7 @@ val_loss = df['val_loss_atbest'].tolist()
 # print('test_loss:', test_loss)
 # print('val_loss:', val_loss)
 print(f"train/val/test: \n AVG[{statistics.mean(train_loss)}-{statistics.mean(test_loss)}-{statistics.mean(val_loss)}]")
-print(f" ALL{train_loss}{test_loss}{val_loss}")
+print(f"ALL{train_loss}{test_loss}{val_loss}")
 if dataset_type != 'vtab_finetune':
     print(f"{best_top_1}--{runs}({Prompt_length}+{VK_length}+lr{lr}_wd{wd} {tuned_percentage} {batch_size})")
 else: # vtab_finetune

@@ -104,6 +104,8 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     else:
         cfg.RUN_N_TIMES = 5
         cfg.MODEL.SAVE_CKPT = False
+        cfg.MODEL.SAVE_CKPT_FINALRUNS = True # set here to True to enable final saving 
+        
         # find the best lr and best wd
         files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
         lr, wd = find_best_lrwd(files, cfg.DATA.NAME)

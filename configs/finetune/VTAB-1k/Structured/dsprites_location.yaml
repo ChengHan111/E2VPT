@@ -1,4 +1,4 @@
-_BASE_: "../../base-finetune.yaml"
+_BASE_: "../../../base-finetune.yaml"
 RUN_N_TIMES: 1
 DATA:
   NAME: vtab-dsprites(predicted_attribute="label_x_position",num_classes=16)

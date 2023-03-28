@@ -1,4 +1,4 @@
-_BASE_: "../../base-finetune.yaml"
+_BASE_: "../../../base-finetune.yaml"
 RUN_N_TIMES: 1
 DATA:
   NAME: vtab-smallnorb(predicted_attribute="label_azimuth")

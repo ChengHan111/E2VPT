@@ -499,6 +499,9 @@ python train.py --config-file configs/finetune/cars.yaml DATA.BATCH_SIZE "128" S
 ## get results
 python get_results_PruningRewind_CVK.py
 
+## finetune command 
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128"
+
 ## get results for imagenet prompt tuning (saved for NIPS)
 
 python tune_vtab_PruningRewind_CVK_imagenet1k.py --train-type "P_VK" --config-file configs/prompt/prompt_test/imagenet1k.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.QUERY_PROMPT_MODE "0"

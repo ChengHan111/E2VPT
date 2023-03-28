@@ -578,28 +578,30 @@ def build_vit_sup_models(
     
     if load_pretrain:
         
-        # load checkpoint
-        Remove_head_during_finetune = True
-        # make changes here! Note to restore the original code
-        ckpt = MODEL_ZOO[model_type]
-        checkpoint = torch.load(ckpt, map_location="cpu")
-        state_dict = checkpoint['model']
-        # create a dictionary to map the old keys to the new keys
-        
-        new_keys = {}
-        for key in state_dict.keys():
-            new_key = key.replace("enc.transformer", "transformer")
-            new_keys[key] = new_key
+        resume_model = False
+        if resume_model:
+            # load checkpoint
+            Remove_head_during_finetune = True
+            # make changes here! Note to restore the original code
+            ckpt = MODEL_ZOO[model_type]
+            checkpoint = torch.load(ckpt, map_location="cpu")
+            state_dict = checkpoint['model']
+            # create a dictionary to map the old keys to the new keys
+            
+            new_keys = {}
+            for key in state_dict.keys():
+                new_key = key.replace("enc.transformer", "transformer")
+                new_keys[key] = new_key
 
-        # create a new state dict with the updated keys
-        new_state_dict = {new_keys[k]: v for k, v in state_dict.items()}
-        new_state_dict = {k:v for k,v in new_state_dict.items() if not k.startswith('head')}
-        
-        model.load_state_dict(new_state_dict, strict=False)
-        # model.load_state_dict(state_dict, strict=True)
-        
-        # This is the origin version of loading the model
-        # model.load_from(np.load(os.path.join(model_root, MODEL_ZOO[model_type])))
+            # create a new state dict with the updated keys
+            new_state_dict = {new_keys[k]: v for k, v in state_dict.items()}
+            new_state_dict = {k:v for k,v in new_state_dict.items() if not k.startswith('head')}
+            
+            model.load_state_dict(new_state_dict, strict=False)
+            # model.load_state_dict(state_dict, strict=True)
+        else:
+            # This is the origin version of loading the model
+            model.load_from(np.load(os.path.join(model_root, MODEL_ZOO[model_type])))
 
     return model, m2featdim[model_type]
 

@@ -5,7 +5,7 @@ This repository contains the official PyTorch implementation for E2VPT: An Effec
 
 As the size of transformer-based models continues to grow, fine-tuning these large-scale pretrained vision models for new tasks has become increasingly parameter-intensive. Parameter-efficient learning has been developed to reduce the number of tunable parameters during fine-tuning. Although these methods show promising results, there is still a significant performance gap compared to full fine-tuning. To address this challenge, we propose an Effective and Efficient Visual Prompt Tuning (E2VPT) approach for large-scale transformer-based model adaptation. Specifically, we introduce a set of learnable key-value prompts and visual prompts into self-attention and input layers, respectively, to improve the effectiveness of model fine-tuning. Moreover, we design a prompt pruning procedure to systematically prune low importance prompts while preserving model performance, which largely enhances the model's efficiency. Empirical results demonstrate that our approach outperforms several state-of-the-art baselines on two benchmarks, with considerably low parameter usage (e.g.,, 0.32% of model parameters on VTAB-1k). We anticipate that this work will inspire further exploration within the pretrain-then-finetune paradigm for large-scale models.
 
-<!-- ![vpt_teaser](https://github.com/KMnP/vpt/blob/main/imgs/teaser.png) -->
+![E2VPT_architecture](imgs/figure2_png)
 
 ## Environment settings
 

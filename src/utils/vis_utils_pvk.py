@@ -167,8 +167,8 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
                     # print('cls_token_pieces_mask', cls_token_pieces_mask)
                     # default as onVK = False # if you wanna change, make changes here
                     # ONVK_0 BS64_LB0
-                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV0_finetuned_update/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
-                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1_RS224_QKV0_finetuned_update/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
                 elif dataset_type == 'fgvc_rewind':
                     root_path = job_path.split('/output_fgvc_rewind')[0]
                     mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
@@ -268,6 +268,158 @@ def get_training_data(job_path, model_type, job_root, MODEL_NAME, dataset_type):
     v_top1, t_top1 = None, None
     return train_loss, val_loss, test_loss, eval_dict, meta_dict, (v_top1, t_top1)
 
+def get_training_dataACC(job_path, model_type, job_root, MODEL_NAME, dataset_type):
+    # data_name, feat_type, lr, wd = get_meta(job_root, job_path, model_type, MODEL_NAME)
+    data_name, feat_type, P_value, VK_value, Shared, lr, wd, Init = get_meta(job_root, job_path, model_type, MODEL_NAME, dataset_type)
+    # print(data_name, feat_type, P_value, VK_value, Shared, lr, wd, Init)
+    
+    with open(job_path) as f:
+        lines = f.readlines()
+
+    # get training loss per epoch, 
+    # cls results for both val and test
+    train_loss = []
+    test_loss = []
+    val_loss = []
+    
+    # get corresponding accuracy as well
+    trainACC, valACC, testACC = [], [], []
+    
+    eval_dict = defaultdict(list)
+#     best_epoch = -1
+    num_jobs = 0
+    total_params = -1
+    gradiented_params = -1
+    batch_size = None
+    for line in lines:  #, leave=False):
+        if "{'BATCH_SIZE'" in line and batch_size is None:
+            batch_size = int(line.split("'BATCH_SIZE': ")[-1].split(",")[0])
+            
+        if "Total Parameters: " in line:
+            total_params = int(line.split("Total Parameters: ")[-1].split("\t")[0])
+            gradiented_params = int(line.split("Gradient Parameters: ")[-1].split("\n")[0])
+            
+            # for rewind approach, consider subtraction on coresponding parameters.
+            if dataset_type == 'vtab_rewind' or dataset_type == 'fgvc_rewind':
+
+                cls_token_mask = int(job_path.split('_mt')[1].split('_mtr')[0])
+                cls_token_pieces_mask = int(job_path.split('_mtr')[1].split('/run')[0])
+                # print('!!!!',cls_token_mask, cls_token_pieces_mask)
+                if dataset_type == 'vtab_rewind':
+                    root_path = job_path.split('/output_rewind')[0]# print('cls_token_mask', cls_token_mask)
+                    # print('cls_token_pieces_mask', cls_token_pieces_mask)
+                    # default as onVK = False # if you wanna change, make changes here
+                    # ONVK_0 BS64_LB0
+                    mask_tokens_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS64_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                elif dataset_type == 'fgvc_rewind':
+                    root_path = job_path.split('/output_fgvc_rewind')[0]
+                    mask_tokens_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens/{cls_token_mask}_soft_tokens_to_mask.json'
+                    mask_tokens_pieces_path = root_path + '/output_fgvc_before_pruning/' + f'{data_name}_{P_value}_{VK_value}_SHARED_{Shared}_INIT_{Init}_ACC_0_BS128_LB1/{feat_type}/lr{lr}_wd{wd}/run1/mask_tokens_pieces/{cls_token_pieces_mask}_soft_tokens_pieces_to_mask.json'
+                
+                soft_token_to_mask = load_soft_token_mask_file(mask_tokens_path) 
+                prompt_soft_tokens_mask_cls_token, parameter_cls_token_mask = mask_soft_tokens(P_value, soft_token_to_mask)
+            
+                soft_tokens_pieces_to_mask = load_soft_tokens_pieces_mask_file(mask_tokens_pieces_path) 
+                # TODO: make cfg available here.
+                CLS_TOKEN_P_PIECES_NUM = 16 # same to the config file as 16 
+                prompt_soft_tokens_pieces_mask_cls_token, parameter_cls_token_piece_mask = mask_soft_tokens_pieces(P_value, soft_tokens_pieces_to_mask, CLS_TOKEN_P_PIECES_NUM)
+                
+                
+                if "swin" not in feat_type:
+                    # 12, 768 for total_dimension and prompt_dim
+                    # notice the difference here, the prompt embeddings should be repeat 12 times as the parameter num.
+                    prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 768)) # for a single layer
+                    
+                    # print(prompt_embeddings.shape) # torch.Size([12, 10, 768])
+                    soft_token_chunks_num_cls_token = int(768/CLS_TOKEN_P_PIECES_NUM)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
+                    # print('masking_map_pieces', prompt_soft_tokens_pieces_mask_cls_token)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
+                    # print('masking_map_cls_token', prompt_soft_tokens_mask_cls_token)
+                    
+                    prompt_embeddings_parameters = 12 * prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
+                    
+                    # print('prompt_embeddings_origin', prompt_embeddings_origin)
+                    # print('masked_percentage:', (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters)
+                    
+                    masked_percentage = (prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))) / prompt_embeddings_parameters
+                    
+                    prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(12 * prompt_embeddings))
+                    # print(total_params)
+                    parameter_added = (parameter_cls_token_mask + parameter_cls_token_piece_mask)
+                    # total_params += parameter_added #.data[0] should not add more (already included)
+                else:
+                    # 1, 128 for total_dimension and prompt dim
+                    # only pass the first layer, the layers after that are not covered.
+                    prompt_embeddings = nn.Parameter(torch.ones(int(P_value[1:]), 128)) # for a single layer
+                    soft_token_chunks_num_cls_token = int(128/CLS_TOKEN_P_PIECES_NUM)
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_pieces_mask_cls_token.repeat((1,soft_token_chunks_num_cls_token))
+                    prompt_embeddings = prompt_embeddings * prompt_soft_tokens_mask_cls_token.view(-1, 1).repeat(1, prompt_embeddings.shape[1])
+                    prompt_embeddings_parameters = prompt_embeddings.shape[0] * prompt_embeddings.shape[1]
+                    masked_percentage = (prompt_embeddings_parameters - int(torch.sum(1 * prompt_embeddings))) / prompt_embeddings_parameters
+                    prompt_embeddings_parameters_filtered = prompt_embeddings_parameters - int(torch.sum(1 * prompt_embeddings))
+
+
+                gradiented_params -= prompt_embeddings_parameters_filtered
+                
+                
+        if "Rank of current process:" in line:
+            num_jobs += 1
+        if num_jobs == 2:
+            break
+        if "average train loss:" in line:
+            loss_train = float(line.split("average train loss: ")[-1])
+            train_loss.append(loss_train)
+        if "average loss:" in line and "Inference (val):" in line:
+            loss_val = float(line.split("average loss: ")[-1])
+            val_loss.append(loss_val)
+        if "average loss:" in line and "Inference (test):" in line:
+            loss_test = float(line.split("verage loss: ")[-1])
+            test_loss.append(loss_test)
+        if "Classification results with val" in line:
+            acc_val_top1 = float(line.split("top1: ")[-1].split("	top5:")[0])
+            valACC.append(acc_val_top1)
+        if "Classification results with test" in line:
+            acc_test_top1 = float(line.split("top1: ")[-1].split("	top5:")[0])
+            testACC.append(acc_test_top1)
+        if " Classification results with " in line:
+            # print(line)
+            update_eval(line, eval_dict, data_name)
+    # print('valACC', valACC)
+    # print('testACC', testACC)
+    # exit()
+    
+    if dataset_type == 'vtab_rewind' or dataset_type == 'fgvc_rewind':
+        masked_percentage_value = masked_percentage
+        cls_token_mask_value = cls_token_mask
+        cls_token_pieces_mask_value = cls_token_pieces_mask
+    else:
+        masked_percentage_value = None
+        cls_token_mask_value = None
+        cls_token_pieces_mask_value = None
+    
+
+    meta_dict = {
+        "data": data_name,
+        "feature": feat_type,
+        "lr": float(lr) * 256 / int(batch_size),
+        "wd": wd,
+        "total_params": total_params,
+        "tuned_params": gradiented_params,
+        "tuned / total (%)": round(gradiented_params / total_params * 100, 4),
+        "batch_size": batch_size,
+        "Prompt_length": P_value,
+        "VK_length": VK_value,
+        "Shared": Shared,
+        "Init": Init,
+        "Masked_Percentage": masked_percentage_value,
+        "Mask_Value": cls_token_mask_value,
+        "Piece_Value": cls_token_pieces_mask_value,
+    }
+    v_top1, t_top1 = None, None
+    return train_loss, val_loss, test_loss, trainACC, valACC, testACC, eval_dict, meta_dict, (v_top1, t_top1)
+
 def load_soft_token_mask_file(path):
     with open(path) as f:
         t = json.load(f)
@@ -342,13 +494,185 @@ def get_df(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_
         # print('train_loss', train_loss)
         # print('val_loss', val_loss)
         # print('test_loss', test_loss)
-        # exit()
-
         
         if len(eval_results) == 0:
             print(f"job {job_path} not ready in eval results")
             continue
-        # print('????', len(eval_results["val_top1"]))
+
+        if len(eval_results["val_top1"]) == 0:
+            print(f"job {job_path} not ready in eval results 'val_top1'")
+            continue
+
+        if "val_top1" not in eval_results or "test_top1" not in eval_results:
+            print(f"inbalanced: {job_path}")
+            continue
+                
+        for k, v in meta_dict.items():
+            pd_dict[k].append(v)
+        
+        metric_b = "val_top1"
+        best_epoch = np.argmax(eval_results[metric_b])
+        # print('best_epoch', best_epoch)
+        
+        train_loss_atbest = train_loss[best_epoch]
+        val_loss_atbest = val_loss[best_epoch]
+        test_loss_atbest = test_loss[best_epoch]
+
+        if is_best:
+            for name, val in eval_results.items():
+                if "top5" in name:
+                    continue
+                if len(val) == 0:
+                    continue
+                if not isinstance(val[0], list):
+                    try:
+                        pd_dict["b-" + name].append(val[best_epoch])
+                    except:
+                        pd_dict["b-" + name].append(-1)
+                        # ongoing training process
+                        print(name, best_epoch, val)
+        # last epoch
+        if is_last:
+            if v_top1 is not None:
+                pd_dict["l-val_top1"].append(v_top1)
+                pd_dict["l-test_top1"].append(t_top1)
+                val = eval_results["val_top1"]
+            else:
+                for name, val in eval_results.items():
+                    if "top5" in name:
+                        continue
+                    if len(val) == 0:
+                        continue
+                    pd_dict["l-" + name].append(val[-1])
+
+        pd_dict["best_epoch"].append(f"{best_epoch + 1} | {len(val)}")
+
+        pd_dict["file"].append(job_path)
+        total_time, _, _ = get_time(job_path)
+        pd_dict["total_time"].append(total_time)
+        pd_dict['train_loss_atbest'].append(train_loss_atbest)
+        pd_dict['val_loss_atbest'].append(val_loss_atbest)
+        pd_dict['test_loss_atbest'].append(test_loss_atbest)
+
+    result_df = None
+    if len(pd_dict) > 0:
+        result_df = pd.DataFrame(pd_dict)
+        result_df = result_df.sort_values(['data', "feature", "lr", "wd"])
+    return result_df
+
+def get_df_forPlot(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_epoch=300, dataset_type='vtab', train_mode='PromptTuning'):
+    pd_dict = defaultdict(list)
+    for job_path in tqdm(files, desc=model_type):
+        train_loss, val_loss, test_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME, dataset_type)
+        batch_size = meta_dict["batch_size"]
+        
+        # print('train_loss', train_loss)
+        # print('val_loss', val_loss)
+        # print('test_loss', test_loss)
+        # saveIndice = files[0].split('run')[1].split('/')[0]
+        try:
+            os.makedirs(f"output_folder/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}", exist_ok=True)
+            with open(f"output_folder/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}/{model_type}.txt", 'x') as f:
+                for i in range(len(train_loss)):
+                    row = [str(train_loss[i]), str(val_loss[i]), str(test_loss[i])]
+                    row_str = '\t'.join(row)  # separate values with tab
+                    f.write(row_str + '\n')  # write row to file, followed by a newline character
+        except:
+            print("file already exists")
+        
+        if len(eval_results) == 0:
+            print(f"job {job_path} not ready in eval results")
+            continue
+
+        if len(eval_results["val_top1"]) == 0:
+            print(f"job {job_path} not ready in eval results 'val_top1'")
+            continue
+
+        if "val_top1" not in eval_results or "test_top1" not in eval_results:
+            print(f"inbalanced: {job_path}")
+            continue
+                
+        for k, v in meta_dict.items():
+            pd_dict[k].append(v)
+        
+        metric_b = "val_top1"
+        best_epoch = np.argmax(eval_results[metric_b])
+        # print('best_epoch', best_epoch)
+        
+        train_loss_atbest = train_loss[best_epoch]
+        val_loss_atbest = val_loss[best_epoch]
+        test_loss_atbest = test_loss[best_epoch]
+
+        if is_best:
+            for name, val in eval_results.items():
+                if "top5" in name:
+                    continue
+                if len(val) == 0:
+                    continue
+                if not isinstance(val[0], list):
+                    try:
+                        pd_dict["b-" + name].append(val[best_epoch])
+                    except:
+                        pd_dict["b-" + name].append(-1)
+                        # ongoing training process
+                        print(name, best_epoch, val)
+        # last epoch
+        if is_last:
+            if v_top1 is not None:
+                pd_dict["l-val_top1"].append(v_top1)
+                pd_dict["l-test_top1"].append(t_top1)
+                val = eval_results["val_top1"]
+            else:
+                for name, val in eval_results.items():
+                    if "top5" in name:
+                        continue
+                    if len(val) == 0:
+                        continue
+                    pd_dict["l-" + name].append(val[-1])
+
+        pd_dict["best_epoch"].append(f"{best_epoch + 1} | {len(val)}")
+
+        pd_dict["file"].append(job_path)
+        total_time, _, _ = get_time(job_path)
+        pd_dict["total_time"].append(total_time)
+        pd_dict['train_loss_atbest'].append(train_loss_atbest)
+        pd_dict['val_loss_atbest'].append(val_loss_atbest)
+        pd_dict['test_loss_atbest'].append(test_loss_atbest)
+
+    result_df = None
+    if len(pd_dict) > 0:
+        result_df = pd.DataFrame(pd_dict)
+        result_df = result_df.sort_values(['data', "feature", "lr", "wd"])
+    return result_df
+
+def get_df_forPlotACC(files, model_type, root, MODEL_NAME, is_best=True, is_last=True, max_epoch=300, dataset_type='vtab', train_mode='PromptTuning'):
+    pd_dict = defaultdict(list)
+    for job_path in tqdm(files, desc=model_type):
+        # currenly trainACC not available
+        train_loss, val_loss, test_loss, trainACC, valACC, testACC, eval_results, meta_dict, (v_top1, t_top1) = get_training_dataACC(job_path, model_type, root, MODEL_NAME, dataset_type)
+        batch_size = meta_dict["batch_size"]
+        
+        # print('trainACC', trainACC)
+        # print('valACC', valACC)
+        # print('testACC', testACC)
+        # saveIndice = files[0].split('run')[1].split('/')[0]
+        try:
+            os.makedirs(f"output_folderACC/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}", exist_ok=True)
+            with open(f"output_folderACC/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}/{model_type}.txt", 'x') as f:
+                # since trainACC is not available, use valACC instead for length
+                for i in range(len(valACC)): 
+                    # print(i)
+                    # row = [str(trainACC[i]), str(valACC[i]), str(testACC[i])]
+                    row = [str(valACC[i]), str(testACC[i])]
+                    row_str = '\t'.join(row)  # separate values with tab
+                    f.write(row_str + '\n')  # write row to file, followed by a newline character
+        except:
+            print("file already exists")
+        
+        if len(eval_results) == 0:
+            print(f"job {job_path} not ready in eval results")
+            continue
+
         if len(eval_results["val_top1"]) == 0:
             print(f"job {job_path} not ready in eval results 'val_top1'")
             continue

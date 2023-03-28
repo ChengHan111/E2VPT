@@ -161,3 +161,5 @@ plot.py
 train_save.py
 /_finalfinal
 /_val
+/plot_functions/output_folder
+/plot_functions/output_folderACC

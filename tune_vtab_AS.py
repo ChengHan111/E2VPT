@@ -443,10 +443,10 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
 def get_lrwd_range(args):
 
     if args.train_type == "finetune":
-        # lr_range = [0.001, 0.0001, 0.0005, 0.005]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-        lr_range = [0.001] # make changes here
-        wd_range = [0.01, 0.001]
+        lr_range = [0.001, 0.0001, 0.0005, 0.005]
+        wd_range = [0.01, 0.001, 0.0001, 0.0]
+        # lr_range = [0.001] # make changes here
+        # wd_range = [0.01, 0.001]
 
     elif args.train_type == "finetune_resnet":
         lr_range = [
@@ -473,14 +473,14 @@ def get_lrwd_range(args):
         wd_range = [0.01, 0.001, 0.0001, 0.0]
 
     elif args.train_type == "prompt":
-        # lr_range = [
-        #     5.0, 2.5, 1.0,
-        #     50.0, 25., 10.0,
-        #     0.5, 0.25, 0.1, 0.05
-        # ]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-        lr_range = [50.0] # make changes here
-        wd_range = [0.01, 0.0001]
+        lr_range = [
+            5.0, 2.5, 1.0,
+            50.0, 25., 10.0,
+            0.5, 0.25, 0.1, 0.05
+        ]
+        wd_range = [0.01, 0.001, 0.0001, 0.0]
+        # lr_range = [50.0] # make changes here
+        # wd_range = [0.01, 0.0001]
 
     elif args.train_type == "prompt_largerlr":
         lr_range = [

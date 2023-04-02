@@ -58,28 +58,64 @@ class CifarData(base.ImageTfdsData):
     # Creates a dict with example counts for each split.
     trainval_count = dataset_builder.info.splits["train"].num_examples
     test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_splits = {
+    # print('1', trainval_count) # 50000
+    # print('2', test_count) # 10000
+
+    origin = True
+    if origin:
+      num_samples_splits = {
+          "train": (train_split_percent * trainval_count) // 100,
+          "val": trainval_count - (train_split_percent * trainval_count) // 100,
+          "trainval": trainval_count,
+          "test": test_count,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+      # print('3', num_samples_splits)
+      
+
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:]".format(num_samples_splits["train"]),
+          "trainval": "train",
+          "test": "test",
+          "train800": "train[:800]",
+          "val200": "train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+          "train800val200": "train[:800]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+      }
+      # print('4', tfds_splits)
+    else:
+      print('self-changes on splits for cifar100')
+      num_samples_splits = {
         "train": (train_split_percent * trainval_count) // 100,
         "val": trainval_count - (train_split_percent * trainval_count) // 100,
         "trainval": trainval_count,
         "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+        "train800": 8000,
+        "val200": 2000,
+        "train800val200": 10000,
+      }
+      # print('3', num_samples_splits)
+    
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train[:{}]".format(num_samples_splits["train"]),
-        "val": "train[{}:]".format(num_samples_splits["train"]),
-        "trainval": "train",
-        "test": "test",
-        "train800": "train[:800]",
-        "val200": "train[{}:{}]".format(
-            num_samples_splits["train"], num_samples_splits["train"]+200),
-        "train800val200": "train[:800]+train[{}:{}]".format(
-            num_samples_splits["train"], num_samples_splits["train"]+200),
-    }
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:]".format(num_samples_splits["train"]),
+          "trainval": "train",
+          "test": "test",
+          "train800": "train[:8000]",
+          "val200": "train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+2000),
+          "train800val200": "train[:8000]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+2000),
+      }
+      # print('4', tfds_splits)
+    
 
     super(CifarData, self).__init__(
         dataset_builder=dataset_builder,

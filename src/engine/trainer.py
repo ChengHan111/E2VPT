@@ -19,6 +19,9 @@ from ..utils import logging
 from ..utils.train_utils import AverageMeter, gpu_mem_usage
 import json
 
+import numpy as np
+from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance
+
 logger = logging.get_logger("visual_prompt")
 
 
@@ -544,3 +547,325 @@ class Trainer():
             soft_tokens_to_mask.add(soft_token)
         
         return soft_tokens_to_mask
+    
+    @torch.no_grad()
+    def eval_classifier_IG(self, model, train_loader, data_loader, prefix):
+        
+        Checkpointer(
+            model
+        ).load(self.cfg.OUTPUT_DIR + '/last_model.pth') 
+        
+        self.cls_weights = train_loader.dataset.get_class_weights(
+            self.cfg.DATA.CLASS_WEIGHTS_TYPE)
+        
+        # ig = IntegratedGradients(model)
+        # ig_patches = IntegratedGradients(model.enc.transformer.embeddings.patch_embeddings)
+        # ig_prompt_embeddings = IntegratedGradients(model.enc.transformer.prompt_embeddings)
+        
+        
+        # ig = IntegratedGradients(model)
+        # ig_patches = LayerIntegratedGradients(ig, model.enc.transformer.embeddings.patch_embeddings) # LayerIntegratedGradients
+        # ig_prompt_embeddings = LayerIntegratedGradients(ig, model.enc.transformer.prompt_embeddings)
+        
+        # ig_patches = LayerConductance(model, model.enc.transformer.embeddings.patch_embeddings) # LayerIntegratedGradients
+        # ig_patches = LayerConductance(model, model.enc.transformer.Embeddings)
+        # ig_prompt_embeddings = LayerConductance(model, model.enc.transformer.prompt_embeddings)
+        
+        ig_patches = LayerIntegratedGradients(model, model.enc.transformer.embeddings) 
+        
+        # wrapper = ParameterWrapper(model.enc.transformer.prompt_embeddings)
+        # ig_prompt_embeddings = LayerIntegratedGradients(model, wrapper)
+        
+        """evaluate classifier"""
+        batch_time = AverageMeter('Time', ':6.3f')
+        data_time = AverageMeter('Data', ':6.3f')
+        losses = AverageMeter('Loss', ':.4e')
+
+        log_interval = self.cfg.SOLVER.LOG_EVERY_N
+        test_name = prefix + "_" + data_loader.dataset.name
+        total = len(data_loader)
+
+        # initialize features and target
+        total_logits = []
+        total_targets = []
+        
+        # grad_prompt = []
+        grad_prompt_norm = []
+        # grad_embeddings = []
+        grad_embeddings_norm = []
+
+        for idx, input_data in enumerate(data_loader):
+            end = time.time()
+            X, targets = self.get_input(input_data)
+            # measure data loading time
+            data_time.update(time.time() - end)
+
+            if self.cfg.DBG:
+                logger.info("during eval: {}".format(X.shape))
+
+            loss, outputs, attribution_patches = self.forward_one_batch_IG_update(ig_patches, X, targets, True) # False (originally False)
+            
+            if attribution_patches is not None:
+                # L2 norm
+                # print('1', torch.norm(attribution_patches, p=2, dim=2).shape) torch.Size([64, 197])
+                max_embeddings = torch.max(torch.abs(attribution_patches), dim=2)[0]
+                # print('max_embeddings', max_embeddings.shape)
+                L2_norm_embeddings = torch.norm(torch.abs(attribution_patches), p=2, dim=2)
+                # grad_embeddings_norm.append(L2_norm_embeddings) 
+            
+            model_type = self.cfg.MODEL.TRANSFER_TYPE
+            if model_type == 'prompt':
+            
+                prompt_grad = model.enc.transformer.prompt_embeddings.grad
+                step_prompt_status = model.enc.transformer.prompt_embeddings
+                
+                B = attribution_patches.shape[0] # batch size
+                prompt_grad_expand = prompt_grad.expand(B, -1, -1)
+                step_prompt_status_expand = step_prompt_status.expand(B, -1, -1)
+                
+                prompt_grad_IG = (step_prompt_status_expand * prompt_grad_expand) # IG
+                # print('attribution_patches', attribution_patches)
+                
+                # L2 norm
+                # print('2', torch.norm(prompt_grad_IG, p=2, dim=2).shape)
+                max_prompt = torch.max(torch.abs(prompt_grad_IG), dim=2)[0]
+                # print('max_prompt', max_prompt.shape)
+                L2_norm_promot = torch.norm(torch.abs(prompt_grad_IG), p=2, dim=2)
+                # grad_prompt_norm.append(L2_norm_promot) #  keepdim=True in shape (batch_size, x, 1)
+            
+            
+                if attribution_patches is not None:
+                    embedding_prompt_cat_maxValue = torch.cat((max_embeddings, max_prompt), dim=1)
+                    embedding_prompt_cat = torch.cat((L2_norm_embeddings, L2_norm_promot), dim=1)
+                    maxValue_idx = torch.max(embedding_prompt_cat_maxValue, dim=1)[1] # get the position of the max value
+                    max_idx = torch.max(embedding_prompt_cat, dim=1)[1] # get the position of the max value
+                    # top_indices = torch.topk(embedding_prompt_cat, k=5, dim=1)[1]
+                else:
+                    maxValue_idx = None
+                    max_idx = None
+            
+            # model_type = 'finetune', no need to concat prompt_grad_IG
+            else:
+                if attribution_patches is not None:
+                    maxValue_idx = torch.max(max_embeddings, dim=1)[1]
+                    max_idx = torch.max(L2_norm_embeddings, dim=1)[1] # get the position of the max value
+                else:
+                    maxValue_idx = None
+                    max_idx = None
+
+            # save the highest L2 norm position.
+            top_1_save = True
+            top_1_MaxValue_save = True
+            save_logits = True
+            
+            if top_1_save:
+                max_idx_numpy = max_idx.cpu().numpy()
+                max_idx_numpy.astype(int)
+                file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/1_dataL2Norm_{model_type}.txt"
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, max_idx_numpy.reshape(1, -1), fmt='%.6f')
+            if top_1_MaxValue_save:
+                maxValue_idx_numpy = maxValue_idx.cpu().numpy()
+                maxValue_idx_numpy.astype(int)
+                file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/2_dataMaxValue_{model_type}.txt"
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, maxValue_idx_numpy.reshape(1, -1), fmt='%.6f')
+            
+            if save_logits:
+                targets_numpy = targets.numpy()
+                targets_numpy.astype(int)
+                file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/3_data_targets_{model_type}.txt"
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, targets_numpy.reshape(1, -1), fmt='%.6f')
+                    
+                outputs_results = np.argmax(outputs.cpu().numpy(), axis=1)
+                outputs_results.astype(int)
+                file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/4_data_outputs_{model_type}.txt"
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, outputs_results.reshape(1, -1), fmt='%.6f')
+            
+            if loss == -1:
+                return
+            losses.update(loss, X.shape[0])
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+
+            if (idx + 1) % log_interval == 0:
+                logger.info(
+                    "\tTest {}/{}. loss: {:.3f}, {:.4f} s / batch. (data: {:.2e})".format(  # noqa
+                        idx + 1,
+                        total,
+                        losses.val,
+                        batch_time.val,
+                        data_time.val
+                    ) + "max mem: {:.5f} GB ".format(gpu_mem_usage())
+                )
+
+            # targets: List[int]
+            # print('targets', targets) tensors
+            # print('outputs', outputs)
+            
+            total_targets.extend(list(targets.numpy()))
+            total_logits.append(outputs)
+        
+        # logger.info(
+        #     f"Inference ({prefix}):"
+        #     + "avg data time: {:.2e}, avg batch time: {:.4f}, ".format(
+        #         data_time.avg, batch_time.avg)
+        #     + "average loss: {:.4f}".format(losses.avg))
+        # if self.model.side is not None:
+        #     logger.info(
+        #         "--> side tuning alpha = {:.4f}".format(self.model.side_alpha))
+            
+        # # total_testimages x num_classes
+        # joint_logits = torch.cat(total_logits, dim=0).cpu().numpy()
+        # self.evaluator.classify(
+        #     joint_logits, total_targets,
+        #     test_name, self.cfg.DATA.MULTILABEL,
+        # )
+
+        # # save the probs and targets
+        # if save_logits:
+        #     out = {"targets": total_targets, "joint_logits": joint_logits}
+        #     out_path = os.path.join(
+        #         self.cfg.OUTPUT_DIR, f"{test_name}_logits.pth")
+        #     torch.save(out, out_path)
+        #     logger.info(
+        #         f"Saved logits and targets for {test_name} at {out_path}")
+        # return grad_embeddings_norm, grad_prompt_norm
+    
+    
+    def forward_one_batch_IG_update(self, ig_patches, inputs, targets, is_train):
+        """Train a single (full) epoch on the model using the given
+        data loader.
+
+        Args:
+            X: input dict
+            targets
+            is_train: bool
+        Returns:
+            loss
+            outputs: output logits
+        """
+        # move data to device
+        inputs = inputs.to(self.device, non_blocking=True)    # (batchsize, 2048)
+        targets = targets.to(self.device, non_blocking=True)  # (batchsize, )
+
+        if self.cfg.DBG:
+            logger.info(f"shape of inputs: {inputs.shape}")
+            logger.info(f"shape of targets: {targets.shape}")
+
+        # forward
+        with torch.set_grad_enabled(is_train):
+            outputs = self.model(inputs)  # (batchsize, num_cls)
+            if self.cfg.DBG:
+                logger.info(
+                    "shape of model output: {}, targets: {}".format(
+                        outputs.shape, targets.shape))
+
+            if self.cls_criterion.is_local() and is_train:
+                self.model.eval()
+                loss = self.cls_criterion(
+                    outputs, targets, self.cls_weights,
+                    self.model, inputs
+                )
+            elif self.cls_criterion.is_local():
+                return torch.tensor(1), outputs
+            else:
+                loss = self.cls_criterion(
+                    outputs, targets, self.cls_weights)
+            
+                # self.model.enc.transformer.prompt_embeddings.requires_grad_(True)
+                
+                # print('step_prompt', step_prompt)
+                # print('step_prompt', step_prompt.shape)
+
+                # correct but for input attribution
+                # batch_size = inputs.shape[0]
+                # num_batches = 4  # divide the attribution computation into 4 batches
+                # chunk_size = batch_size // num_batches
+                # attributions = []
+                # for i in range(num_batches):
+                #     start_idx = i * chunk_size
+                #     end_idx = start_idx + chunk_size if i < num_batches - 1 else batch_size
+                #     inputs_chunk = inputs[start_idx:end_idx]
+                #     baseline_chunk = torch.zeros_like(inputs_chunk)
+                #     target_chunk = targets[start_idx:end_idx]
+                #     attribution_chunk = ig.attribute(inputs_chunk, baselines=baseline_chunk, target=target_chunk)
+                #     attributions.append(attribution_chunk)
+                # attribution_ig = torch.cat(attributions, dim=0)
+                # print('attribution_ig', attribution_ig)
+                # print('attribution_ig.shape', attribution_ig.shape)
+                
+                # True
+                batch_size = inputs.shape[0]
+                num_batches = 32  # divide the attribution computation into 4 batches
+                chunk_size = batch_size // num_batches
+                attributions = []
+                for i in range(num_batches):
+                    start_idx = i * chunk_size
+                    end_idx = start_idx + chunk_size if i < num_batches - 1 else batch_size
+                    inputs_chunk = inputs[start_idx:end_idx]
+                    baseline_chunk = torch.zeros_like(inputs_chunk)
+                    target_chunk = targets[start_idx:end_idx]
+                    # print('!!!', target_chunk.shape)
+                    if target_chunk.shape[0] != 0:
+                        # attribution_chunk = ig_patches.attribute(inputs_chunk, baselines=baseline_chunk, target=target_chunk)
+                        attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
+                        attributions.append(attribution_chunk)
+                        attribution_ig = torch.cat(attributions, dim=0)
+                    else:
+                        ('under construction')
+                        
+                # True end
+                # attribution_ig = torch.cat(attributions, dim=0)
+                # print('attribution_ig', attribution_ig)
+                # print('attribution_ig.shape', attribution_ig.shape)
+                
+                # print('grad_loss', grad_loss)
+                # print('grad_outputs', grad_outputs)
+                # print('grad_prompt', grad_prompt)
+            
+                # attribution = ig_prompt_embeddings.attribute(inputs, target=targets)
+                
+                # batch_size = inputs.shape[0]
+                # num_batches = 4  # divide the attribution computation into 4 batches
+                # chunk_size = batch_size // num_batches
+                # attributions = []
+                # for i in range(num_batches):
+                #     start_idx = i * chunk_size
+                #     end_idx = start_idx + chunk_size if i < num_batches - 1 else batch_size
+                #     inputs_chunk = inputs[start_idx:end_idx]
+                #     baseline_chunk = torch.zeros_like(inputs_chunk)
+                #     target_chunk = targets[start_idx:end_idx]
+                #     print('!!!', target_chunk.shape)
+                #     # attribution_chunk = ig_prompt_embeddings.attribute(inputs_chunk, baselines=baseline_chunk, target=target_chunk)
+                #     attribution_chunk = ig_prompt_embeddings.attribute(inputs_chunk, target=target_chunk)
+                #     attributions.append(attribution_chunk)
+                # attribution_ig = torch.cat(attributions, dim=0)
+                # print('attribution_ig', attribution_ig)
+                # print('attribution_ig.shape', attribution_ig.shape)
+
+            if loss == float('inf'):
+                logger.info(
+                    "encountered infinite loss, skip gradient updating for this batch!"
+                )
+                return -1, -1
+            elif torch.isnan(loss).any():
+                logger.info(
+                    "encountered nan loss, skip gradient updating for this batch!"
+                )
+                return -1, -1
+
+        # =======backward and optim step only if in training phase... =========
+        if is_train:
+            self.optimizer.zero_grad()
+            loss.backward()
+            # self.optimizer.step()
+
+        return loss, outputs, attribution_ig

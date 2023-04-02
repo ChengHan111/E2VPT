@@ -163,3 +163,11 @@ train_save.py
 /_val
 /plot_functions/output_folder
 /plot_functions/output_folderACC
+/A_test_as_before_pruning
+/A_test_as_finetune_before_pruning
+/A_test_as_finetune_val
+/A_test_as_val
+/DatasetChanged8000-2000FineTune_finalfinal
+/DatasetChanged8000-2000FineTune_val
+/DatasetChanged8000-2000_val
+/DatasetChanged8000-2000_finalfinal

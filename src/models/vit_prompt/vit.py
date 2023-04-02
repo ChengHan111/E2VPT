@@ -19,6 +19,14 @@ from ...utils import logging
 
 logger = logging.get_logger("visual_prompt")
 
+# class ParameterWrapper(nn.Parameter):
+#     def __init__(self, data):
+#         super(ParameterWrapper, self).__init__(data)
+        
+#     def register_forward_hook(self, hook):
+#         self._forward_hooks.clear()
+#         handle = self._register_forward_hook(hook)
+#         return handle
 
 class PromptedTransformer(Transformer):
     def __init__(self, prompt_config, config, img_size, vis):
@@ -71,6 +79,9 @@ class PromptedTransformer(Transformer):
 
         else:
             raise ValueError("Other initiation scheme is not supported")
+        
+        # Wrap self.prompt_embeddings in ParameterWrapper to be able to register hooks
+        # self.prompt_embeddings = ParameterWrapper(self.prompt_embeddings.weight)
 
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings

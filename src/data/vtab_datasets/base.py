@@ -490,3 +490,106 @@ class ImageTfdsData(ImageData):
 
   def _log_warning_if_direct_inheritance(self):
     pass
+
+
+# # Self added for equal distribution of images per class
+# class ImageTfdsDataEqualClass(ImageTfdsData):
+#   """
+#   Class for reading image data from a TFDS dataset and evenly distributing
+#   the number of images per class.
+#   """
+#   def __init__(self,
+#              tfds_name,
+#              tfds_split,
+#              shuffle_buffer_size=10000,
+#              num_parallel_parser_calls=64,
+#              image_size=None,
+#              num_channels=3,
+#              num_samples_per_class=None,
+#              include_classes=None,
+#              exclude_classes=None,
+#              **kwargs):
+#     """
+#     Args:
+#         tfds_name (str): Name of the TFDS dataset.
+#         tfds_split (str): Name of the split to read from the dataset.
+#         shuffle_buffer_size (int): Number of examples to prefetch and shuffle.
+#         num_parallel_parser_calls (int): Number of parser threads to use for
+#             parallel parsing.
+#         image_size (int or tuple(int, int)): Desired output image size. If 
+#             None, use the default size for the dataset.
+#         num_channels (int): Number of image channels. 
+#         num_samples_per_class (int): Number of samples to include per class. 
+#             If None, include all samples.
+#         include_classes (list of str): List of classes to include. If None,
+#             include all classes.
+#         exclude_classes (list of str): List of classes to exclude. 
+#         **kwargs: Additional arguments passed to the superclass constructor.
+#     """
+#     super().__init__(tfds_name=tfds_name,
+#                      tfds_split=tfds_split,
+#                      shuffle_buffer_size=shuffle_buffer_size,
+#                      num_parallel_parser_calls=num_parallel_parser_calls,
+#                      image_size=image_size,
+#                      num_channels=num_channels,
+#                      include_classes=include_classes,
+#                      exclude_classes=exclude_classes,
+#                      **kwargs)
+    
+#     self.num_samples_per_class = num_samples_per_class
+    
+# def _get_num_samples_per_class(self):
+#     """Gets the number of samples to include per class."""
+#     if self.num_samples_per_class is None:
+#         return None
+    
+#     class_counts = self.get_class_counts()
+#     num_classes = self.get_num_classes()
+#     min_class_count = min(class_counts.values())
+#     return min(self.num_samples_per_class, min_class_count // num_classes)
+
+# def get_class_counts(self):
+#     """Gets the number of samples per class."""
+#     num_samples_per_class = self._get_num_samples_per_class()
+#     class_counts = defaultdict(int)
+    
+#     for data in self._tf_data.as_numpy_iterator():
+#         image = data['image']
+#         label = self._get_label(data)
+#         if label in self._excluded_classes or label not in self._included_classes:
+#             continue
+            
+#         class_counts[label] += 1
+        
+#         if num_samples_per_class is not None and class_counts[label] >= num_samples_per_class:
+#             continue
+        
+#         self._data.append((image, label))
+    
+#     return class_counts
+  
+
+# Additional class for balanced datasets.
+# class BalancedImageData(ImageData):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#     def get_tf_data(self, label_key=None, *args, **kwargs):
+#         if label_key is None:
+#             label_key = self.default_label_key
+
+#         # Get the number of samples for each class.
+#         num_classes = self.get_num_classes(label_key=label_key)
+#         # this parameter is used to set the number of samples per class
+#         num_samples_per_class = min(num_samples for num_samples in num_classes.values())
+
+#         # Create a filter function that selects the same number of images for each class.
+#         def filter_fn(features):
+#             return tf.math.less(features[label_key], num_samples_per_class * (features[label_key] < num_samples_per_class + 1))
+
+#         if kwargs.get('filter_fn') is None:
+#             kwargs['filter_fn'] = filter_fn
+#         else:
+#             kwargs['filter_fn'] = lambda features: tf.math.logical_and(filter_fn(features), kwargs['filter_fn'](features))
+
+#         return super().get_tf_data(*args, **kwargs)

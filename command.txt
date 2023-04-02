@@ -4,6 +4,8 @@ python train.py --config-file /home/ch7858/vpt/configs/prompt/cub.yaml SFER_TYPE
 
 python tune_fgvc.py --config-file configs/prompt/*.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
 
+# vpt example
+python tune_vtab.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1"
 
 python train.py \
         --config-file configs/prompt/cub.yaml \
@@ -508,3 +510,8 @@ python tune_vtab_PruningRewind_CVK_imagenet1k.py --train-type "P_VK" --config-fi
 
 (under construction)
 # python train.py --config-file configs/finetune/imagenet1k.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
+
+# calculate IG 
+python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "A_test_as" DATA.BATCH_SIZE "64"
+
+python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "A_test_as_finetune" DATA.BATCH_SIZE "128"

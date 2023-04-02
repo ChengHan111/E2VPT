@@ -65,6 +65,8 @@ class SvhnData(base.ImageTfdsData):
         "val200": 200,
         "train800val200": 1000,
     }
+    # num_samples_splits:  {'train': 65931, 'val': 7326, 'trainval': 73257, 'test': 26032, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    # print("num_samples_splits: ", num_samples_splits)
 
     # Defines dataset specific train/val/trainval/test splits.
     # The validation set is split out of the original training set, and the
@@ -88,6 +90,8 @@ class SvhnData(base.ImageTfdsData):
             "train[:800]+train[{}:{}]".format(
                 num_samples_splits["train"], num_samples_splits["train"] + 200),
     }
+    # tfds_splits:  {'train': 'train[:65931]', 'val': 'train[65931:]', 'trainval': 'train', 'test': 'test', 'train800': 'train[:800]', 'val200': 'train[65931:66131]', 'train800val200': 'train[:800]+train[65931:66131]'}
+    # print("tfds_splits: ", tfds_splits)
 
     super(SvhnData, self).__init__(
         dataset_builder=dataset_builder,

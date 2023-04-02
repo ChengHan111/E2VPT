@@ -21,6 +21,22 @@ from ...utils import logging
 logger = logging.get_logger("visual_prompt")
 
 
+# class PromptEmbedding(nn.Module):
+#     def __init__(self, prompt_embeddings):
+#         super().__init__()
+#         self.prompt_embeddings = prompt_embeddings
+
+#     def forward(self, x):
+#         return self.prompt_embeddings
+
+# class MyParameter(nn.Module):
+#     def __init__(self, parameter):
+#         super(MyParameter, self).__init__()
+#         self.parameter = nn.Parameter(parameter)
+
+#     def forward(self, x):
+#         return self.parameter
+
 class PromptedTransformer_EXPSELF(Transformer):
     def __init__(self, prompt_config, config, img_size, vis):
         assert prompt_config.LOCATION == "prepend"
@@ -77,7 +93,7 @@ class PromptedTransformer_EXPSELF(Transformer):
 
         else:
             raise ValueError("Other initiation scheme is not supported")
-
+      
     def incorporate_prompt(self, x):
         # combine prompt embeddings with image-patch embeddings
         B = x.shape[0]

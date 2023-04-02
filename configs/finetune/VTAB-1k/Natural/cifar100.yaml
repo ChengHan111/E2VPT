@@ -1,4 +1,4 @@
-_BASE_: "../../base-finetune.yaml" # applied changed version of base-prompt here (Origin VisionTransformer)
+_BASE_: "../../../base-finetune.yaml" # applied changed version of base-prompt here (Origin VisionTransformer)
 RUN_N_TIMES: 1
 DATA:
   NAME: "vtab-cifar(num_classes=100)"

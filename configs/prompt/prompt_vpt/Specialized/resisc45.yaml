@@ -1,0 +1,12 @@
+_BASE_: "../../../base-prompt.yaml"
+RUN_N_TIMES: 1
+DATA:
+  NAME: vtab-resisc45
+  DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Specialized/"  #TODO: need to specify here
+  NUMBER_CLASSES: 45
+  MULTILABEL: False
+MODEL:
+  TYPE: "vit"
+SOLVER:
+  BASE_LR: 0.01
+  WEIGHT_DECAY: 0.001

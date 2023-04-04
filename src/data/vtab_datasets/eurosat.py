@@ -52,7 +52,37 @@ class EurosatData(base.ImageTfdsData):
     val_count = num_examples * VALIDATION_SPLIT_PERCENT // 100
     test_count = num_examples * TEST_SPLIT_PERCENT // 100
 
-    tfds_splits = {
+    origin = True
+    if origin:
+        tfds_splits = {
+            "train":
+                "train[:{}]".format(train_count),
+            "val":
+                "train[{}:{}]".format(train_count, train_count+val_count),
+            "trainval":
+                "train[:{}]".format(train_count+val_count),
+            "test":
+                "train[{}:]".format(train_count+val_count),
+            "train800":
+                "train[:800]",
+            "val200":
+                "train[{}:{}]".format(train_count, train_count+200),
+            "train800val200":
+                "train[:800]+train[{}:{}]".format(train_count, train_count+200),
+        }
+
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    else:
+        tfds_splits = {
         "train":
             "train[:{}]".format(train_count),
         "val":
@@ -67,18 +97,20 @@ class EurosatData(base.ImageTfdsData):
             "train[{}:{}]".format(train_count, train_count+200),
         "train800val200":
             "train[:800]+train[{}:{}]".format(train_count, train_count+200),
-    }
+        }
 
-    # Creates a dict with example counts for each split.
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    # tfds_splits {'train': 'train[:16200]', 'val': 'train[16200:21600]', 'trainval': 'train[:21600]', 'test': 'train[21600:]', 'train800': 'train[:800]', 'val200': 'train[16200:16400]', 'train800val200': 'train[:800]+train[16200:16400]'}
+    # num_samples_splits {'train': 16200, 'val': 5400, 'trainval': 21600, 'test': 5400, 'train800': 800, 'val200': 200, 'train800val200': 1000}
 
     num_channels = 3
     if data_key == "sentinel2":

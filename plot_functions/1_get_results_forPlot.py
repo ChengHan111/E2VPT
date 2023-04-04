@@ -12,10 +12,10 @@ pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = '/home/ch7858/vpt/output_copy/output_25/output_rewind/vtab-sun397_P5_VK5_SHARED_1_INIT_2_ACC_0_BS64_LB1'
-dataset_type = 'vtab_rewind' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
+root = '/home/ch7858/vptSelf/8000-2000/_finalfinal/vtab-cifar(num_classes=100)'
+dataset_type = 'vtab_finetune' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
 MODEL_NAME = "sup_vitb16_224" # sup_vitb16_224 # mae_vitb16 # mocov3_vitb # swinb_imagenet22k_224
-train_mode = 'PromptTuning' # Finetune # PromptTuning # MixedOneStep # TwoSteps
+train_mode = 'Finetune' # Finetune # PromptTuning # MixedOneStep # TwoSteps
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):
@@ -39,7 +39,7 @@ f_df = average_df(df, metric_names=["l-test_top1"], take_average=True)
 # print(f_df)
 
 best_top_1 = pd.to_numeric(f_df["l-test_top1"]).tolist()[0]
-if dataset_type != 'vtab_finetune':
+if dataset_type != 'vtab_finetune' and dataset_type != 'vtab':
     Prompt_length = f_df["Prompt_length"].tolist()[0][1:]
     VK_length = f_df["VK_length"].tolist()[0][2:]
 lr = f_df["lr"].tolist()[0]
@@ -55,7 +55,7 @@ val_loss = df['val_loss_atbest'].tolist()
 # print('val_loss:', val_loss)
 print(f"train/val/test: \n AVG[{statistics.mean(train_loss)}-{statistics.mean(test_loss)}-{statistics.mean(val_loss)}]")
 print(f"ALL{train_loss}{test_loss}{val_loss}")
-if dataset_type != 'vtab_finetune':
+if dataset_type != 'vtab_finetune' and dataset_type != 'vtab':
     print(f"{best_top_1}--{runs}({Prompt_length}+{VK_length}+lr{lr}_wd{wd} {tuned_percentage} {batch_size})")
 else: # vtab_finetune
     print(f"{best_top_1}--{runs}(lr{lr}_wd{wd} {tuned_percentage} {batch_size})")

@@ -54,44 +54,84 @@ class SvhnData(base.ImageTfdsData):
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
 
-    # Creates a dict with example counts for each split.
-    num_samples_splits = {
-        # Calculates the train/val split example count based on percent.
-        "train": TRAIN_SPLIT_PERCENT * trainval_count // 100,
-        "val": trainval_count - TRAIN_SPLIT_PERCENT * trainval_count // 100,
-        "trainval": trainval_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
-    # num_samples_splits:  {'train': 65931, 'val': 7326, 'trainval': 73257, 'test': 26032, 'train800': 800, 'val200': 200, 'train800val200': 1000}
-    # print("num_samples_splits: ", num_samples_splits)
+    origin = True
+    if origin:
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            # Calculates the train/val split example count based on percent.
+            "train": TRAIN_SPLIT_PERCENT * trainval_count // 100,
+            "val": trainval_count - TRAIN_SPLIT_PERCENT * trainval_count // 100,
+            "trainval": trainval_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+        # num_samples_splits:  {'train': 65931, 'val': 7326, 'trainval': 73257, 'test': 26032, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+        # print("num_samples_splits: ", num_samples_splits)
 
-    # Defines dataset specific train/val/trainval/test splits.
-    # The validation set is split out of the original training set, and the
-    # remaining examples are used as the "train" split. The "trainval" split
-    # corresponds to the original training set.
-    tfds_splits = {
-        "train":
-            "train[:{}]".format(num_samples_splits["train"]),
-        "val":
-            "train[{}:]".format(num_samples_splits["train"]),
-        "trainval":
-            "train",
-        "test":
-            "test",
-        "train800":
-            "train[:800]",
-        "val200":
-            "train[{}:{}]".format(num_samples_splits["train"],
-                                  num_samples_splits["train"] + 200),
-        "train800val200":
-            "train[:800]+train[{}:{}]".format(
-                num_samples_splits["train"], num_samples_splits["train"] + 200),
-    }
-    # tfds_splits:  {'train': 'train[:65931]', 'val': 'train[65931:]', 'trainval': 'train', 'test': 'test', 'train800': 'train[:800]', 'val200': 'train[65931:66131]', 'train800val200': 'train[:800]+train[65931:66131]'}
-    # print("tfds_splits: ", tfds_splits)
+        # Defines dataset specific train/val/trainval/test splits.
+        # The validation set is split out of the original training set, and the
+        # remaining examples are used as the "train" split. The "trainval" split
+        # corresponds to the original training set.
+        tfds_splits = {
+            "train":
+                "train[:{}]".format(num_samples_splits["train"]),
+            "val":
+                "train[{}:]".format(num_samples_splits["train"]),
+            "trainval":
+                "train",
+            "test":
+                "test",
+            "train800":
+                "train[:800]",
+            "val200":
+                "train[{}:{}]".format(num_samples_splits["train"],
+                                    num_samples_splits["train"] + 200),
+            "train800val200":
+                "train[:800]+train[{}:{}]".format(
+                    num_samples_splits["train"], num_samples_splits["train"] + 200),
+        }
+        # tfds_splits:  {'train': 'train[:65931]', 'val': 'train[65931:]', 'trainval': 'train', 'test': 'test', 'train800': 'train[:800]', 'val200': 'train[65931:66131]', 'train800val200': 'train[:800]+train[65931:66131]'}
+        # print("tfds_splits: ", tfds_splits)
+    
+    else:
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            # Calculates the train/val split example count based on percent.
+            "train": TRAIN_SPLIT_PERCENT * trainval_count // 100,
+            "val": trainval_count - TRAIN_SPLIT_PERCENT * trainval_count // 100,
+            "trainval": trainval_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+
+        # Defines dataset specific train/val/trainval/test splits.
+        # The validation set is split out of the original training set, and the
+        # remaining examples are used as the "train" split. The "trainval" split
+        # corresponds to the original training set.
+        tfds_splits = {
+            "train":
+                "train[:{}]".format(num_samples_splits["train"]),
+            "val":
+                "train[{}:]".format(num_samples_splits["train"]),
+            "trainval":
+                "train",
+            "test":
+                "test",
+            "train800":
+                "train[:800]",
+            "val200":
+                "train[{}:{}]".format(num_samples_splits["train"],
+                                    num_samples_splits["train"] + 200),
+            "train800val200":
+                "train[:800]+train[{}:{}]".format(
+                    num_samples_splits["train"], num_samples_splits["train"] + 200),
+        }
+        # tfds_splits:  {'train': 'train[:65931]', 'val': 'train[65931:]', 'trainval': 'train', 'test': 'test', 'train800': 'train[:800]', 'val200': 'train[65931:66131]', 'train800val200': 'train[:800]+train[65931:66131]'}
+        # print("tfds_splits: ", tfds_splits)
 
     super(SvhnData, self).__init__(
         dataset_builder=dataset_builder,

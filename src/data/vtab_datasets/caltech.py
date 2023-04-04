@@ -64,6 +64,8 @@ class Caltech101(base.ImageTfdsData):
         train800=800,
         val200=200,
         train800val200=1000)
+    # print(num_samples_splits)
+    # {'train': 2754, 'val': 306, 'trainval': 3060, 'test': 6084, 'train800': 800, 'val200': 200, 'train800val200': 1000}
 
     # Defines dataset specific train/val/trainval/test splits.
     tfds_splits = {
@@ -76,6 +78,8 @@ class Caltech101(base.ImageTfdsData):
         "train800val200": (
             "train[:800]+train[{}:{}]".format(train_count, train_count+200)),
     }
+    # print(tfds_splits)
+    # exit()
 
     super(Caltech101, self).__init__(
         dataset_builder=dataset_builder,

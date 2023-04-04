@@ -30,7 +30,7 @@ def read_loss_from_txt(filename):
     return val_loss, test_loss
 
 # filename = '/home/ch7858/vpt/plot_functions/output_folder/vtab-svhn/P20_VK5_TwoSteps/run1.txt'
-FolderName = '/home/ch7858/vpt/plot_functions/output_folderACC/vtab-svhn_finish'
+FolderName = '/home/ch7858/vptSelf/plot_functions/output_folderACC/vtab-cifar(num_classes=100)'
 subfolders = [f.path for f in os.scandir(FolderName) if f.is_dir()]
 print(subfolders)
 

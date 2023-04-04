@@ -35,25 +35,53 @@ class PatchCamelyonData(base.ImageTfdsData):
     dataset_builder = tfds.builder("patch_camelyon:2.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "test": "test",
-        "train": "train",
-        "val": "validation",
-        "trainval": "train+validation",
-        "train800": "train[:800]",
-        "val200": "validation[:200]",
-        "train800val200": "train[:800]+validation[:200]",
-    }
-    # Creates a dict with example counts.
-    num_samples_splits = {
-        "test": dataset_builder.info.splits["test"].num_examples,
-        "train": dataset_builder.info.splits["train"].num_examples,
-        "val": dataset_builder.info.splits["validation"].num_examples,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+    origin = True
+    if origin:
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "test": "test",
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        # Creates a dict with example counts.
+        num_samples_splits = {
+            "test": dataset_builder.info.splits["test"].num_examples,
+            "train": dataset_builder.info.splits["train"].num_examples,
+            "val": dataset_builder.info.splits["validation"].num_examples,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    else:
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "test": "test",
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        # Creates a dict with example counts.
+        num_samples_splits = {
+            "test": dataset_builder.info.splits["test"].num_examples,
+            "train": dataset_builder.info.splits["train"].num_examples,
+            "val": dataset_builder.info.splits["validation"].num_examples,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+
+
+    # tfds_splits:  {'test': 'test', 'train': 'train', 'val': 'validation', 'trainval': 'train+validation', 'train800': 'train[:800]', 'val200': 'validation[:200]', 'train800val200': 'train[:800]+validation[:200]'}
+    # num_samples_splits:  {'test': 32768, 'train': 262144, 'val': 32768, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    
+    
     num_samples_splits["trainval"] = (
         num_samples_splits["train"] + num_samples_splits["val"])
     super(PatchCamelyonData, self).__init__(

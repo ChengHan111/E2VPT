@@ -24,7 +24,7 @@ def read_loss_from_txt(filename, loss_type):
     
     return loss
 
-FolderName = '/home/ch7858/vpt/plot_functions/output_folderACC/vtab-svhn_finish'
+FolderName = '/home/ch7858/vptSelf/plot_functions/output_folderACC/vtab-cifar(num_classes=100)'
 log_scale = False # True to enable log scale
 subfolders = [f.path for f in os.scandir(FolderName) if f.is_dir()]
 # print(subfolders)

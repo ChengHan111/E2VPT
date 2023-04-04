@@ -45,47 +45,52 @@ class OxfordFlowers102Data(base.ImageTfdsData):
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
 
     if train_split_percent:
-      tfds_splits = {
-          "train": "train[:{s}%]+validation[:{s}%]".format(
-              s=train_split_percent),
-          "val": "train[-{s}%:]+validation[-{s}%:]".format(
-              s=train_split_percent),
-          "trainval": "train+validation",
-          "test": "test",
-          "train800": "train[:800]",
-          "val200": "validation[:200]",
-          "train800val200": "train[:800]+validation[:200]",
-      }
-      num_samples_splits = {
-          "train": (((train_count + val_count) // 100)
-                    * train_split_percent),
-          "val": (((train_count + val_count) // 100) *
-                  (100 - train_split_percent)),
-          "trainval": train_count + val_count,
-          "test": test_count,
-          "train800": 800,
-          "val200": 200,
-          "train800val200": 1000,
-      }
+        tfds_splits = {
+            "train": "train[:{s}%]+validation[:{s}%]".format(
+                s=train_split_percent),
+            "val": "train[-{s}%:]+validation[-{s}%:]".format(
+                s=train_split_percent),
+            "trainval": "train+validation",
+            "test": "test",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        
+        num_samples_splits = {
+            "train": (((train_count + val_count) // 100)
+                        * train_split_percent),
+            "val": (((train_count + val_count) // 100) *
+                    (100 - train_split_percent)),
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
     else:
-      tfds_splits = {
-          "train": "train",
-          "val": "validation",
-          "trainval": "train+validation",
-          "test": "test",
-          "train800": "train[:800]",
-          "val200": "validation[:200]",
-          "train800val200": "train[:800]+validation[:200]",
-      }
-      num_samples_splits = {
-          "train": train_count,
-          "val": val_count,
-          "trainval": train_count + val_count,
-          "test": test_count,
-          "train800": 800,
-          "val200": 200,
-          "train800val200": 1000,
-      }
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "test": "test",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        print(tfds_splits)
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+        # print(num_samples_splits)
+        # {'train': 1020, 'val': 1020, 'trainval': 2040, 'test': 6149, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+        # exit()
 
     super(OxfordFlowers102Data, self).__init__(
         dataset_builder=dataset_builder,

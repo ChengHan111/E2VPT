@@ -61,7 +61,7 @@ class CifarData(base.ImageTfdsData):
     # print('1', trainval_count) # 50000
     # print('2', test_count) # 10000
 
-    origin = True
+    origin = False
     if origin:
       num_samples_splits = {
           "train": (train_split_percent * trainval_count) // 100,
@@ -95,9 +95,9 @@ class CifarData(base.ImageTfdsData):
         "val": trainval_count - (train_split_percent * trainval_count) // 100,
         "trainval": trainval_count,
         "test": test_count,
-        "train800": 8000,
-        "val200": 2000,
-        "train800val200": 10000,
+        "train800": 400,
+        "val200": 100,
+        "train800val200": 500,
       }
       # print('3', num_samples_splits)
     
@@ -108,11 +108,11 @@ class CifarData(base.ImageTfdsData):
           "val": "train[{}:]".format(num_samples_splits["train"]),
           "trainval": "train",
           "test": "test",
-          "train800": "train[:8000]",
+          "train800": "train[:400]",
           "val200": "train[{}:{}]".format(
-              num_samples_splits["train"], num_samples_splits["train"]+2000),
-          "train800val200": "train[:8000]+train[{}:{}]".format(
-              num_samples_splits["train"], num_samples_splits["train"]+2000),
+              num_samples_splits["train"], num_samples_splits["train"]+100),
+          "train800val200": "train[:400]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+100),
       }
       # print('4', tfds_splits)
     

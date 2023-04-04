@@ -72,7 +72,34 @@ class DSpritesData(base.ImageTfdsData):
     num_total = dataset_builder.info.splits["train"].num_examples
     num_samples_train = TRAIN_SPLIT_PERCENT * num_total // 100
     num_samples_val = VAL_SPLIT_PERCENT * num_total // 100
-    num_samples_splits = {
+    
+    origin = True
+    if origin:
+      num_samples_splits = {
+          "train": num_samples_train,
+          "val": num_samples_val,
+          "trainval": num_samples_val + num_samples_train,
+          "test": num_total - num_samples_val - num_samples_train,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:{}]".format(num_samples_splits["train"],
+                                      num_samples_splits["trainval"]),
+          "trainval": "train[:{}]".format(num_samples_splits["trainval"]),
+          "test": "train[{}:]".format(num_samples_splits["trainval"]),
+          "train800": "train[:800]",
+          "val200": "train[{}:{}]".format(num_samples_splits["train"],
+                                          num_samples_splits["train"]+200),
+          "train800val200": "train[:800]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+      }
+    else:
+      num_samples_splits = {
         "train": num_samples_train,
         "val": num_samples_val,
         "trainval": num_samples_val + num_samples_train,
@@ -80,21 +107,24 @@ class DSpritesData(base.ImageTfdsData):
         "train800": 800,
         "val200": 200,
         "train800val200": 1000,
-    }
+      }
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train[:{}]".format(num_samples_splits["train"]),
-        "val": "train[{}:{}]".format(num_samples_splits["train"],
-                                     num_samples_splits["trainval"]),
-        "trainval": "train[:{}]".format(num_samples_splits["trainval"]),
-        "test": "train[{}:]".format(num_samples_splits["trainval"]),
-        "train800": "train[:800]",
-        "val200": "train[{}:{}]".format(num_samples_splits["train"],
-                                        num_samples_splits["train"]+200),
-        "train800val200": "train[:800]+train[{}:{}]".format(
-            num_samples_splits["train"], num_samples_splits["train"]+200),
-    }
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:{}]".format(num_samples_splits["train"],
+                                      num_samples_splits["trainval"]),
+          "trainval": "train[:{}]".format(num_samples_splits["trainval"]),
+          "test": "train[{}:]".format(num_samples_splits["trainval"]),
+          "train800": "train[:800]",
+          "val200": "train[{}:{}]".format(num_samples_splits["train"],
+                                          num_samples_splits["train"]+200),
+          "train800val200": "train[:800]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+      }
+
+    # num_samples_splits:  {'train': 589824, 'val': 73728, 'trainval': 663552, 'test': 73728, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    # tfds_splits:  {'train': 'train[:589824]', 'val': 'train[589824:663552]', 'trainval': 'train[:663552]', 'test': 'train[663552:]', 'train800': 'train[:800]', 'val200': 'train[589824:590024]', 'train800val200': 'train[:800]+train[589824:590024]'}
 
     def preprocess_fn(tensors):
       # For consistency with other datasets, image needs to have three channels

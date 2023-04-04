@@ -45,7 +45,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     
     # print(job_name)
     job_name_split = job_name.split("_")
-    if dataset_type != 'vtab_finetune':
+    if dataset_type != 'vtab_finetune' and dataset_type != 'vtab':
         P_value, VK_value, Shared, Init = job_name_split[1], job_name_split[2], job_name_split[4], job_name_split[6]
     else:
         P_value, VK_value, Shared, Init = None, None, None, None

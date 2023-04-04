@@ -90,7 +90,32 @@ class CLEVRData(base.ImageTfdsData):
     # Creates a dict with example counts for each split.
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
-    num_samples_splits = {
+    origin = True
+    if origin:
+      num_samples_splits = {
+          "train": (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
+          "val": trainval_count - (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
+          "trainval": trainval_count,
+          "test": test_count,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:]".format(num_samples_splits["train"]),
+          "trainval": "train",
+          "test": "validation",
+          "train800": "train[:800]",
+          "val200": "train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+          "train800val200": "train[:800]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+      }
+    else:
+      num_samples_splits = {
         "train": (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
         "val": trainval_count - (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
         "trainval": trainval_count,
@@ -98,20 +123,22 @@ class CLEVRData(base.ImageTfdsData):
         "train800": 800,
         "val200": 200,
         "train800val200": 1000,
-    }
+      }
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train[:{}]".format(num_samples_splits["train"]),
-        "val": "train[{}:]".format(num_samples_splits["train"]),
-        "trainval": "train",
-        "test": "validation",
-        "train800": "train[:800]",
-        "val200": "train[{}:{}]".format(
-            num_samples_splits["train"], num_samples_splits["train"]+200),
-        "train800val200": "train[:800]+train[{}:{}]".format(
-            num_samples_splits["train"], num_samples_splits["train"]+200),
-    }
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train[:{}]".format(num_samples_splits["train"]),
+          "val": "train[{}:]".format(num_samples_splits["train"]),
+          "trainval": "train",
+          "test": "validation",
+          "train800": "train[:800]",
+          "val200": "train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+          "train800val200": "train[:800]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+200),
+      }
+    # num_samples_splits {'train': 63000, 'val': 7000, 'trainval': 70000, 'test': 15000, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    # tfds_splits {'train': 'train[:63000]', 'val': 'train[63000:]', 'trainval': 'train', 'test': 'validation', 'train800': 'train[:800]', 'val200': 'train[63000:63200]', 'train800val200': 'train[:800]+train[63000:63200]'}
 
     task = _TASK_DICT[task]
     base_preprocess_fn = task["preprocess_fn"]

@@ -44,7 +44,35 @@ class DmlabData(base.ImageTfdsData):
 
     dataset_builder = tfds.builder("dmlab:2.0.1", data_dir=data_dir)
 
-    tfds_splits = {
+    origin = True
+    if origin:
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "test": "test",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+
+        # Example counts are retrieved from the tensorflow dataset info.
+        train_count = dataset_builder.info.splits["train"].num_examples
+        val_count = dataset_builder.info.splits["validation"].num_examples
+        test_count = dataset_builder.info.splits["test"].num_examples
+
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    else:
+        tfds_splits = {
         "train": "train",
         "val": "validation",
         "trainval": "train+validation",
@@ -52,23 +80,26 @@ class DmlabData(base.ImageTfdsData):
         "train800": "train[:800]",
         "val200": "validation[:200]",
         "train800val200": "train[:800]+validation[:200]",
-    }
+        }
 
-    # Example counts are retrieved from the tensorflow dataset info.
-    train_count = dataset_builder.info.splits["train"].num_examples
-    val_count = dataset_builder.info.splits["validation"].num_examples
-    test_count = dataset_builder.info.splits["test"].num_examples
+        # Example counts are retrieved from the tensorflow dataset info.
+        train_count = dataset_builder.info.splits["train"].num_examples
+        val_count = dataset_builder.info.splits["validation"].num_examples
+        test_count = dataset_builder.info.splits["test"].num_examples
 
-    # Creates a dict with example counts for each split.
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    # tfds_splits:  {'train': 'train', 'val': 'validation', 'trainval': 'train+validation', 'test': 'test', 'train800': 'train[:800]', 'val200': 'validation[:200]', 'train800val200': 'train[:800]+validation[:200]'}
+    # num_samples_splits:  {'train': 65550, 'val': 22628, 'trainval': 88178, 'test': 22735, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    
 
     super(DmlabData, self).__init__(
         dataset_builder=dataset_builder,

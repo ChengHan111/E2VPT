@@ -53,31 +53,61 @@ class SmallNORBData(base.ImageTfdsData):
       raise ValueError(
           "{} is not a valid attribute to predict.".format(predicted_attribute))
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train",
-        "val": "test[:{}%]".format(VAL_SPLIT_PERCENT),
-        "trainval": "train+test[:{}%]".format(VAL_SPLIT_PERCENT),
-        "test": "test[{}%:]".format(VAL_SPLIT_PERCENT),
-        "train800": "train[:800]",
-        "val200": "test[:200]",
-        "train800val200": "train[:800]+test[:200]",
-    }
+    origin = True
+    if origin:
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train",
+          "val": "test[:{}%]".format(VAL_SPLIT_PERCENT),
+          "trainval": "train+test[:{}%]".format(VAL_SPLIT_PERCENT),
+          "test": "test[{}%:]".format(VAL_SPLIT_PERCENT),
+          "train800": "train[:800]",
+          "val200": "test[:200]",
+          "train800val200": "train[:800]+test[:200]",
+      }
 
-    # Creates a dict with example counts for each split.
-    train_count = dataset_builder.info.splits["train"].num_examples
-    test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_validation = VAL_SPLIT_PERCENT * test_count // 100
-    num_samples_splits = {
-        "train": train_count,
-        "val": num_samples_validation,
-        "trainval": train_count + num_samples_validation,
-        "test": test_count - num_samples_validation,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+      # Creates a dict with example counts for each split.
+      train_count = dataset_builder.info.splits["train"].num_examples
+      test_count = dataset_builder.info.splits["test"].num_examples
+      num_samples_validation = VAL_SPLIT_PERCENT * test_count // 100
+      num_samples_splits = {
+          "train": train_count,
+          "val": num_samples_validation,
+          "trainval": train_count + num_samples_validation,
+          "test": test_count - num_samples_validation,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+    else:
+      # Defines dataset specific train/val/trainval/test splits.
+      tfds_splits = {
+          "train": "train",
+          "val": "test[:{}%]".format(VAL_SPLIT_PERCENT),
+          "trainval": "train+test[:{}%]".format(VAL_SPLIT_PERCENT),
+          "test": "test[{}%:]".format(VAL_SPLIT_PERCENT),
+          "train800": "train[:800]",
+          "val200": "test[:200]",
+          "train800val200": "train[:800]+test[:200]",
+      }
 
+      # Creates a dict with example counts for each split.
+      train_count = dataset_builder.info.splits["train"].num_examples
+      test_count = dataset_builder.info.splits["test"].num_examples
+      num_samples_validation = VAL_SPLIT_PERCENT * test_count // 100
+      num_samples_splits = {
+          "train": train_count,
+          "val": num_samples_validation,
+          "trainval": train_count + num_samples_validation,
+          "test": test_count - num_samples_validation,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+    
+    # tfds_splits:  {'train': 'train', 'val': 'test[:50%]', 'trainval': 'train+test[:50%]', 'test': 'test[50%:]', 'train800': 'train[:800]', 'val200': 'test[:200]', 'train800val200': 'train[:800]+test[:200]'}
+    # num_samples_splits:  {'train': 24300, 'val': 12150, 'trainval': 36450, 'test': 12150, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    
     def preprocess_fn(tensors):
       # For consistency with other datasets, image needs to have three channels.
       image = tf.tile(tensors["image"], [1, 1, 3])

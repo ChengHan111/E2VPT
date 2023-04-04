@@ -171,3 +171,11 @@ train_save.py
 /DatasetChanged8000-2000FineTune_val
 /DatasetChanged8000-2000_val
 /DatasetChanged8000-2000_finalfinal
+/DatasetChanged400-100_Finetune_finalfinal
+/DatasetChanged400-100_Finetune_val
+/DatasetChanged400-100_finalfinal
+/DatasetChanged400-100_val
+/plot_functions/8000-2000
+/plot_functions/output_folderACC_saved
+/plot_functions/output_folder_saved
+/8000-2000

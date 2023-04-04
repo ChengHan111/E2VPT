@@ -804,7 +804,7 @@ class Trainer():
                 
                 # True
                 batch_size = inputs.shape[0]
-                num_batches = 32  # divide the attribution computation into 4 batches
+                num_batches = 64  # divide the attribution computation into 4 batches (32 for prompt/ 64 for finetune)
                 chunk_size = batch_size // num_batches
                 attributions = []
                 for i in range(num_batches):

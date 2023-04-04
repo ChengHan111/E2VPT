@@ -158,3 +158,6 @@ enc.transformer.embeddings.position_embeddings
 CUDA_VISIBLE_DEVICES=1 PORT=30000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128" OUTPUT_DIR "DatasetChanged8000-2000FineTune"
 
 CUDA_VISIBLE_DEVICES=0 PORT=30000 python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "A_test_as"
+
+
+CUDA_VISIBLE_DEVICES=0 PORT=10000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128" OUTPUT_DIR "DatasetChanged400-100_Finetune"

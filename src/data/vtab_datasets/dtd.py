@@ -51,6 +51,7 @@ class DTDData(base.ImageTfdsData):
         "val200": "validation[:200]",
         "train800val200": "train[:800]+validation[:200]",
     }
+    # print("tfds_splits: ", tfds_splits)
 
     # Creates a dict with example counts for each split.
     train_count = dataset_builder.info.splits["train"].num_examples
@@ -65,6 +66,8 @@ class DTDData(base.ImageTfdsData):
         "val200": 200,
         "train800val200": 1000,
     }
+    # print("num_samples_splits: ", num_samples_splits)
+    # num_samples_splits:  {'train': 1880, 'val': 1880, 'trainval': 3760, 'test': 1880, 'train800': 800, 'val200': 200, 'train800val200': 1000}
 
     super(DTDData, self).__init__(
         dataset_builder=dataset_builder,

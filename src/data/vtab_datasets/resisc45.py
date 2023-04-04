@@ -52,33 +52,65 @@ class Resisc45Data(base.ImageTfdsData):
     test_count = num_examples * TEST_SPLIT_PERCENT // 100
     # print('dataset check',train_count, val_count, test_count)
 
-    tfds_splits = {
-        "train":
-            "train[:{}]".format(train_count),
-        "val":
-            "train[{}:{}]".format(train_count, train_count + val_count),
-        "trainval":
-            "train[:{}]".format(train_count + val_count),
-        "test":
-            "train[{}:]".format(train_count + val_count),
-        "train800":
-            "train[:800]",
-        "val200":
-            "train[{}:{}]".format(train_count, train_count+200),
-        "train800val200": # run this line
-            "train[:800]+train[{}:{}]".format(train_count, train_count+200),
-    }
+    origin = True
+    if origin:
+        tfds_splits = {
+            "train":
+                "train[:{}]".format(train_count),
+            "val":
+                "train[{}:{}]".format(train_count, train_count + val_count),
+            "trainval":
+                "train[:{}]".format(train_count + val_count),
+            "test":
+                "train[{}:]".format(train_count + val_count),
+            "train800":
+                "train[:800]",
+            "val200":
+                "train[{}:{}]".format(train_count, train_count+200),
+            "train800val200": # run this line
+                "train[:800]+train[{}:{}]".format(train_count, train_count+200),
+        }
 
-    # Creates a dict with example counts for each split.
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    else:
+        tfds_splits = {
+            "train":
+                "train[:{}]".format(train_count),
+            "val":
+                "train[{}:{}]".format(train_count, train_count + val_count),
+            "trainval":
+                "train[:{}]".format(train_count + val_count),
+            "test":
+                "train[{}:]".format(train_count + val_count),
+            "train800":
+                "train[:800]",
+            "val200":
+                "train[{}:{}]".format(train_count, train_count+200),
+            "train800val200": # run this line
+                "train[:800]+train[{}:{}]".format(train_count, train_count+200),
+        }
+
+        # Creates a dict with example counts for each split.
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+    # {'train': 'train[:18900]', 'val': 'train[18900:25200]', 'trainval': 'train[:25200]', 'test': 'train[25200:]', 'train800': 'train[:800]', 'val200': 'train[18900:19100]', 'train800val200': 'train[:800]+train[18900:19100]'}
+    # {'train': 18900, 'val': 6300, 'trainval': 25200, 'test': 6300, 'train800': 800, 'val200': 200, 'train800val200': 1000}
 
     super(Resisc45Data, self).__init__(
         dataset_builder=dataset_builder,

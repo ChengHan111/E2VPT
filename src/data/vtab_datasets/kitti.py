@@ -199,6 +199,8 @@ class KittiData(base.ImageTfdsData):
         "val200": 200,
         "train800val200": 1000,
     }
+    # tfds_splits {'train': 'train', 'val': 'validation', 'trainval': 'train+validation', 'test': 'test', 'train800': 'train[:800]', 'val200': 'validation[:200]', 'train800val200': 'train[:800]+validation[:200]'}
+    # num_samples_splits {'train': 6347, 'val': 423, 'trainval': 6770, 'test': 711, 'train800': 800, 'val200': 200, 'train800val200': 1000}
 
     task = _TASK_DICT[task]
     base_preprocess_fn = task["preprocess_fn"]

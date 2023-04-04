@@ -73,6 +73,9 @@ class OxfordIIITPetData(base.ImageTfdsData):
         "train800val200": "train[:800]+train[{}:{}]".format(
             num_samples_splits["train"], num_samples_splits["train"]+200),
     }
+    # print("num_samples_splits: ", num_samples_splits)
+    # print("tfds_splits: ", tfds_splits)
+    # exit()
 
     super(OxfordIIITPetData, self).__init__(
         dataset_builder=dataset_builder,

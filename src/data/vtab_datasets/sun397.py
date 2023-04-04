@@ -39,26 +39,52 @@ class Sun397Data(base.ImageTfdsData):
       dataset_builder = tfds.builder("sun397/tfds:4.*.*", data_dir=data_dir)
       dataset_builder.download_and_prepare()
 
-      tfds_splits = {
-          "train": "train",
-          "val": "validation",
-          "test": "test",
-          "trainval": "train+validation",
-          "train800": "train[:800]",
-          "val200": "validation[:200]",
-          "train800val200": "train[:800]+validation[:200]",
-      }
-      # Creates a dict with example counts.
-      num_samples_splits = {
-          "test": dataset_builder.info.splits["test"].num_examples,
-          "train": dataset_builder.info.splits["train"].num_examples,
-          "val": dataset_builder.info.splits["validation"].num_examples,
-          "train800": 800,
-          "val200": 200,
-          "train800val200": 1000,
-      }
-      num_samples_splits["trainval"] = (
-          num_samples_splits["train"] + num_samples_splits["val"])
+      origin = True
+      if origin:
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "test": "test",
+            "trainval": "train+validation",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        # Creates a dict with example counts.
+        num_samples_splits = {
+            "test": dataset_builder.info.splits["test"].num_examples,
+            "train": dataset_builder.info.splits["train"].num_examples,
+            "val": dataset_builder.info.splits["validation"].num_examples,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+        num_samples_splits["trainval"] = (
+            num_samples_splits["train"] + num_samples_splits["val"])
+      else: # make custom split(10000-2500, 8000-2000, 5000-1250)
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "test": "test",
+            "trainval": "train+validation",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        # Creates a dict with example counts.
+        num_samples_splits = {
+            "test": dataset_builder.info.splits["test"].num_examples,
+            "train": dataset_builder.info.splits["train"].num_examples,
+            "val": dataset_builder.info.splits["validation"].num_examples,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+        num_samples_splits["trainval"] = (
+            num_samples_splits["train"] + num_samples_splits["val"])
+
+      # num_samples_splits:  {'test': 21750, 'train': 76127, 'val': 10875, 'train800': 800, 'val200': 200, 'train800val200': 1000, 'trainval': 87002}
+      # tfds_splits:  {'train': 'train', 'val': 'validation', 'test': 'test', 'trainval': 'train+validation', 'train800': 'train[:800]', 'val200': 'validation[:200]', 'train800val200': 'train[:800]+validation[:200]'}
     else:
 
       raise ValueError("No supported config %r for Sun397Data." % config)

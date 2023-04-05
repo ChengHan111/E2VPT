@@ -896,6 +896,8 @@ class Trainer():
             method = NoiseTunnel(integrated_gradients)
         elif integrated_method == 'occlusion':
             method = Occlusion(model)
+        elif integrated_method == 'layer_gradcam':
+            method = LayerGradCam(model, model.layer3[1].conv2) # should specific a layer here
         else:
             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py: {integrated_method}")
         
@@ -971,7 +973,7 @@ class Trainer():
                     
                     for i in range(attribution_patches.shape[0]):                       
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/noise_tunnel/test_ig_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/noise_tunnel/test_nt_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -989,7 +991,7 @@ class Trainer():
                     
                     for i in range(attribution_patches.shape[0]):
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/occlusion/test_ig_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/occlusion/test_occ_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -1000,6 +1002,20 @@ class Trainer():
                                       outlier_perc=2,
                                      )
                         plt.savefig(filename)
+                
+                elif integrated_method == 'layer_gradcam':
+                    if not os.path.exists('./attribution_images_saved/gradcam'):
+                        os.makedirs('./attribution_images_saved/gradcam')
+                    
+                    for i in range(attribution_patches.shape[0]):
+                        unique_id = str(uuid.uuid4())
+                        filename = f'./attribution_images_saved/gradcam/test_gcam_{targets[i]}_{unique_id}.png'
+
+                        figure = viz.visualize_image_attr(attribution_patches[0].cpu().permute(1,2,0).detach().numpy(),
+                                sign="all",
+                                title="Specific layer here")
+                        plt.savefig(filename)
+                    
                 
             else:
                 print("attribution_patches is None")
@@ -1155,6 +1171,8 @@ class Trainer():
                                        target=target_chunk,
                                        sliding_window_shapes=(3, 15, 15),
                                        baselines=0)
+                        elif integrated_method == "layer_gradcam": # which is the same as ig but with layer gradcam
+                            attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
                         else:
                             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py forward_one_batch_IgGeneral: {integrated_method}")
 

@@ -23,7 +23,7 @@ import uuid
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel
+from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel, Occlusion
 from captum.attr import visualization as viz
 
 
@@ -892,8 +892,10 @@ class Trainer():
         if integrated_method == 'ig':
             method = IntegratedGradients(model) 
         elif integrated_method == 'noise_tunnel':
-            integrated_gradients  = IntegratedGradients(model)
+            integrated_gradients = IntegratedGradients(model)
             method = NoiseTunnel(integrated_gradients)
+        elif integrated_method == 'occlusion':
+            method = Occlusion(model)
         else:
             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py: {integrated_method}")
         
@@ -943,10 +945,10 @@ class Trainer():
                         os.makedirs('./attribution_images_saved/ig')
                     for i in range(attribution_patches.shape[0]):                    
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/ig/test_ig_{unique_id}.png'
+                        filename = f'./attribution_images_saved/ig/test_ig_{targets[i]}_{unique_id}.png'
                         # a warning will show up since attr creates negative values
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
-                        targetrgb = targetrgb[..., [0, 1, 2]]
+                        
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
                                                     targetrgb,
                                                     methods=["original_image", "heat_map"],
@@ -969,16 +971,35 @@ class Trainer():
                     
                     for i in range(attribution_patches.shape[0]):                       
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/noise_tunnel/test_ig_{unique_id}.png'
+                        filename = f'./attribution_images_saved/noise_tunnel/test_ig_{targets[i]}_{unique_id}.png'
+                        targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
+                        
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
-                                        np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0)),
+                                        targetrgb,
                                         ["original_image", "heat_map"],
                                         ["all", "positive"],
                                         cmap=default_cmap,
                                         show_colorbar=True)
                         
                         plt.savefig(filename)
+                
+                elif integrated_method == 'occlusion':
+                    if not os.path.exists('./attribution_images_saved/occlusion'):
+                        os.makedirs('./attribution_images_saved/occlusion')
                     
+                    for i in range(attribution_patches.shape[0]):
+                        unique_id = str(uuid.uuid4())
+                        filename = f'./attribution_images_saved/occlusion/test_ig_{targets[i]}_{unique_id}.png'
+                        targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
+                        
+                        figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
+                                      targetrgb,
+                                      ["original_image", "heat_map"],
+                                      ["all", "positive"],
+                                      show_colorbar=True,
+                                      outlier_perc=2,
+                                     )
+                        plt.savefig(filename)
                 
             else:
                 print("attribution_patches is None")
@@ -1127,7 +1148,13 @@ class Trainer():
                         if integrated_method == "ig":
                             attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
                         elif integrated_method == "noise_tunnel":
-                             attribution_chunk = ig_patches.attribute(inputs_chunk, nt_samples=10, nt_type='smoothgrad_sq', target=target_chunk)
+                            attribution_chunk = ig_patches.attribute(inputs_chunk, nt_samples=10, nt_type='smoothgrad_sq', target=target_chunk)
+                        elif integrated_method == "occlusion":
+                            attribution_chunk = ig_patches.attribute(inputs_chunk,
+                                       strides = (3, 8, 8),
+                                       target=target_chunk,
+                                       sliding_window_shapes=(3, 15, 15),
+                                       baselines=0)
                         else:
                             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py forward_one_batch_IgGeneral: {integrated_method}")
 

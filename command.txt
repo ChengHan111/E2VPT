@@ -518,3 +518,5 @@ python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/prompt
 python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "A_test_as_finetune" DATA.BATCH_SIZE "128"
 
 CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "A_test_as_finetune_general" DATA.BATCH_SIZE "64" ATTRIBUTION_TYPE "general"
+
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "IG_VIS" DATA.BATCH_SIZE "64" ATTRIBUTION_TYPE "general" ATTRIBUTION_INTEGRATED_METHOD "ig"

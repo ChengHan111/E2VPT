@@ -28,7 +28,7 @@ _C.SEED = None
 # _C.SAVE_VTAB_RESULTS_PTH = False # self added here for not saving tune_vtab pth results
 
 _C.ATTRIBUTION_TYPE = "specific" # one of "specific", "general" for attribution results
-_C.ATTRIBUTION_INTEGRATED_METHOD = "ig"
+_C.ATTRIBUTION_INTEGRATED_METHOD = "ig" # one of "ig", "noise_tunnel" "occlusion" for attribution results
 
 # ----------------------------------------------------------------------
 # Model options

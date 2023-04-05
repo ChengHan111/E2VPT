@@ -79,57 +79,9 @@ def find_best_lrwd(files, data_name):
             frag_txt = f.split("/run")[0]
             best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
             best_wd = float(frag_txt.split("_wd")[-1])
+    print('best_lr: ', best_lr)
+    print('best_wd: ', best_wd)
     return best_lr, best_wd
-
-def find_best_MtMtp(files, data_name):
-    
-    t_name = "val_" + data_name
-    best_mask_token = None
-    best_mask_token_piece = None
-    best_val_acc = -1
-    for f in files:
-        try:
-            results_dict = torch.load(f, "cpu")
-            epoch = len(results_dict) - 1
-            val_result = results_dict[f"epoch_{epoch}"]["classification"][t_name]["top1"]
-            val_result = float(val_result)
-            
-            frag_txt = f.split("run1")[1]
-            cur_mask_token = int(frag_txt.split("/rewind_")[-1].split('_tokens')[0])
-            cur_mask_token_piece = int(frag_txt.split("tokens_")[-1].split('_pieces')[0])
-        except Exception as e:
-            print(f"Encounter issue: {e} for file {f}")
-            continue
-
-        if val_result == best_val_acc:
-            # frag_txt = f.split("run1")[1]
-            # cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
-            # cur_wd = float(frag_txt.split("_wd")[-1])
-
-            # cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
-            # cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
-            # 这里不一样的点是选择了尽可能大的mask
-            # change into default setting
-            if best_mask_token is not None and best_mask_token < cur_mask_token :
-                # get the smallest lr to break tie for stability
-                # print('pass best_mask_token < cur_mask_token situation')
-                best_mask_token = cur_mask_token
-                best_mask_token_piece = cur_mask_token_piece
-                best_val_acc = val_result
-
-        # larger is better for val results
-        elif val_result > best_val_acc:
-            best_val_acc = val_result
-            frag_txt = f.split("run1")[1]
-            # best_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
-            # best_wd = float(frag_txt.split("_wd")[-1])
-            best_mask_token = cur_mask_token
-            best_mask_token_piece = cur_mask_token_piece
-            print('best_val_acc', best_val_acc)
-            print('best_mask_token', best_mask_token, best_mask_token_piece)
-        
-    return best_mask_token, best_mask_token_piece
-
 
 def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
     """
@@ -174,10 +126,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             layer_behind = 1
         else:
             layer_behind = 0
-        # if QUERY_PROMPT == True:
-        #     query_prompt = 1
-        # else:
-        #     query_prompt = 0
         
         # changes the name of the output folder for loading the pretrained model differently: fine-tuned version.
         # Data_Name_With_PVK = cfg.DATA.NAME + f"_P{P_NUM}_VK{VK_NUM}_SHARED_{marker}_INIT_{init}_ACC_{shared_acc}_BS{BS}_LB{layer_behind}_RS{RESOLUTION}_QKV{QUERY_PROMPT_MODE}_finetuned_update" #_jointUpdate
@@ -193,9 +141,9 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         cfg.SOLVER.BASE_LR = lr
         cfg.SOLVER.WEIGHT_DECAY = wd
     
-    elif final_runs == 'before_pruning':
+    elif final_runs == 'attribution':
         cfg.RUN_N_TIMES = 1
-        cfg.MODEL.SAVE_CKPT_FINALRUNS = True # enable ckpt saving during 'before_pruning' stage (need gradient during pruning)
+        cfg.MODEL.SAVE_CKPT_FINALRUNS = True # enable ckpt saving during 'attribution' stage (need gradient during pruning)
         cfg.MODEL.SAVE_CKPT = False
         
         # find the best lr and best wd
@@ -208,44 +156,9 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
             lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
             
-        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_before_pruning"
+        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_attribution"
         cfg.SOLVER.BASE_LR = lr # this change the corresponding lr and wd (no need to change during pruning)
         cfg.SOLVER.WEIGHT_DECAY = wd
-
-    # # rewind process
-    # elif final_runs == 'final_runs':
-    #     cfg.RUN_N_TIMES = 5
-    #     cfg.MODEL.SAVE_CKPT_FINALRUNS = False # change this to true to enable model saving
-    #     cfg.MODEL.SAVE_CKPT = False
-    #     cfg.SOLVER.BASE_LR = lr
-    #     cfg.SOLVER.WEIGHT_DECAY = wd
-    #     # sleep(10) # sleep for complete saving of eval_results.pth
-
-    #     if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
-            
-    #         files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
-    #         # print('should not be longer than 72', len(files))
-    #         # print(files)
-    #         # notice that mask tokens and mask token pieces are selected in this process(before)
-            
-    #         # print('1', cfg.DATA.NAME)
-    #         # print('2', files)
-    #         mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
-    #         mt, mtr = int(mt), int(mtr)
-        
-    #     else:
-    #         files = glob.glob(f"{cfg.OUTPUT_DIR}_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{lr}_wd{wd}/run1/rewind/*/eval_results.pth")
-    #         mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
-    #         mt, mtr = int(mt), int(mtr)
-        
-    #     cfg.OUTPUT_DIR = cfg.OUTPUT_DIR + "_rewind"
-        
-    #     cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_NUM = mt
-    #     cfg.MODEL.P_VK.REWIND_MASK_CLS_TOKEN_PIECE_NUM = mtr
-    #     cfg.MODEL.P_VK.REWIND_STATUS = True
-    #     # cfg.MODEL.P_VK.PRUNING_SAVING_PATH = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-    #     cfg.MODEL.P_VK.REWIND_OUTPUT_DIR = f"output_before_pruning/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/lr{cfg.SOLVER.BASE_LR}_wd{cfg.SOLVER.WEIGHT_DECAY}/run1"
-    #     print('At final runs:', cfg.MODEL.P_VK.REWIND_OUTPUT_DIR)
         
     else:
         raise ValueError(
@@ -381,7 +294,11 @@ def cal_attribution_score(cfg, args, final_runs):
     if test_loader:
         logger.info("Start to calculate attribution scores")
         # grad = trainer.calculate_attribution_scores_captum(cfg, model, test_loader)
-        trainer.eval_classifier_IG(model, train_loader, test_loader, prefix="test")
+        
+        if cfg.ATTRIBUTION_TYPE == "specific":
+            trainer.eval_classifier_IG(model, train_loader, test_loader, prefix="test")
+        elif cfg.ATTRIBUTION_TYPE == "general":
+            trainer.eval_classifier_GENERAL(model, train_loader, test_loader, prefix="test", integrated_method=cfg.ATTRIBUTION_INTEGRATED_METHOD)
         
     else:
         print("No test loader presented. Exit")
@@ -443,10 +360,10 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
 def get_lrwd_range(args):
 
     if args.train_type == "finetune":
-        lr_range = [0.001, 0.0001, 0.0005, 0.005]
-        wd_range = [0.01, 0.001, 0.0001, 0.0]
-        # lr_range = [0.001] # make changes here
-        # wd_range = [0.01, 0.001]
+        # lr_range = [0.001, 0.0001, 0.0005, 0.005]
+        # wd_range = [0.01, 0.001, 0.0001, 0.0]
+        lr_range = [0.001] # make changes here
+        wd_range = [0.01, 0.001]
 
     elif args.train_type == "finetune_resnet":
         lr_range = [
@@ -530,10 +447,10 @@ def main(args):
             train(cfg, args, final_runs=False)
     
     # run and save best lr, wd combination model (only 1 time) before pruning
-    cfg = setup(args, 0.1, 0.1, final_runs='before_pruning')
+    cfg = setup(args, 0.1, 0.1, final_runs='attribution')
     train(cfg, args, final_runs=False) # originally True here.
     
-    # keep the same config as before_pruning
+    # keep the same config as attribution
     cal_attribution_score(cfg, args, final_runs=True)
 
 if __name__ == '__main__':

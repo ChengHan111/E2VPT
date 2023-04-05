@@ -61,7 +61,7 @@ class CifarData(base.ImageTfdsData):
     # print('1', trainval_count) # 50000
     # print('2', test_count) # 10000
 
-    origin = False
+    origin = True
     if origin:
       num_samples_splits = {
           "train": (train_split_percent * trainval_count) // 100,

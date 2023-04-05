@@ -943,11 +943,11 @@ class Trainer():
 
                     # print('attribution_patches', attribution_patches.shape) # torch.Size([64, 3, 224, 224])
                     # print('X', X.shape) # torch.Size([64, 3, 224, 224])
-                    if not os.path.exists('./attribution_images_saved/ig'):
-                        os.makedirs('./attribution_images_saved/ig')
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig')
                     for i in range(attribution_patches.shape[0]):                    
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/ig/test_ig_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig/ig_{targets[i]}_{unique_id}.png'
                         # a warning will show up since attr creates negative values
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
@@ -968,12 +968,12 @@ class Trainer():
                     #                             sign='positive',
                     #                             outlier_perc=1)
                 elif integrated_method == 'noise_tunnel':
-                    if not os.path.exists('./attribution_images_saved/noise_tunnel'):
-                        os.makedirs('./attribution_images_saved/noise_tunnel')
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel')
                     
                     for i in range(attribution_patches.shape[0]):                       
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/noise_tunnel/test_nt_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel/nt_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -986,12 +986,12 @@ class Trainer():
                         plt.savefig(filename)
                 
                 elif integrated_method == 'occlusion':
-                    if not os.path.exists('./attribution_images_saved/occlusion'):
-                        os.makedirs('./attribution_images_saved/occlusion')
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion')
                     
                     for i in range(attribution_patches.shape[0]):
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/occlusion/test_occ_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion/occ_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -1004,12 +1004,12 @@ class Trainer():
                         plt.savefig(filename)
                 
                 elif integrated_method == 'layer_gradcam':
-                    if not os.path.exists('./attribution_images_saved/gradcam'):
-                        os.makedirs('./attribution_images_saved/gradcam')
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam')
                     
                     for i in range(attribution_patches.shape[0]):
                         unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/gradcam/test_gcam_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam/gcam_{targets[i]}_{unique_id}.png'
 
                         figure = viz.visualize_image_attr(attribution_patches[0].cpu().permute(1,2,0).detach().numpy(),
                                 sign="all",

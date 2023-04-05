@@ -360,10 +360,10 @@ def rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_outp
 def get_lrwd_range(args):
 
     if args.train_type == "finetune":
-        # lr_range = [0.001, 0.0001, 0.0005, 0.005]
-        # wd_range = [0.01, 0.001, 0.0001, 0.0]
-        lr_range = [0.001] # make changes here
-        wd_range = [0.01, 0.001]
+        lr_range = [0.001, 0.0001, 0.0005, 0.005]
+        wd_range = [0.01, 0.001, 0.0001, 0.0]
+        # lr_range = [0.001] # make changes here
+        # wd_range = [0.01, 0.001]
 
     elif args.train_type == "finetune_resnet":
         lr_range = [

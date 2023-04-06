@@ -23,7 +23,7 @@ import uuid
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel, Occlusion
+from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel, Occlusion, LayerGradCam, LayerAttribution
 from captum.attr import visualization as viz
 
 
@@ -887,7 +887,9 @@ class Trainer():
         self.cls_weights = train_loader.dataset.get_class_weights(
             self.cfg.DATA.CLASS_WEIGHTS_TYPE)
         
-        # ig = IntegratedGradients(model)
+        for name, _ in model.named_parameters():
+            print(name)
+        list(model.parameters())
 
         if integrated_method == 'ig':
             method = IntegratedGradients(model) 
@@ -897,7 +899,11 @@ class Trainer():
         elif integrated_method == 'occlusion':
             method = Occlusion(model)
         elif integrated_method == 'layer_gradcam':
-            method = LayerGradCam(model, model.layer3[1].conv2) # should specific a layer here
+            print(model) # model.enc.transformer.encoder.layer[11] ffn
+            # model.enc.transformer.encoder.encoder_norm torch.Size([64, 1, 768])
+            # model.enc.transformer.encoder.layer[11].ffn torch.Size([64, 1, 768])
+            # embeddings.patch_embeddings
+            method = LayerGradCam(model, model.enc.transformer.embeddings.patch_embeddings) # should specific a layer here
         else:
             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py: {integrated_method}")
         
@@ -960,13 +966,6 @@ class Trainer():
                         
                         plt.savefig(filename)
                         
-                    # figure = viz.visualize_image_attr(np.transpose(attribution_patches.squeeze().cpu().detach().numpy(), (1,2,0)),
-                    #                             np.transpose(X.squeeze().cpu().detach().numpy(), (1,2,0)),
-                    #                             method='heat_map',
-                    #                             cmap=default_cmap,
-                    #                             show_colorbar=True,
-                    #                             sign='positive',
-                    #                             outlier_perc=1)
                 elif integrated_method == 'noise_tunnel':
                     if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel'):
                         os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel')
@@ -1010,49 +1009,29 @@ class Trainer():
                     for i in range(attribution_patches.shape[0]):
                         unique_id = str(uuid.uuid4())
                         filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam/gcam_{targets[i]}_{unique_id}.png'
+                        
+                        # print('attribution_patches', attribution_patches.shape) 
+                        # attribution_patches = F.interpolate(attribution_patches, size=(224, 224), mode='bilinear', align_corners=False)
+                        
+                        targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
+                        # print('targetrgb', targetrgb.shape) 
+                        
+                        # targetrgb = np.reshape(targetrgb, (224,224,3))
+                        # print('attribution_patches', attribution_patches.shape) 
+                        
+                        # save blend in heat map (kinda blurry)
+                        # figure = viz.visualize_image_attr(
+                        #     np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)), targetrgb, 
+                        #     method='blended_heat_map', sign='absolute_value')
 
-                        figure = viz.visualize_image_attr(attribution_patches[0].cpu().permute(1,2,0).detach().numpy(),
-                                sign="all",
-                                title="Specific layer here")
+                        figure = viz.visualize_image_attr_multiple(
+                            np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)), targetrgb, 
+                            methods=["original_image", "heat_map"], signs=["all","absolute_value"], show_colorbar=True, outlier_perc=2)
                         plt.savefig(filename)
                     
                 
             else:
                 print("attribution_patches is None")
-                
-            # top_1_save = True
-            # top_1_MaxValue_save = True
-            # save_logits = True
-            
-            # if top_1_save:
-            #     max_idx_numpy = max_idx.cpu().numpy()
-            #     max_idx_numpy.astype(int)
-            #     file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/1_dataL2Norm_{model_type}.txt"
-            #     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            #     with open(file_path, 'ab') as f:
-            #         np.savetxt(f, max_idx_numpy.reshape(1, -1), fmt='%.6f')
-            # if top_1_MaxValue_save:
-            #     maxValue_idx_numpy = maxValue_idx.cpu().numpy()
-            #     maxValue_idx_numpy.astype(int)
-            #     file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/2_dataMaxValue_{model_type}.txt"
-            #     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            #     with open(file_path, 'ab') as f:
-            #         np.savetxt(f, maxValue_idx_numpy.reshape(1, -1), fmt='%.6f')
-            
-            # if save_logits:
-            #     targets_numpy = targets.numpy()
-            #     targets_numpy.astype(int)
-            #     file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/3_data_targets_{model_type}.txt"
-            #     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            #     with open(file_path, 'ab') as f:
-            #         np.savetxt(f, targets_numpy.reshape(1, -1), fmt='%.6f')
-                    
-            #     outputs_results = np.argmax(outputs.cpu().numpy(), axis=1)
-            #     outputs_results.astype(int)
-            #     file_path = self.cfg.OUTPUT_DIR + f"/txt_save_folder/4_data_outputs_{model_type}.txt"
-            #     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            #     with open(file_path, 'ab') as f:
-            #         np.savetxt(f, outputs_results.reshape(1, -1), fmt='%.6f')
             
             if loss == -1:
                 return
@@ -1071,40 +1050,10 @@ class Trainer():
                         data_time.val
                     ) + "max mem: {:.5f} GB ".format(gpu_mem_usage())
                 )
-
-            # targets: List[int]
-            # print('targets', targets) tensors
-            # print('outputs', outputs)
             
             total_targets.extend(list(targets.numpy()))
             total_logits.append(outputs)
         
-        # logger.info(
-        #     f"Inference ({prefix}):"
-        #     + "avg data time: {:.2e}, avg batch time: {:.4f}, ".format(
-        #         data_time.avg, batch_time.avg)
-        #     + "average loss: {:.4f}".format(losses.avg))
-        # if self.model.side is not None:
-        #     logger.info(
-        #         "--> side tuning alpha = {:.4f}".format(self.model.side_alpha))
-            
-        # # total_testimages x num_classes
-        # joint_logits = torch.cat(total_logits, dim=0).cpu().numpy()
-        # self.evaluator.classify(
-        #     joint_logits, total_targets,
-        #     test_name, self.cfg.DATA.MULTILABEL,
-        # )
-
-        # # save the probs and targets
-        # if save_logits:
-        #     out = {"targets": total_targets, "joint_logits": joint_logits}
-        #     out_path = os.path.join(
-        #         self.cfg.OUTPUT_DIR, f"{test_name}_logits.pth")
-        #     torch.save(out, out_path)
-        #     logger.info(
-        #         f"Saved logits and targets for {test_name} at {out_path}")
-        # return grad_embeddings_norm, grad_prompt_norm
-    
     
     def forward_one_batch_IgGeneral(self, ig_patches, inputs, targets, is_train, integrated_method):
         """Train a single (full) epoch on the model using the given
@@ -1157,7 +1106,7 @@ class Trainer():
                     inputs_chunk = inputs[start_idx:end_idx]
                     baseline_chunk = torch.zeros_like(inputs_chunk)
                     target_chunk = targets[start_idx:end_idx]
-                    # print('!!!', target_chunk.shape)
+                    
                     if target_chunk.shape[0] != 0:
                         
                         # attribution_chunk = ig_patches.attribute(inputs_chunk, baselines=baseline_chunk, target=target_chunk)
@@ -1173,6 +1122,8 @@ class Trainer():
                                        baselines=0)
                         elif integrated_method == "layer_gradcam": # which is the same as ig but with layer gradcam
                             attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
+                            # interpolate to the original size
+                            attribution_chunk = LayerAttribution.interpolate(attribution_chunk, (224, 224))
                         else:
                             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py forward_one_batch_IgGeneral: {integrated_method}")
 

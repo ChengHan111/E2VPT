@@ -179,3 +179,7 @@ train_save.py
 /plot_functions/output_folderACC_saved
 /plot_functions/output_folder_saved
 /8000-2000
+
+/IG_VIS_attribution
+/IG_VIS_val
+/NT_VIS_val

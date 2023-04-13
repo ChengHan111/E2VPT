@@ -12,10 +12,10 @@ pd.set_option('display.max_rows', None)
 
 # 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
 # 两个文件夹下:output_before_pruning + output_rewind
-root = '/home/ch7858/vptSelf/8000-2000/_finalfinal/vtab-cifar(num_classes=100)'
-dataset_type = 'vtab_finetune' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
+root = '/home/ch7858/vptSelf/cifar100_400-100/output_finalfinal/vtab-cifar(num_classes=100)'
+dataset_type = 'vtab' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
 MODEL_NAME = "sup_vitb16_224" # sup_vitb16_224 # mae_vitb16 # mocov3_vitb # swinb_imagenet22k_224
-train_mode = 'Finetune' # Finetune # PromptTuning # MixedOneStep # TwoSteps
+train_mode = 'PromptTuning' # Finetune # PromptTuning # MixedOneStep # TwoSteps
 
 df_list=[]
 for idx, seed in enumerate(["42", "44", "82", "100", "800"]):

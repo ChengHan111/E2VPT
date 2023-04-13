@@ -20,6 +20,7 @@ from ..utils.train_utils import AverageMeter, gpu_mem_usage
 import json
 
 import uuid
+import itertools
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -829,12 +830,6 @@ class Trainer():
                         
                 # True end
                 # attribution_ig = torch.cat(attributions, dim=0)
-                # print('attribution_ig', attribution_ig)
-                # print('attribution_ig.shape', attribution_ig.shape)
-                
-                # print('grad_loss', grad_loss)
-                # print('grad_outputs', grad_outputs)
-                # print('grad_prompt', grad_prompt)
             
                 # attribution = ig_prompt_embeddings.attribute(inputs, target=targets)
                 
@@ -887,9 +882,10 @@ class Trainer():
         self.cls_weights = train_loader.dataset.get_class_weights(
             self.cfg.DATA.CLASS_WEIGHTS_TYPE)
         
-        for name, _ in model.named_parameters():
-            print(name)
-        list(model.parameters())
+        # print parameters
+        # for name, _ in model.named_parameters():
+        #     print(name)
+        # list(model.parameters())
 
         if integrated_method == 'ig':
             method = IntegratedGradients(model) 
@@ -899,7 +895,7 @@ class Trainer():
         elif integrated_method == 'occlusion':
             method = Occlusion(model)
         elif integrated_method == 'layer_gradcam':
-            print(model) # model.enc.transformer.encoder.layer[11] ffn
+            # print(model) # model.enc.transformer.encoder.layer[11] ffn
             # model.enc.transformer.encoder.encoder_norm torch.Size([64, 1, 768])
             # model.enc.transformer.encoder.layer[11].ffn torch.Size([64, 1, 768])
             # embeddings.patch_embeddings
@@ -928,6 +924,8 @@ class Trainer():
         # grad_embeddings = []
         grad_embeddings_norm = []
 
+        id_iter = itertools.count()
+        
         for idx, input_data in enumerate(data_loader):
             end = time.time()
             X, targets = self.get_input(input_data)
@@ -938,6 +936,22 @@ class Trainer():
                 logger.info("during eval: {}".format(X.shape))
 
             loss, outputs, attribution_patches = self.forward_one_batch_IgGeneral(method, X, targets, False, integrated_method) # False (originally False)
+            
+            # save logits
+            if self.cfg.SAVE_LOGITS:
+                targets_numpy = targets.cpu().numpy()
+                targets_numpy.astype(int)
+                file_path = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/{self.cfg.ATTRIBUTION_INTEGRATED_METHOD}/t_l_save/Targets_{self.cfg.MODEL.TRANSFER_TYPE}.txt'
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, targets_numpy.reshape(1, -1), fmt='%.6f')
+                
+                outputs_numpy = outputs.cpu().numpy()
+                file_path = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/{self.cfg.ATTRIBUTION_INTEGRATED_METHOD}/t_l_save/Logits_{self.cfg.MODEL.TRANSFER_TYPE}.txt'
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'ab') as f:
+                    np.savetxt(f, outputs_numpy.reshape(1, -1), fmt='%.6f')
+                            
             
             if attribution_patches is not None:
                 
@@ -951,8 +965,10 @@ class Trainer():
                     # print('X', X.shape) # torch.Size([64, 3, 224, 224])
                     if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig'):
                         os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig')
+                    # get images uniquely and save
                     for i in range(attribution_patches.shape[0]):                    
-                        unique_id = str(uuid.uuid4())
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
                         filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig/ig_{targets[i]}_{unique_id}.png'
                         # a warning will show up since attr creates negative values
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
@@ -962,7 +978,7 @@ class Trainer():
                                                     methods=["original_image", "heat_map"],
                                                     cmap=default_cmap,
                                                     show_colorbar=True,
-                                                    signs=["all", "positive"])
+                                                    signs=["all", "absolute_value"]) # originally positive here!
                         
                         plt.savefig(filename)
                         
@@ -971,7 +987,8 @@ class Trainer():
                         os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel')
                     
                     for i in range(attribution_patches.shape[0]):                       
-                        unique_id = str(uuid.uuid4())
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
                         filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel/nt_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
@@ -989,35 +1006,33 @@ class Trainer():
                         os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion')
                     
                     for i in range(attribution_patches.shape[0]):
-                        unique_id = str(uuid.uuid4())
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
                         filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion/occ_{targets[i]}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
                                       targetrgb,
                                       ["original_image", "heat_map"],
-                                      ["all", "positive"],
+                                      ["all", "all"], # originally positive
                                       show_colorbar=True,
                                       outlier_perc=2,
                                      )
                         plt.savefig(filename)
                 
                 elif integrated_method == 'layer_gradcam':
-                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam'):
-                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam')
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/layer_gradcam'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/layer_gradcam')
                     
                     for i in range(attribution_patches.shape[0]):
-                        unique_id = str(uuid.uuid4())
-                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/gradcam/gcam_{targets[i]}_{unique_id}.png'
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/layer_gradcam/gcam_{targets[i]}_{unique_id}.png'
                         
                         # print('attribution_patches', attribution_patches.shape) 
                         # attribution_patches = F.interpolate(attribution_patches, size=(224, 224), mode='bilinear', align_corners=False)
                         
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
-                        # print('targetrgb', targetrgb.shape) 
-                        
-                        # targetrgb = np.reshape(targetrgb, (224,224,3))
-                        # print('attribution_patches', attribution_patches.shape) 
                         
                         # save blend in heat map (kinda blurry)
                         # figure = viz.visualize_image_attr(
@@ -1116,9 +1131,9 @@ class Trainer():
                             attribution_chunk = ig_patches.attribute(inputs_chunk, nt_samples=10, nt_type='smoothgrad_sq', target=target_chunk)
                         elif integrated_method == "occlusion":
                             attribution_chunk = ig_patches.attribute(inputs_chunk,
-                                       strides = (3, 8, 8),
+                                       strides = (3, 8, 8), # (2, 8, 8)
                                        target=target_chunk,
-                                       sliding_window_shapes=(3, 15, 15),
+                                       sliding_window_shapes=(3, 15, 15), # (3, 13, 13) different choice
                                        baselines=0)
                         elif integrated_method == "layer_gradcam": # which is the same as ig but with layer gradcam
                             attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)

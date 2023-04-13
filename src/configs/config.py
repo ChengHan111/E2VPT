@@ -28,7 +28,8 @@ _C.SEED = None
 # _C.SAVE_VTAB_RESULTS_PTH = False # self added here for not saving tune_vtab pth results
 
 _C.ATTRIBUTION_TYPE = "specific" # one of "specific", "general" for attribution results
-_C.ATTRIBUTION_INTEGRATED_METHOD = "ig" # one of "ig", "noise_tunnel" "occlusion" for attribution results
+_C.ATTRIBUTION_INTEGRATED_METHOD = "ig" # one of "ig", "noise_tunnel" "occlusion" "layer_gradcam" for attribution results
+_C.SAVE_LOGITS = True # save logits for attribution results
 
 # ----------------------------------------------------------------------
 # Model options
@@ -235,6 +236,11 @@ _C.DATA.BATCH_SIZE = 32
 _C.DATA.NUM_WORKERS = 4
 # Load data to pinned host memory
 _C.DATA.PIN_MEMORY = True
+
+# Set to True to enable even separation of classes.
+_C.DATA.EVEN_SEPARETE = False 
+_C.DATA.MAX_IMAGES_PER_CLASS_TRAIN = 1 # one-shot learning
+_C.DATA.MAX_IMAGES_PER_CLASS_VAL = 1 
 
 # ImageNet settings, not for E2VPT
 _C.DATA.RANDOM_SEED = 0

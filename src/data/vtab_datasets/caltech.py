@@ -52,34 +52,62 @@ class Caltech101(base.ImageTfdsData):
     dataset_builder = tfds.builder("caltech101:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
     
-    # Creates a dict with example counts for each split.
-    trainval_count = dataset_builder.info.splits["train"].num_examples
-    train_count = (_TRAIN_SPLIT_PERCENT * trainval_count) // 100
-    test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_splits = dict(
+    origin = False
+    if origin:
+        # Creates a dict with example counts for each split.
+        trainval_count = dataset_builder.info.splits["train"].num_examples
+        train_count = (_TRAIN_SPLIT_PERCENT * trainval_count) // 100
+        test_count = dataset_builder.info.splits["test"].num_examples
+        num_samples_splits = dict(
+            train=train_count,
+            val=trainval_count - train_count,
+            trainval=trainval_count,
+            test=test_count,
+            train800=800,
+            val200=200,
+            train800val200=1000)
+        # print(num_samples_splits)
+        # {'train': 2754, 'val': 306, 'trainval': 3060, 'test': 6084, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "train": "train[:{}]".format(train_count),
+            "val": "train[{}:]".format(train_count),
+            "trainval": "train",
+            "test": "test",
+            "train800": "train[:800]",
+            "val200": "train[{}:{}]".format(train_count, train_count+200),
+            "train800val200": (
+                "train[:800]+train[{}:{}]".format(train_count, train_count+200)),
+        }
+    else:
+        print('for else option, get train test data enlarged')
+        # Creates a dict with example counts for each split.
+        _TRAIN_SPLIT_PERCENT = 70 # (origin: 90, set to 70 to enable )
+        trainval_count = dataset_builder.info.splits["train"].num_examples
+        train_count = (_TRAIN_SPLIT_PERCENT * trainval_count) // 100
+        test_count = dataset_builder.info.splits["test"].num_examples
+        
+        num_samples_splits = dict(
         train=train_count,
         val=trainval_count - train_count,
         trainval=trainval_count,
         test=test_count,
-        train800=800,
-        val200=200,
-        train800val200=1000)
-    # print(num_samples_splits)
-    # {'train': 2754, 'val': 306, 'trainval': 3060, 'test': 6084, 'train800': 800, 'val200': 200, 'train800val200': 1000}
-
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train[:{}]".format(train_count),
-        "val": "train[{}:]".format(train_count),
-        "trainval": "train",
-        "test": "test",
-        "train800": "train[:800]",
-        "val200": "train[{}:{}]".format(train_count, train_count+200),
-        "train800val200": (
-            "train[:800]+train[{}:{}]".format(train_count, train_count+200)),
-    }
-    # print(tfds_splits)
-    # exit()
+        train800=2000,
+        val200=800,
+        train800val200=2800)
+        
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "train": "train[:{}]".format(train_count),
+            "val": "train[{}:]".format(train_count),
+            "trainval": "train",
+            "test": "test",
+            "train800": "train[:2000]",
+            "val200": "train[{}:{}]".format(train_count, train_count+800),
+            "train800val200": (
+                "train[:2000]+train[{}:{}]".format(train_count, train_count+800)),
+        }
 
     super(Caltech101, self).__init__(
         dataset_builder=dataset_builder,

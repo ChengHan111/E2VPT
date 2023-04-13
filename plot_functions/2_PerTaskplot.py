@@ -33,7 +33,7 @@ def read_loss_from_txt(filename, log_scale):
 # filename = '/home/ch7858/vpt/plot_functions/output_folder/vtab-svhn/P20_VK5_TwoSteps/run1.txt'
 FolderName = '/home/ch7858/vptSelf/plot_functions/output_folder/vtab-cifar(num_classes=100)'
 subfolders = [f.path for f in os.scandir(FolderName) if f.is_dir()]
-log_scale = True # True to enable log scale
+log_scale = False # True to enable log scale
 print(subfolders)
 
 for folder in subfolders:

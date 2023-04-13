@@ -6,7 +6,8 @@ import tensorflow.compat.v1 as tf
 import torch
 import torch.utils.data
 import numpy as np
-
+import random
+import collections
 from collections import Counter
 from torch import Tensor
 
@@ -77,22 +78,85 @@ class TFDataset(torch.utils.data.Dataset):
 
         self.get_data(cfg, split)
 
+    # # origin
+    # def get_data(self, cfg, split):
+    #     tf_data = build_tf_dataset(cfg, split)
+    #     data_list = list(tf_data)  # a list of tuples
+        
+    #     self._image_tensor_list = [t[0].numpy().squeeze() for t in data_list]
+        
+    #     self._targets = [int(t[1].numpy()[0]) for t in data_list]
+    #     self._class_ids = sorted(list(set(self._targets)))
+
+    #     logger.info("Number of images: {}".format(len(self._image_tensor_list)))
+    #     logger.info("Number of classes: {} / {}".format(
+    #         len(self._class_ids), self.get_class_num()))
+
+    #     del data_list
+    #     del tf_data
+    
     def get_data(self, cfg, split):
-        # print('at get data', cfg)
-        # print('print split', split)
         tf_data = build_tf_dataset(cfg, split)
-        data_list = list(tf_data)  # a list of tuples
+        data_list = list(tf_data)
+        
+        # for test, we don't need to sample images from each class
+        if cfg.DATA.EVEN_SEPARETE and split != "test":
+            random.seed(0) # set seed
+            class_id_to_images = collections.defaultdict(list)
+            for t in data_list:
+                image_tensor = t[0].numpy().squeeze()
+                target = int(t[1].numpy()[0])
+                class_id_to_images[target].append(image_tensor)
+                
+            self._image_tensor_list = []
+            self._targets = []
+            if split == "train":
+                for class_id, images in class_id_to_images.items():
+                    num_images = min(len(images), cfg.DATA.MAX_IMAGES_PER_CLASS_TRAIN)
+                    sampled_images = random.sample(images, num_images)
+                    self._image_tensor_list += sampled_images
+                    self._targets += [class_id] * num_images
+            elif split == "val":
+                for class_id, images in class_id_to_images.items():
+                    num_images = min(len(images), cfg.DATA.MAX_IMAGES_PER_CLASS_VAL)
+                    sampled_images = random.sample(images, num_images)
+                    self._image_tensor_list += sampled_images
+                    self._targets += [class_id] * num_images
+            elif split == "trainval":
+                for class_id, images in class_id_to_images.items():
+                    number_trainval = cfg.DATA.MAX_IMAGES_PER_CLASS_TRAIN + cfg.DATA.MAX_IMAGES_PER_CLASS_VAL
+                    num_images = min(len(images), number_trainval)
+                    sampled_images = random.sample(images, num_images)
+                    self._image_tensor_list += sampled_images
+                    self._targets += [class_id] * num_images
+            else:
+                raise ValueError(F"split {split} is not supported.")
+                
+            self._class_ids = sorted(list(set(self._targets)))
+            print("self._targets", self._targets)
 
-        self._image_tensor_list = [t[0].numpy().squeeze() for t in data_list]
-        self._targets = [int(t[1].numpy()[0]) for t in data_list]
-        self._class_ids = sorted(list(set(self._targets)))
+            logger.info("Number of images: {}".format(len(self._image_tensor_list)))
+            logger.info("Number of classes: {} / {}".format(
+                len(self._class_ids), self.get_class_num()))
 
-        logger.info("Number of images: {}".format(len(self._image_tensor_list)))
-        logger.info("Number of classes: {} / {}".format(
-            len(self._class_ids), self.get_class_num()))
+            del data_list
+            del tf_data
+            
+        else:
+            tf_data = build_tf_dataset(cfg, split)
+            data_list = list(tf_data)  # a list of tuples
+            
+            self._image_tensor_list = [t[0].numpy().squeeze() for t in data_list]
+            
+            self._targets = [int(t[1].numpy()[0]) for t in data_list]
+            self._class_ids = sorted(list(set(self._targets)))
 
-        del data_list
-        del tf_data
+            logger.info("Number of images: {}".format(len(self._image_tensor_list)))
+            logger.info("Number of classes: {} / {}".format(
+                len(self._class_ids), self.get_class_num()))
+
+            del data_list
+            del tf_data
 
     def get_info(self):
         num_imgs = len(self._image_tensor_list)

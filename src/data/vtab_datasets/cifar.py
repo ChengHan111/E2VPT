@@ -28,7 +28,6 @@ import tensorflow_datasets as tfds
 # split is used as a new training split and the rest is used for validation.
 TRAIN_SPLIT_PERCENT = 90
 
-
 @Registry.register("data.cifar", "class")
 class CifarData(base.ImageTfdsData):
   """Provides Cifar10 or Cifar100 data.
@@ -58,8 +57,6 @@ class CifarData(base.ImageTfdsData):
     # Creates a dict with example counts for each split.
     trainval_count = dataset_builder.info.splits["train"].num_examples
     test_count = dataset_builder.info.splits["test"].num_examples
-    # print('1', trainval_count) # 50000
-    # print('2', test_count) # 10000
 
     origin = True
     if origin:
@@ -89,17 +86,16 @@ class CifarData(base.ImageTfdsData):
       }
       # print('4', tfds_splits)
     else:
-      print('self-changes on splits for cifar100')
+      # print('self-changes on splits for cifar100')
       num_samples_splits = {
         "train": (train_split_percent * trainval_count) // 100,
         "val": trainval_count - (train_split_percent * trainval_count) // 100,
         "trainval": trainval_count,
         "test": test_count,
-        "train800": 400,
-        "val200": 100,
-        "train800val200": 500,
+        "train800": 10000,
+        "val200": 2500,
+        "train800val200": 12500,
       }
-      # print('3', num_samples_splits)
     
 
       # Defines dataset specific train/val/trainval/test splits.
@@ -108,11 +104,11 @@ class CifarData(base.ImageTfdsData):
           "val": "train[{}:]".format(num_samples_splits["train"]),
           "trainval": "train",
           "test": "test",
-          "train800": "train[:400]",
+          "train800": "train[:10000]",
           "val200": "train[{}:{}]".format(
-              num_samples_splits["train"], num_samples_splits["train"]+100),
-          "train800val200": "train[:400]+train[{}:{}]".format(
-              num_samples_splits["train"], num_samples_splits["train"]+100),
+              num_samples_splits["train"], num_samples_splits["train"]+2500),
+          "train800val200": "train[:10000]+train[{}:{}]".format(
+              num_samples_splits["train"], num_samples_splits["train"]+2500),
       }
       # print('4', tfds_splits)
     

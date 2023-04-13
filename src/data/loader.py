@@ -29,8 +29,7 @@ def _construct_loader(cfg, split, batch_size, shuffle, drop_last):
         # import the tensorflow here only if needed
         from .datasets.tf_dataset import TFDataset
         dataset = TFDataset(cfg, split)
-        # print('dataset check', dataset)
-    # 一共两个dataset 一个是vtab一个是fgvc
+        
     else:
         assert (
             dataset_name in _DATASET_CATALOG.keys()

@@ -349,7 +349,7 @@ class ImageData(ImageDataInterface):
 
     data = self._cache_data_if_possible(
         data, split_name=split_name, num_samples=num_samples, for_eval=for_eval)
-
+    
     def print_filtered_subset(ex):
       """Print filtered subset for debug purpose."""
       if isinstance(ex, dict) and 'id' in ex and 'label' in ex:

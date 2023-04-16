@@ -39,7 +39,7 @@ class Sun397Data(base.ImageTfdsData):
       dataset_builder = tfds.builder("sun397/tfds:4.*.*", data_dir=data_dir)
       dataset_builder.download_and_prepare()
 
-      origin = True
+      origin = False
       if origin:
         tfds_splits = {
             "train": "train",
@@ -67,18 +67,18 @@ class Sun397Data(base.ImageTfdsData):
             "val": "validation",
             "test": "test",
             "trainval": "train+validation",
-            "train800": "train[:800]",
-            "val200": "validation[:200]",
-            "train800val200": "train[:800]+validation[:200]",
+            "train800": "train[:10000]",
+            "val200": "validation[:10000]",
+            "train800val200": "train[:10000]+validation[:10000]",
         }
         # Creates a dict with example counts.
         num_samples_splits = {
             "test": dataset_builder.info.splits["test"].num_examples,
             "train": dataset_builder.info.splits["train"].num_examples,
             "val": dataset_builder.info.splits["validation"].num_examples,
-            "train800": 800,
-            "val200": 200,
-            "train800val200": 1000,
+            "train800": 10000,
+            "val200": 10000,
+            "train800val200": 20000,
         }
         num_samples_splits["trainval"] = (
             num_samples_splits["train"] + num_samples_splits["val"])

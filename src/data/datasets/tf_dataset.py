@@ -95,6 +95,7 @@ class TFDataset(torch.utils.data.Dataset):
     #     del data_list
     #     del tf_data
     
+    # updated version of get_data to enable even sampling
     def get_data(self, cfg, split):
         tf_data = build_tf_dataset(cfg, split)
         data_list = list(tf_data)

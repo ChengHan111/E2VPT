@@ -32,7 +32,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     j_data = job_path.split("/run")[0].split(
         job_root + "/" + model_type)[-1].split("/")
     if dataset_type == 'vtab':
-        job_name = job_root.split("/output_finalfinal/")[1]
+        job_name = job_root.split("/output_finalfinal/")[1] # output_finalfinal
     elif dataset_type == 'fgvc':
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
@@ -57,7 +57,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     wd = float(j_data_lrwd.split("_")[1].split("wd")[-1])
     # return data_name, feat_type, lr, wd
     if dataset_type == 'vtab':
-        data_name = job_root.split(f"_{P_value}")[0].split("/output_finalfinal/")[1]
+        data_name = job_root.split(f"_{P_value}")[0].split("/output_finalfinal/")[1] #output_finalfinal
     elif dataset_type == 'fgvc':
         data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':

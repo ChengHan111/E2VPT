@@ -41,34 +41,62 @@ class DTDData(base.ImageTfdsData):
     dataset_builder = tfds.builder("dtd:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train",
-        "val": "validation",
-        "trainval": "train+validation",
-        "test": "test",
-        "train800": "train[:800]",
-        "val200": "validation[:200]",
-        "train800val200": "train[:800]+validation[:200]",
-    }
-    # print("tfds_splits: ", tfds_splits)
+    origin = False
+    if origin:
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "test": "test",
+            "train800": "train[:800]",
+            "val200": "validation[:200]",
+            "train800val200": "train[:800]+validation[:200]",
+        }
+        # print("tfds_splits: ", tfds_splits)
 
-    # Creates a dict with example counts for each split.
-    train_count = dataset_builder.info.splits["train"].num_examples
-    val_count = dataset_builder.info.splits["validation"].num_examples
-    test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
-    # print("num_samples_splits: ", num_samples_splits)
-    # num_samples_splits:  {'train': 1880, 'val': 1880, 'trainval': 3760, 'test': 1880, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+        # Creates a dict with example counts for each split.
+        train_count = dataset_builder.info.splits["train"].num_examples
+        val_count = dataset_builder.info.splits["validation"].num_examples
+        test_count = dataset_builder.info.splits["test"].num_examples
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 800,
+            "val200": 200,
+            "train800val200": 1000,
+        }
+        # print("num_samples_splits: ", num_samples_splits)
+        # num_samples_splits:  {'train': 1880, 'val': 1880, 'trainval': 3760, 'test': 1880, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+    else:
+        # Defines dataset specific train/val/trainval/test splits.
+        tfds_splits = {
+            "train": "train",
+            "val": "validation",
+            "trainval": "train+validation",
+            "test": "test",
+            "train800": "train[:1000]",
+            "val200": "validation[:1000]",
+            "train800val200": "train[:1000]+validation[:1000]",
+        }
+        # print("tfds_splits: ", tfds_splits)
 
+        # Creates a dict with example counts for each split.
+        train_count = dataset_builder.info.splits["train"].num_examples
+        val_count = dataset_builder.info.splits["validation"].num_examples
+        test_count = dataset_builder.info.splits["test"].num_examples
+        num_samples_splits = {
+            "train": train_count,
+            "val": val_count,
+            "trainval": train_count + val_count,
+            "test": test_count,
+            "train800": 1000,
+            "val200": 1000,
+            "train800val200": 2000,
+        }
+    
     super(DTDData, self).__init__(
         dataset_builder=dataset_builder,
         tfds_splits=tfds_splits,

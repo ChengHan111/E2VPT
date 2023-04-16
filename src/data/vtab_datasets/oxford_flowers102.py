@@ -69,28 +69,50 @@ class OxfordFlowers102Data(base.ImageTfdsData):
             "train800val200": 1000,
         }
     else:
-        tfds_splits = {
+        origin = False
+        if origin:
+            tfds_splits = {
+                "train": "train",
+                "val": "validation",
+                "trainval": "train+validation",
+                "test": "test",
+                "train800": "train[:800]",
+                "val200": "validation[:200]",
+                "train800val200": "train[:800]+validation[:200]",
+            }
+            # print(tfds_splits)
+            num_samples_splits = {
+                "train": train_count,
+                "val": val_count,
+                "trainval": train_count + val_count,
+                "test": test_count,
+                "train800": 800,
+                "val200": 200,
+                "train800val200": 1000,
+            }
+            # print(num_samples_splits)
+            # {'train': 1020, 'val': 1020, 'trainval': 2040, 'test': 6149, 'train800': 800, 'val200': 200, 'train800val200': 1000}
+        else:
+            # to enable one-shot to collect enough data on val set 
+            tfds_splits = {
             "train": "train",
             "val": "validation",
             "trainval": "train+validation",
             "test": "test",
             "train800": "train[:800]",
-            "val200": "validation[:200]",
-            "train800val200": "train[:800]+validation[:200]",
-        }
-        print(tfds_splits)
-        num_samples_splits = {
-            "train": train_count,
-            "val": val_count,
-            "trainval": train_count + val_count,
-            "test": test_count,
-            "train800": 800,
-            "val200": 200,
-            "train800val200": 1000,
-        }
-        # print(num_samples_splits)
-        # {'train': 1020, 'val': 1020, 'trainval': 2040, 'test': 6149, 'train800': 800, 'val200': 200, 'train800val200': 1000}
-        # exit()
+            "val200": "validation[:1000]",
+            "train800val200": "train[:800]+validation[:1000]",
+            }
+            # print(tfds_splits)
+            num_samples_splits = {
+                "train": train_count,
+                "val": val_count,
+                "trainval": train_count + val_count,
+                "test": test_count,
+                "train800": 800,
+                "val200": 1000,
+                "train800val200": 1800,
+            }
 
     super(OxfordFlowers102Data, self).__init__(
         dataset_builder=dataset_builder,

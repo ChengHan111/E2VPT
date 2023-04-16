@@ -636,13 +636,13 @@ class Trainer():
                 # print('2', torch.norm(prompt_grad_IG, p=2, dim=2).shape)
                 max_prompt = torch.max(torch.abs(prompt_grad_IG), dim=2)[0]
                 # print('max_prompt', max_prompt.shape)
-                L2_norm_promot = torch.norm(torch.abs(prompt_grad_IG), p=2, dim=2)
-                # grad_prompt_norm.append(L2_norm_promot) #  keepdim=True in shape (batch_size, x, 1)
+                L2_norm_prompt = torch.norm(torch.abs(prompt_grad_IG), p=2, dim=2)
+                # grad_prompt_norm.append(L2_norm_prompt) #  keepdim=True in shape (batch_size, x, 1)
             
             
                 if attribution_patches is not None:
                     embedding_prompt_cat_maxValue = torch.cat((max_embeddings, max_prompt), dim=1)
-                    embedding_prompt_cat = torch.cat((L2_norm_embeddings, L2_norm_promot), dim=1)
+                    embedding_prompt_cat = torch.cat((L2_norm_embeddings, L2_norm_prompt), dim=1)
                     maxValue_idx = torch.max(embedding_prompt_cat_maxValue, dim=1)[1] # get the position of the max value
                     max_idx = torch.max(embedding_prompt_cat, dim=1)[1] # get the position of the max value
                     # top_indices = torch.topk(embedding_prompt_cat, k=5, dim=1)[1]
@@ -881,11 +881,6 @@ class Trainer():
         
         self.cls_weights = train_loader.dataset.get_class_weights(
             self.cfg.DATA.CLASS_WEIGHTS_TYPE)
-        
-        # print parameters
-        # for name, _ in model.named_parameters():
-        #     print(name)
-        # list(model.parameters())
 
         if integrated_method == 'ig':
             method = IntegratedGradients(model) 
@@ -969,7 +964,11 @@ class Trainer():
                     for i in range(attribution_patches.shape[0]):                    
                         # unique_id = str(uuid.uuid4())
                         unique_id = next(id_iter)
-                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig/ig_{targets[i]}_{unique_id}.png'
+                        # print('outputs', outputs.shape)
+                        # print('outputs[i]', outputs[i].shape)
+                        # print('outputs[i]', torch.argmax(outputs[i]))
+                        # print('targets[i]', targets[i])
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/ig/ig_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
                         # a warning will show up since attr creates negative values
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
@@ -989,7 +988,7 @@ class Trainer():
                     for i in range(attribution_patches.shape[0]):                       
                         # unique_id = str(uuid.uuid4())
                         unique_id = next(id_iter)
-                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel/nt_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/noise_tunnel/nt_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -1008,7 +1007,7 @@ class Trainer():
                     for i in range(attribution_patches.shape[0]):
                         # unique_id = str(uuid.uuid4())
                         unique_id = next(id_iter)
-                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion/occ_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/occlusion/occ_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
@@ -1027,7 +1026,7 @@ class Trainer():
                     for i in range(attribution_patches.shape[0]):
                         # unique_id = str(uuid.uuid4())
                         unique_id = next(id_iter)
-                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/layer_gradcam/gcam_{targets[i]}_{unique_id}.png'
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/layer_gradcam/gcam_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
                         
                         # print('attribution_patches', attribution_patches.shape) 
                         # attribution_patches = F.interpolate(attribution_patches, size=(224, 224), mode='bilinear', align_corners=False)

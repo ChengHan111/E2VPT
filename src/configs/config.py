@@ -29,7 +29,7 @@ _C.SEED = None
 
 _C.ATTRIBUTION_TYPE = "specific" # one of "specific", "general" for attribution results
 _C.ATTRIBUTION_INTEGRATED_METHOD = "ig" # one of "ig", "noise_tunnel" "occlusion" "layer_gradcam" for attribution results
-_C.SAVE_LOGITS = True # save logits for attribution results
+_C.SAVE_LOGITS = False # save logits for attribution results
 
 # ----------------------------------------------------------------------
 # Model options

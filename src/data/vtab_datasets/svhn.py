@@ -54,7 +54,7 @@ class SvhnData(base.ImageTfdsData):
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
 
-    origin = True
+    origin = False
     if origin:
         # Creates a dict with example counts for each split.
         num_samples_splits = {
@@ -103,9 +103,9 @@ class SvhnData(base.ImageTfdsData):
             "val": trainval_count - TRAIN_SPLIT_PERCENT * trainval_count // 100,
             "trainval": trainval_count,
             "test": test_count,
-            "train800": 800,
-            "val200": 200,
-            "train800val200": 1000,
+            "train800": 10000,
+            "val200": 2000,
+            "train800val200": 12000,
         }
 
         # Defines dataset specific train/val/trainval/test splits.
@@ -122,13 +122,13 @@ class SvhnData(base.ImageTfdsData):
             "test":
                 "test",
             "train800":
-                "train[:800]",
+                "train[:10000]",
             "val200":
                 "train[{}:{}]".format(num_samples_splits["train"],
-                                    num_samples_splits["train"] + 200),
+                                    num_samples_splits["train"] + 2000),
             "train800val200":
-                "train[:800]+train[{}:{}]".format(
-                    num_samples_splits["train"], num_samples_splits["train"] + 200),
+                "train[:10000]+train[{}:{}]".format(
+                    num_samples_splits["train"], num_samples_splits["train"] + 2000),
         }
         # tfds_splits:  {'train': 'train[:65931]', 'val': 'train[65931:]', 'trainval': 'train', 'test': 'test', 'train800': 'train[:800]', 'val200': 'train[65931:66131]', 'train800val200': 'train[:800]+train[65931:66131]'}
         # print("tfds_splits: ", tfds_splits)

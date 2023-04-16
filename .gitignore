@@ -202,3 +202,5 @@ train_save.py
 /fewshot_prompt_val
 /plot_functions/cifar100_400-100
 /plot_functions/cifar100_8000-2000
+/IG_VIS_abs_finetune_attribution_save
+/IG_VIS_absolute_attribution_save

@@ -35,7 +35,7 @@ class PatchCamelyonData(base.ImageTfdsData):
     dataset_builder = tfds.builder("patch_camelyon:2.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    origin = True
+    origin = False
     if origin:
         # Defines dataset specific train/val/trainval/test splits.
         tfds_splits = {
@@ -63,18 +63,18 @@ class PatchCamelyonData(base.ImageTfdsData):
             "train": "train",
             "val": "validation",
             "trainval": "train+validation",
-            "train800": "train[:800]",
-            "val200": "validation[:200]",
-            "train800val200": "train[:800]+validation[:200]",
+            "train800": "train[:10000]",
+            "val200": "validation[:2500]",
+            "train800val200": "train[:10000]+validation[:2500]",
         }
         # Creates a dict with example counts.
         num_samples_splits = {
             "test": dataset_builder.info.splits["test"].num_examples,
             "train": dataset_builder.info.splits["train"].num_examples,
             "val": dataset_builder.info.splits["validation"].num_examples,
-            "train800": 800,
-            "val200": 200,
-            "train800val200": 1000,
+            "train800": 10000,
+            "val200": 2500,
+            "train800val200": 12500,
         }
 
 

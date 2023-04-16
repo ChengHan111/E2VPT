@@ -1,0 +1,12 @@
+_BASE_: "../../../base-finetune_swin.yaml"
+RUN_N_TIMES: 1
+DATA:
+  NAME: vtab-diabetic_retinopathy(config="btgraham-300")
+  DATAPATH: "/shared/kgcoe-research/spl/VTAB-1k/Specialized/"  #TODO: need to specify here
+  NUMBER_CLASSES: 5
+  MULTILABEL: False
+MODEL:
+  TYPE: "vit"
+SOLVER:
+  BASE_LR: 0.01
+  WEIGHT_DECAY: 0.001

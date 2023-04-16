@@ -430,6 +430,7 @@ class BasicLayer(nn.Module):
         #         raise ValueError("deep prompt mode for swin is only applicable to prepend")
         
         else:
+            # print('should pass here for full fine-tuning')
             self.blocks = nn.ModuleList([
                 block_module(
                     dim=dim, input_resolution=input_resolution,
@@ -441,6 +442,8 @@ class BasicLayer(nn.Module):
                     drop_path=drop_path[i] if isinstance(drop_path, list) else drop_path,  # noqa
                     norm_layer=norm_layer)
                 for i in range(depth)])
+            
+            self.deep_prompt = False # should set false here for full fine-tuning
 
         # patch merging layer
         if downsample is not None:
@@ -457,6 +460,7 @@ class BasicLayer(nn.Module):
             self.downsample = None
 
     def forward(self, x, deep_prompt_embd=None):
+        # print('111', self.deep_prompt)
         if self.deep_prompt and deep_prompt_embd is None:
             raise ValueError("need deep_prompt embddings")
 

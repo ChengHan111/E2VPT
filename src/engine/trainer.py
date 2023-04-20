@@ -468,10 +468,6 @@ class Trainer():
         
         assert token_piece_mask_number[-1] == sum(token_piece_mask_sequence)
         
-        # print('1', soft_token_mask_sequence)
-        # print('2', token_piece_mask_sequence)
-        # print('3', soft_token_mask_number)
-        # print('4', token_piece_mask_number)
         return soft_token_mask_sequence, token_piece_mask_sequence
     
     def dump(self, path, data, convert_key_type=False):

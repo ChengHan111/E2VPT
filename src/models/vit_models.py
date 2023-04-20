@@ -116,15 +116,16 @@ class ViT(nn.Module):
 
         elif transfer_type == "prompt":
             for k, p in self.enc.named_parameters():
-                if "prompt" not in k:
-                    p.requires_grad = False
-                    # print(p.requires_grad) prompt and deep_prompt both True
+                if not prompt_cfg.FT_PT_MIXED: # if not mixed, then freeze all except prompt
+                    if "prompt" not in k:
+                        p.requires_grad = False
+                        # print(p.requires_grad) # prompt and deep_prompt both True
         
         # self-added HyperPrompt Ver.
         elif transfer_type == "SELF_QKV":
             # originally enc
             for k, p in self.enc.transformer.named_parameters():
-                print('!!!!!!!', k) # p 仅仅是数值 # 
+                print('!!!!!!!', k) 
                 if "QKV" not in k:
                     p.requires_grad = False
                     print(p.requires_grad) # prompt and deep_prompt both True
@@ -146,10 +147,11 @@ class ViT(nn.Module):
         elif transfer_type == "P_VK": # add bias term here for exp.
             for k, p in self.enc.named_parameters():
                 print('#####', k)
-                # print('this mark appears when all layers+prompts are updated jointly')
-                if "QKV" not in k and 'prompt' not in k: 
-                    p.requires_grad = False
-                    print(p.requires_grad)
+                if not p_vk_cfg.FT_PT_MIXED:
+                    # print('this mark appears when all layers+prompts are updated jointly')
+                    if "QKV" not in k and 'prompt' not in k: 
+                        p.requires_grad = False
+                        # print(p.requires_grad)
             
 
         elif transfer_type == "prompt+bias":

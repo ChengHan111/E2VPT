@@ -69,7 +69,7 @@ class OxfordFlowers102Data(base.ImageTfdsData):
             "train800val200": 1000,
         }
     else:
-        origin = False
+        origin = True
         if origin:
             tfds_splits = {
                 "train": "train",

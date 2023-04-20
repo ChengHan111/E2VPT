@@ -52,7 +52,7 @@ class Caltech101(base.ImageTfdsData):
     dataset_builder = tfds.builder("caltech101:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
     
-    origin = False
+    origin = True
     if origin:
         # Creates a dict with example counts for each split.
         trainval_count = dataset_builder.info.splits["train"].num_examples

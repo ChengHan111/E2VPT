@@ -41,7 +41,7 @@ class DTDData(base.ImageTfdsData):
     dataset_builder = tfds.builder("dtd:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    origin = False
+    origin = True
     if origin:
         # Defines dataset specific train/val/trainval/test splits.
         tfds_splits = {

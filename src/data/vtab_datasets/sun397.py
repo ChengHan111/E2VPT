@@ -39,7 +39,7 @@ class Sun397Data(base.ImageTfdsData):
       dataset_builder = tfds.builder("sun397/tfds:4.*.*", data_dir=data_dir)
       dataset_builder.download_and_prepare()
 
-      origin = False
+      origin = True
       if origin:
         tfds_splits = {
             "train": "train",

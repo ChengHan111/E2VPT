@@ -54,6 +54,7 @@ class Caltech101(base.ImageTfdsData):
     
     origin = True
     if origin:
+        _TRAIN_SPLIT_PERCENT = 90
         # Creates a dict with example counts for each split.
         trainval_count = dataset_builder.info.splits["train"].num_examples
         train_count = (_TRAIN_SPLIT_PERCENT * trainval_count) // 100

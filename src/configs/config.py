@@ -79,6 +79,7 @@ _C.MODEL.PROMPT.FORWARD_DEEP_NOEXPAND = False  # if true, will not expand input 
 _C.MODEL.PROMPT.VIT_POOL_TYPE = "original"
 _C.MODEL.PROMPT.DROPOUT = 0.0
 _C.MODEL.PROMPT.SAVE_FOR_EACH_EPOCH = False
+_C.MODEL.PROMPT.FT_PT_MIXED = False # if true, will do mixed pt+ft training
 # ----------------------------------------------------------------------
 # adapter options
 # ----------------------------------------------------------------------
@@ -213,7 +214,7 @@ _C.MODEL.P_VK.SAVE_REWIND_MODEL = False
 _C.MODEL.P_VK.MASK_CLS_TOKEN_ON_VK = False # mask value and key instead of cls_token (unfinished, does not make sense)
 # _C.MODEL.P_VK.MASK_QUERY = False # does not make sense (attention map size changed, should apply linear projection to reduce dim)
 _C.MODEL.P_VK.QUERY_PROMPT_MODE = 0 # 0, 1, 2, 3 (disable query-prompt/ query transpose/query-key prompt(dim=3)/query-key-value prompt (2-dimension prompt))
-
+_C.MODEL.P_VK.FT_PT_MIXED = False # if true, will do mixed pt+ft training
 # ----------------------------------------------------------------------
 # Dataset options
 # ----------------------------------------------------------------------

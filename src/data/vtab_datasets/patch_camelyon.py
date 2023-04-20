@@ -35,7 +35,7 @@ class PatchCamelyonData(base.ImageTfdsData):
     dataset_builder = tfds.builder("patch_camelyon:2.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    origin = False
+    origin = True
     if origin:
         # Defines dataset specific train/val/trainval/test splits.
         tfds_splits = {

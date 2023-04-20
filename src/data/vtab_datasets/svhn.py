@@ -54,7 +54,7 @@ class SvhnData(base.ImageTfdsData):
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
 
-    origin = False
+    origin = True
     if origin:
         # Creates a dict with example counts for each split.
         num_samples_splits = {

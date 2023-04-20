@@ -52,7 +52,7 @@ class OxfordIIITPetData(base.ImageTfdsData):
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
     
-    origin = False
+    origin = True
     if origin:
         num_samples_splits = {
             "train": (train_split_percent * trainval_count) // 100,

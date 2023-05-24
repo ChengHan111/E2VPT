@@ -151,7 +151,7 @@ If you find our work helpful in your research, please cite it as:
 
 ```
 @inproceedings{cheng2023e2vpt,
-  title={E\textsuperscript{2}VPT: An Effective and Efficient Approach for Visual Prompt Tuning},
+  title={E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning},
   author={Cheng, Han and Qifan, Wang and Yiming, Cui and Zhiwen, Cao and Wenguan, Wang and Siyuan, Qi and Dongfang, Liu},
   booktitle={International Conference on Computer Vision (ICCV)},
   year={2023}

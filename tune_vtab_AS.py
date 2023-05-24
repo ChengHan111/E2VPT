@@ -251,6 +251,7 @@ def train(cfg, args, final_runs):
         cfg, logger, final_runs)
     logger.info("Constructing models...")
     model, cur_device = build_model(cfg)
+    # print(model)
 
     logger.info("Setting up Evalutator...")
     evaluator = Evaluator()

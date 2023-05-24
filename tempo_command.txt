@@ -167,3 +167,9 @@ python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-
 
 # swin vpt origin
 python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_swin/VTAB-1k_forVPT/Natural/cifar100.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "80" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "test_dataset"
+
+
+python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/caltech101_forVPT.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt"
+
+
+python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/dsprites_orientation.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt_mixed" DATA.BATCH_SIZE "64" MODEL.PROMPT.FT_PT_MIXED "True"

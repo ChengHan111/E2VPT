@@ -24,8 +24,12 @@ import itertools
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel, Occlusion, LayerGradCam, LayerAttribution
+from captum.attr import IntegratedGradients, LayerIntegratedGradients, LayerConductance, NoiseTunnel, Occlusion, LayerGradCam, LayerAttribution, Saliency
 from captum.attr import visualization as viz
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+import torch.nn.functional as F
+import cv2
 
 
 logger = logging.get_logger("visual_prompt")
@@ -601,11 +605,16 @@ class Trainer():
             X, targets = self.get_input(input_data)
             # measure data loading time
             data_time.update(time.time() - end)
+            
+            model_type = self.cfg.MODEL.TRANSFER_TYPE
 
             if self.cfg.DBG:
                 logger.info("during eval: {}".format(X.shape))
-
-            loss, outputs, attribution_patches = self.forward_one_batch_IG_update(ig_patches, X, targets, True) # False (originally False)
+            
+            if model_type == 'pytorch_gradcam':
+                loss, outputs, attribution_patches = self.forward_one_batch_IG_update(ig_patches, X, targets, True) # False (originally False)
+            else:
+                loss, outputs, attribution_patches = self.forward_one_batch_IG_update(ig_patches, X, targets, False)
             
             if attribution_patches is not None:
                 # L2 norm
@@ -615,7 +624,6 @@ class Trainer():
                 L2_norm_embeddings = torch.norm(torch.abs(attribution_patches), p=2, dim=2)
                 # grad_embeddings_norm.append(L2_norm_embeddings) 
             
-            model_type = self.cfg.MODEL.TRANSFER_TYPE
             if model_type == 'prompt':
             
                 prompt_grad = model.enc.transformer.prompt_embeddings.grad
@@ -714,32 +722,6 @@ class Trainer():
             
             total_targets.extend(list(targets.numpy()))
             total_logits.append(outputs)
-        
-        # logger.info(
-        #     f"Inference ({prefix}):"
-        #     + "avg data time: {:.2e}, avg batch time: {:.4f}, ".format(
-        #         data_time.avg, batch_time.avg)
-        #     + "average loss: {:.4f}".format(losses.avg))
-        # if self.model.side is not None:
-        #     logger.info(
-        #         "--> side tuning alpha = {:.4f}".format(self.model.side_alpha))
-            
-        # # total_testimages x num_classes
-        # joint_logits = torch.cat(total_logits, dim=0).cpu().numpy()
-        # self.evaluator.classify(
-        #     joint_logits, total_targets,
-        #     test_name, self.cfg.DATA.MULTILABEL,
-        # )
-
-        # # save the probs and targets
-        # if save_logits:
-        #     out = {"targets": total_targets, "joint_logits": joint_logits}
-        #     out_path = os.path.join(
-        #         self.cfg.OUTPUT_DIR, f"{test_name}_logits.pth")
-        #     torch.save(out, out_path)
-        #     logger.info(
-        #         f"Saved logits and targets for {test_name} at {out_path}")
-        # return grad_embeddings_norm, grad_prompt_norm
     
     
     def forward_one_batch_IG_update(self, ig_patches, inputs, targets, is_train):
@@ -815,14 +797,14 @@ class Trainer():
                     inputs_chunk = inputs[start_idx:end_idx]
                     baseline_chunk = torch.zeros_like(inputs_chunk)
                     target_chunk = targets[start_idx:end_idx]
-                    # print('!!!', target_chunk.shape)
+                    
                     if target_chunk.shape[0] != 0:
                         # attribution_chunk = ig_patches.attribute(inputs_chunk, baselines=baseline_chunk, target=target_chunk)
                         attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
                         attributions.append(attribution_chunk)
                         attribution_ig = torch.cat(attributions, dim=0)
                     else:
-                        ('under construction')
+                        raise ValueError('target_chunk.shape[0] == 0')
                         
                 # True end
                 # attribution_ig = torch.cat(attributions, dim=0)
@@ -871,6 +853,20 @@ class Trainer():
     @torch.no_grad()
     def eval_classifier_GENERAL(self, model, train_loader, data_loader, prefix, integrated_method):
         
+        def reshape_transform(tensor, height=14, width=14):
+            # print('In reshape_transform', tensor.shape) # [batch size, 197 ,768]
+            # tensor = tensor[:, 0:197, :] # prompt tuning will return value not equal to 197 (with prompt length), reflect in error
+            tensor = tensor[:, 11:, :]
+            result = tensor[:, :, :].reshape(tensor.size(0),
+                                            height, width, tensor.size(2))
+            # result = tensor[:, 1:, :].reshape(tensor.size(0),
+                                            # height, width, tensor.size(2))
+
+            # Bring the channels to the first dimension,
+            # like in CNNs.
+            result = result.transpose(2, 3).transpose(1, 2)
+            return result
+        
         Checkpointer(
             model
         ).load(self.cfg.OUTPUT_DIR + '/last_model.pth') 
@@ -890,7 +886,19 @@ class Trainer():
             # model.enc.transformer.encoder.encoder_norm torch.Size([64, 1, 768])
             # model.enc.transformer.encoder.layer[11].ffn torch.Size([64, 1, 768])
             # embeddings.patch_embeddings
+            
             method = LayerGradCam(model, model.enc.transformer.embeddings.patch_embeddings) # should specific a layer here
+            # method = LayerGradCam(model, model.enc.transformer.encoder.layer[11].ffn_norm)
+            
+        elif integrated_method == 'saliency':
+            method = Saliency(model)
+        
+        elif integrated_method == 'pytorch_gradcam': # under construction
+            method = GradCAM(model=model,
+                            target_layers=[model.enc.transformer.encoder.layer[11].attention_norm], # [model.enc.transformer.encoder.encoder_norm],
+                            use_cuda=True,
+                            reshape_transform=reshape_transform,
+                            )
         else:
             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py: {integrated_method}")
         
@@ -926,7 +934,7 @@ class Trainer():
             if self.cfg.DBG:
                 logger.info("during eval: {}".format(X.shape))
 
-            loss, outputs, attribution_patches = self.forward_one_batch_IgGeneral(method, X, targets, False, integrated_method) # False (originally False)
+            loss, outputs, attribution_patches = self.forward_one_batch_IgGeneral(method, X, targets, True, integrated_method) # False 
             
             # save logits
             if self.cfg.SAVE_LOGITS:
@@ -968,12 +976,20 @@ class Trainer():
                         # a warning will show up since attr creates negative values
                         targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
                         
+                        # original ver.
                         figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
                                                     targetrgb,
                                                     methods=["original_image", "heat_map"],
                                                     cmap=default_cmap,
                                                     show_colorbar=True,
                                                     signs=["all", "absolute_value"]) # originally positive here!
+                        
+                        # update test ver.
+                        # figure = viz.visualize_image_attr_multiple(np.transpose(attribution_patches[i].squeeze().cpu().detach().numpy(), (1,2,0)),
+                        #                             targetrgb,
+                        #                             methods=["original_image", "heat_map"],
+                        #                             show_colorbar=True,
+                        #                             signs=["all", "absolute_value"]) # change into all and disable cmap
                         
                         plt.savefig(filename)
                         
@@ -1033,15 +1049,135 @@ class Trainer():
                         # figure = viz.visualize_image_attr(
                         #     np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)), targetrgb, 
                         #     method='blended_heat_map', sign='absolute_value')
-
+                        
+                        origin_save_mode = False
+                        
+                        if origin_save_mode:
+                            figure = viz.visualize_image_attr_multiple(
+                                np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)), targetrgb, 
+                                methods=["original_image", "heat_map"], signs=["all","positive"], show_colorbar=True, outlier_perc=2) #absolute_value
+                            plt.savefig(filename)
+                            
+                        else:
+                            # (1, 224, 224)
+                            img_reshaped = np.reshape(attribution_patches[i].cpu().detach().numpy(), (224, 224))
+                            # heatmap_test = cv2.resize(img_reshaped, (224, 224))
+                            min_val = img_reshaped.min()
+                            max_val = img_reshaped.max()
+                            # print('1', np.max(img_reshaped), np.min(img_reshaped))
+                            img_reshaped = np.interp(img_reshaped, (min_val, max_val), (0, 255))
+                            # print('2', targetrgb.shape) # (224, 224, 3)
+                            heatmap_test = np.uint8(img_reshaped) 
+                            # print('heatmap_test', heatmap_test.shape)
+                            heatmap_test = cv2.applyColorMap(heatmap_test, cv2.COLORMAP_JET)
+                            superimposed_img_test = heatmap_test * 0.5 + targetrgb
+                            superimposed_img_test=np.clip(superimposed_img_test,0,255)
+                            superimposed_img_test=superimposed_img_test.astype(np.uint8)
+                            targetrgb = np.uint8(targetrgb)  
+                            # targetrgb = targetrgb[:, :, [2, 1, 0]]
+                            # print('targetrgb', targetrgb.shape) # (224, 224, 3)
+                            # print('superimposed_img_test', superimposed_img_test.shape) # (224, 224, 3)
+                            merged_img = cv2.hconcat([targetrgb, superimposed_img_test])
+                            cv2.imwrite(f'{filename}.jpg', merged_img) 
+                            
+                        
+                        
+                elif integrated_method == 'saliency':
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/saliency'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/saliency')
+                    
+                    for i in range(attribution_patches.shape[0]):
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/saliency/saliency_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
+                        
+                        # print('attribution_patches', attribution_patches.shape) 
+                        # attribution_patches = F.interpolate(attribution_patches, size=(224, 224), mode='bilinear', align_corners=False)
+                        
+                        targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
+                        
+                        # blend in heat map
+                        # figure = viz.visualize_image_attr(
+                        #     np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)),  
+                        #     targetrgb,  
+                        #     method='blended_heat_map',
+                        #     cmap='hot',
+                        #     show_colorbar=True,
+                        #     sign='positive',
+                        #     outlier_perc=1
+                        #     )
+                        
                         figure = viz.visualize_image_attr_multiple(
                             np.transpose(attribution_patches[i].cpu().detach().numpy(), (1,2,0)), targetrgb, 
-                            methods=["original_image", "heat_map"], signs=["all","absolute_value"], show_colorbar=True, outlier_perc=2)
+                            methods=["original_image", "heat_map"], signs=["all","positive"], show_colorbar=True, outlier_perc=1, cmap='hot')
                         plt.savefig(filename)
+                elif integrated_method == 'pytorch_gradcam':
+                    if not os.path.exists(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/pytorch_gradcam'):
+                        os.makedirs(f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/pytorch_gradcam')
+                        
+                    for i in range(attribution_patches.shape[0]):
+                        # unique_id = str(uuid.uuid4())
+                        unique_id = next(id_iter)
+                        filename = f'./attribution_images_saved/{self.cfg.MODEL.TRANSFER_TYPE}/pytorch_gradcam/pytorch_gradcam_{targets[i]}_{torch.argmax(outputs[i])}_{unique_id}.png'
+                        
+                        # attribution_patches = F.interpolate(attribution_patches, size=(224, 224), mode='bilinear', align_corners=False)
+                        
+                        targetrgb = np.transpose(X[i].squeeze().cpu().detach().numpy(), (1,2,0))
+                        
+                        # print('attribution_patches', attribution_patches.shape) # torch.Size([128, 224, 224])
+                        grayscale_cam = attribution_patches[i].cpu().detach().numpy()
+
+                        # print('grayscale_cam', grayscale_cam.shape) # (224, 224)
+                        # print('targetrgb', targetrgb.shape) # (224, 224, 3)
+                        
+                        # print('1', min(grayscale_cam.flatten()), max(grayscale_cam.flatten())) # exist negative value
+                        # print('2', min(targetrgb.flatten()), max(targetrgb.flatten())) 
+                        
+                        
+                        # print('1', np.max(grayscale_cam), np.min(grayscale_cam))
+
+                        # grayscale_cam = np.interp(grayscale_cam, (min_val, max_val), (0, 255))
+                        
+                        only_heatmap = True
+                        if only_heatmap:
+                            # targetrgb = cv2.cvtColor(targetrgb, cv2.COLOR_RGB2BGR)
+                            # targetrgb = np.uint8(targetrgb)
+                            heatmap = cv2.applyColorMap(np.uint8(255*grayscale_cam), cv2.COLORMAP_JET)
+                            heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+                            # print('heatmap', heatmap.shape) # (224, 224, 3)
+                            # print('targetrgb', targetrgb.shape) # (224, 224, 3)
+                            
+                            # cv2.imwrite(f'{filename}.jpg', merged_img)
+                            
+                            fig, ax = plt.subplots(1, 2, figsize=(10,5))
+
+                            # plot the left image
+                            ax[0].imshow(targetrgb)
+                            ax[0].axis('off')
+                            # ax[0].set_title('Target RGB Image')
+
+                            # plot the right image
+                            ax[1].imshow(heatmap)
+                            ax[1].axis('off')
+                            # ax[1].set_title('Heatmap')
+                            plt.savefig(f'{filename}.jpg')
+
+                        else:
+                            targetrgb = targetrgb.astype(np.float32) / 255.0 # should convert to float32 and range to 0~1
+                            merged_img = show_cam_on_image(targetrgb, grayscale_cam) # use_rgb=True
+                            cv2.imwrite(f'{filename}.jpg', merged_img)
+                        
                     
-                
+                        # targetrgb = np.uint8(targetrgb)  
+                        # merged_img = cv2.hconcat([targetrgb, heatmap])
+                        
+                        # merged_img = show_cam_on_image(targetrgb, grayscale_cam, use_rgb=True)
+                        
+                        # merged_img = cv2.cvtColor(merged_img, cv2.COLOR_BGR2RGB)
+                        
             else:
-                print("attribution_patches is None")
+                # print("attribution_patches is None")
+                ValueError("attribution_patches is None")
             
             if loss == -1:
                 return
@@ -1131,16 +1267,36 @@ class Trainer():
                                        sliding_window_shapes=(3, 15, 15), # (3, 13, 13) different choice
                                        baselines=0)
                         elif integrated_method == "layer_gradcam": # which is the same as ig but with layer gradcam
+                            
+                            # print(inputs_chunk.shape) # torch.Size([1, 3, 224, 224])
+                            
                             attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
                             # interpolate to the original size
+                            # success
                             attribution_chunk = LayerAttribution.interpolate(attribution_chunk, (224, 224))
+                            
+                            # print('1',attribution_chunk.shape) # torch.Size([2, 1, 768])
+                            
+                            
+                        elif integrated_method == "saliency":
+                            attribution_chunk = ig_patches.attribute(inputs_chunk, target=target_chunk)
+                        elif integrated_method == "pytorch_gradcam":
+                            
+                            attribution_chunk = ig_patches(input_tensor=inputs_chunk,
+                                                targets=None, eigen_smooth=True, aug_smooth=True) # eigen_smooth=True, aug_smooth=False # target_chunk
+
+                            # print(attribution_chunk.shape) # (1, 224, 224)
+                            attribution_chunk = torch.from_numpy(attribution_chunk)
+                            # Here grayscale_cam has only one image in the batch
+                            # attribution_chunk = attribution_chunk[0, :]
+                        
                         else:
                             ValueError(f"Unsupported cfg.ATTRIBUTION_INTEGRATED_METHOD in trainer.py forward_one_batch_IgGeneral: {integrated_method}")
 
                         attributions.append(attribution_chunk)
                         attribution_ig = torch.cat(attributions, dim=0)
                     else:
-                        ('under construction')
+                        ValueError(f"target_chunk.shape[0] == 0 in trainer.py forward_one_batch_IgGeneral: {target_chunk.shape[0]}")
 
             if loss == float('inf'):
                 logger.info(

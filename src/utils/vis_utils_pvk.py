@@ -32,7 +32,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     j_data = job_path.split("/run")[0].split(
         job_root + "/" + model_type)[-1].split("/")
     if dataset_type == 'vtab':
-        job_name = job_root.split("/output_finalfinal/")[1] # output_finalfinal
+        job_name = job_root.split("/output_finalfinal/")[1] # output_finalfinal ft_pt_finalfinal
     elif dataset_type == 'fgvc':
         job_name = job_root.split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
@@ -41,7 +41,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
         job_name = job_root.split("/output_fgvc_rewind/")[1]
     # elif job_name == 'vtab_finetune':
     else:
-        job_name = job_root.split("/_finalfinal/")[1]
+        job_name = job_root.split("/_finalfinal/")[1] #_finalfinal
     
     # print(job_name)
     job_name_split = job_name.split("_")
@@ -58,6 +58,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     # return data_name, feat_type, lr, wd
     if dataset_type == 'vtab':
         data_name = job_root.split(f"_{P_value}")[0].split("/output_finalfinal/")[1] #output_finalfinal
+        # data_name = job_root.split("/ft_pt_finalfinal/")[1]
     elif dataset_type == 'fgvc':
         data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_finalfinal/")[1]
     elif dataset_type == 'vtab_rewind':
@@ -65,9 +66,7 @@ def get_meta(job_root, job_path, model_type, model_name, dataset_type='vtab'):
     elif dataset_type == 'fgvc_rewind':
         data_name = job_root.split(f"_{P_value}")[0].split("/output_fgvc_rewind/")[1]
     else:
-        # print(data_name)
-        print('111', job_root)
-        data_name = job_root.split("/_finalfinal/")[1]  
+        data_name = job_root.split("/_finalfinal/")[1]  #_finalfinal
           
         
     return data_name, model_name, P_value, VK_value, Shared, lr, wd, Init
@@ -566,10 +565,6 @@ def get_df_forPlot(files, model_type, root, MODEL_NAME, is_best=True, is_last=Tr
         train_loss, val_loss, test_loss, eval_results, meta_dict, (v_top1, t_top1) = get_training_data(job_path, model_type, root, MODEL_NAME, dataset_type)
         batch_size = meta_dict["batch_size"]
         
-        # print('train_loss', train_loss)
-        # print('val_loss', val_loss)
-        # print('test_loss', test_loss)
-        # saveIndice = files[0].split('run')[1].split('/')[0]
         try:
             os.makedirs(f"output_folder/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}", exist_ok=True)
             with open(f"output_folder/{meta_dict['data']}/{meta_dict['Prompt_length']}_{meta_dict['VK_length']}_{train_mode}/{model_type}.txt", 'x') as f:

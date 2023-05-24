@@ -36,7 +36,8 @@ MODEL_ZOO = {
     "swinl_imagenet22k_224": "swin_large_patch4_window7_224_22k.pth",
     "sup_vitb8": "ViT-B_8.npz",
     "sup_vitb16_224": "ViT-B_16-224.npz",
-    # "sup_vitb16_224": '/home/ch7858/vpt/_finalfinal/vtab-sun397/last_model.pth',
+    # enable the below line for two step training
+    # "sup_vitb16_224": 'specific model path here',
     "sup_vitb16": "ViT-B_16.npz",
     "sup_vitl16_224": "ViT-L_16-224.npz",
     "sup_vitl16": "ViT-L_16.npz",

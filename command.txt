@@ -528,9 +528,9 @@ CUDA_VISIBLE_DEVICES=0 PORT=30000 python tune_vtab_AS.py --train-type "finetune"
 
 
 # example command for few-shot learning
-CUDA_VISIBLE_DEVICES=0 PORT=40000 python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/smallnorb_evaluation.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "200" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "fewshot_prompt" DATA.BATCH_SIZE "64" DATA.EVEN_SEPARETE "True"
+CUDA_VISIBLE_DEVICES=0 PORT=40000 python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/dsprites_orientation.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "fewshot_prompt" DATA.BATCH_SIZE "64" DATA.EVEN_SEPARETE "True"
 
-CUDA_VISIBLE_DEVICES=1 PORT=50000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Structured/smallnorb_evaluation.yaml OUTPUT_DIR "fewshot_finetune" DATA.BATCH_SIZE "128" DATA.EVEN_SEPARETE "True"
+CUDA_VISIBLE_DEVICES=1 PORT=50000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Structured/dsprites_orientation.yaml OUTPUT_DIR "fewshot_finetune" DATA.BATCH_SIZE "128" DATA.EVEN_SEPARETE "True"
 
 # example command for swin finetune
 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k_swin/Natural/cifar100.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "128" OUTPUT_DIR "DatasetChanged_swin8000-2000FineTune"
@@ -540,7 +540,7 @@ python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_sw
 
 
 # ft + pt(two steps)
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt" DATA.BATCH_SIZE "64"
+python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/clevr_distance.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "200" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt" DATA.BATCH_SIZE "64"
 
 # ft + pt(one step) ## run!
 python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt_mixed" DATA.BATCH_SIZE "64" MODEL.PROMPT.FT_PT_MIXED "True"

@@ -102,13 +102,7 @@ def find_best_MtMtp(files, data_name):
             continue
 
         if val_result == best_val_acc:
-            # frag_txt = f.split("run1")[1]
-            # cur_lr = float(frag_txt.split("/lr")[-1].split("_wd")[0])
-            # cur_wd = float(frag_txt.split("_wd")[-1])
 
-            # cur_mask_token = float(frag_txt.split("/rewind")[-1].split('_tokens')[0])
-            # cur_mask_token_piece = float(frag_txt.split("tokens_")[-1].split('_pieces')[0])
-            # 这里不一样的点是选择了尽可能大的mask
             # change into default setting
             if best_mask_token is not None and best_mask_token < cur_mask_token :
                 # get the smallest lr to break tie for stability
@@ -203,8 +197,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
         if 'P_VK' in cfg.MODEL.TRANSFER_TYPE:
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{Data_Name_With_PVK}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
             lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
-            # print('!!!!!!!', lr)
-            # print('@@@@@@', wd)
         else:
             files = glob.glob(f"{cfg.OUTPUT_DIR}_val/{cfg.DATA.NAME}/{cfg.DATA.FEATURE}/*/run1/eval_results.pth")
             lr, wd = find_best_lrwd(files, cfg.DATA.NAME)
@@ -229,8 +221,6 @@ def setup(args, lr, wd, final_runs, run_idx=None, seed=None):
             # print(files)
             # notice that mask tokens and mask token pieces are selected in this process(before)
             
-            # print('1', cfg.DATA.NAME)
-            # print('2', files)
             mt, mtr = find_best_MtMtp(files, cfg.DATA.NAME)
             mt, mtr = int(mt), int(mtr)
         
@@ -552,8 +542,6 @@ def get_lrwd_range(args):
             0.5, 0.25, 0.1, 0.05
         ]
         wd_range = [0.01, 0.001, 0.0001, 0.0]
-        # lr_range = [50.0]
-        # wd_range = [0.01, 0.0001]
 
     elif args.train_type == "QKV_largerlr" or args.train_type == "P_KV_largerlr":
         lr_range = [
@@ -624,7 +612,6 @@ def main(args):
             rewind_train(cfg, args, cls_token_id, cls_token_pieces_id, rewind_model_output_dir, final_runs=False)
     
     print('Finish rewind process, get final runs')
-    # sleep(10)
     
     # get best results on rewind options
     # final run 5 times with fixed seed

@@ -152,9 +152,6 @@ CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "finetune" --
 
 CUDA_VISIBLE_DEVICES=1 PORT=30000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 
-transformer.embeddings.position_embeddings
-enc.transformer.embeddings.position_embeddings
-
 CUDA_VISIBLE_DEVICES=1 PORT=30000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128" OUTPUT_DIR "DatasetChanged8000-2000FineTune"
 
 CUDA_VISIBLE_DEVICES=0 PORT=30000 python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "A_test_as"

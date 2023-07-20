@@ -1,7 +1,7 @@
 # E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning
 ------
 
-(Under construction! There are several redundancies in the current version, and the commands/instructions are not perfectly ready for formal release. I will gradually update it! Please stay tuned.)
+(👉Under construction! There are several redundancies in the current version, and the commands/instructions are not perfectly ready for formal release. I will gradually update it! Please stay tuned.)
 
 This repository contains the official PyTorch implementation for E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning. Our work is based on Visual Prompt Tuning [VPT](https://github.com/KMnP/vpt), and we thank the great work of them. 
 

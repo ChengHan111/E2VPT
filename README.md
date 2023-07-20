@@ -1,7 +1,7 @@
 # E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning
 ------
 
-This repository contains the official PyTorch implementation for E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning. Our work is based on Visual Prompt Tuning, and we thank the great work of them. 
+This repository contains the official PyTorch implementation for E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning. Our work is based on Visual Prompt Tuning [VPT](https://github.com/KMnP/vpt), and we thank the great work of them. 
 
 As the size of transformer-based models continues to grow, fine-tuning these large-scale pretrained vision models for new tasks has become increasingly parameter-intensive. Parameter-efficient learning has been developed to reduce the number of tunable parameters during fine-tuning. Although these methods show promising results, there is still a significant performance gap compared to full fine-tuning. To address this challenge, we propose an Effective and Efficient Visual Prompt Tuning (E2VPT) approach for large-scale transformer-based model adaptation. Specifically, we introduce a set of learnable key-value prompts and visual prompts into self-attention and input layers, respectively, to improve the effectiveness of model fine-tuning. Moreover, we design a prompt pruning procedure to systematically prune low importance prompts while preserving model performance, which largely enhances the model's efficiency. Empirical results demonstrate that our approach outperforms several state-of-the-art baselines on two benchmarks, with considerably low parameter usage (e.g.,, 0.32% of model parameters on VTAB-1k). We anticipate that this work will inspire further exploration within the pretrain-then-finetune paradigm for large-scale models.
 
@@ -18,7 +18,7 @@ See `env_setup.sh`
 
 Note that you need to add a file (which is put in timm_added folder) to timm/models with path `anaconda3/envs/[envs-name]/lib/python3.7/site-packages/timm/models`, and init it in `__init__.py` by adding `from .vision_transformer_changeVK import *`.
 
-## Structure of the this repo (key files are marked with 👉):
+## Structure of the this repo (Many thanks to VPT, key files are marked with 👉):
 
 - `src/configs`: handles config parameters for the experiments.
   
@@ -74,25 +74,11 @@ Note that you need to add a file (which is put in timm_added folder) to timm/mod
 
 ### Datasets preperation:
 
-See Table 8 in the Appendix for dataset details. 
-
-- Fine-Grained Visual Classification tasks (FGVC): The datasets can be downloaded following the official links. We split the training data if the public validation set is not available. The splitted dataset can be found here: [Dropbox](https://cornell.box.com/v/vptfgvcsplits), [Google Drive](https://drive.google.com/drive/folders/1mnvxTkYxmOr2W9QjcgS64UBpoJ4UmKaM?usp=sharing). 
-
-  - [CUB200 2011](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html)
-
-  - [NABirds](http://info.allaboutbirds.org/nabirds/)
-
-  - [Oxford Flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/)
-
-  - [Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/main.html)
-
-  - [Stanford Cars](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
-
-- [Visual Task Adaptation Benchmark](https://google-research.github.io/task_adaptation/) (VTAB): see [`VTAB_SETUP.md`](https://github.com/KMnP/vpt/blob/main/VTAB_SETUP.md) for detailed instructions and tips.
+As I am having a hard time preparing for all of the datasets, I am considering to release a compiled version of FGVC and VTAB-1k sooner or later. For now, you can follow the instructions in [VPT](https://github.com/KMnP/vpt) for more details. We strictly follow the same datasets setup as VPT.
 
 ### Pre-trained model preperation
 
-Download and place the pre-trained Transformer-based backbones to `MODEL.MODEL_ROOT` (ConvNeXt-Base and ResNet50 would be automatically downloaded via the links in the code). Note that you also need to rename the downloaded ViT-B/16 ckpt from `ViT-B_16.npz` to `imagenet21k_ViT-B_16.npz`.
+Download and place the pre-trained Transformer-based backbones to `MODEL.MODEL_ROOT`. Note that you also need to rename the downloaded ViT-B/16 ckpt from `ViT-B_16.npz` to `imagenet21k_ViT-B_16.npz`.
 
 See Table 9 in the Appendix for more details about pre-trained backbones.
 
@@ -125,25 +111,15 @@ See Table 9 in the Appendix for more details about pre-trained backbones.
 <td align="center"><a href="https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_base_patch4_window7_224_22k.pth">link</a></td>
 <td align="center"><tt>bf9cc1</tt></td>
 </tr>
-<tr><td align="left">ConvNeXt-Base</td>
-<td align="center">Supervised</td>
-<td align="center"><a href="https://dl.fbaipublicfiles.com/convnext/convnext_base_22k_224.pth">link</a></td>
-<td align="center"><tt>-</tt></td>
-</tr>
-<tr><td align="left">ResNet-50</td>
-<td align="center">Supervised</td>
-<td align="center"><a href="https://pytorch.org/vision/stable/models.html">link</a></td>
-<td align="center"><tt>-</tt></td>
-</tr>
 </tbody></table>
 
-### Examples for training and aggregating results
+<!-- ### Examples for training and aggregating results
 
-See [`demo.ipynb`](https://github.com/KMnP/vpt/blob/main/demo.ipynb) for how to use this repo.
+See [`demo.ipynb`](https://github.com/KMnP/vpt/blob/main/demo.ipynb) for how to use this repo. -->
 
 ### Hyperparameters for experiments in paper
 
-The hyperparameter values used (prompt length for VPT / reduction rate for Adapters, base learning rate, weight decay values) in Table 1-2, Fig. 3-4, Table 4-5 can be found here: [Dropbox](https://cornell.box.com/s/lv10kptgyrm8uxb6v6ctugrhao24rs2z) / [Google Drive](https://drive.google.com/drive/folders/1ldhqkXelHDXq4bG7qpKn5YEfU6sRehJH?usp=sharing). 
+We will release the hyperparameters for all experiments in the paper soon. Stay tuned!
 
 ## Citation
 

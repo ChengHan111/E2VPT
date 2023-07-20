@@ -290,8 +290,6 @@ def cal_attribution_score(cfg, args, final_runs):
     evaluator = Evaluator()
     trainer = Trainer(cfg, model, evaluator, cur_device)
     
-    # 这里应该要改成test_loader
-    
     if test_loader:
         logger.info("Start to calculate attribution scores")
         # grad = trainer.calculate_attribution_scores_captum(cfg, model, test_loader)

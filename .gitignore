@@ -209,3 +209,4 @@ train_save.py
 /origin_mixed
 /plot_functions
 /pt_origin_val
+tune_vtab_PruningRewind_CVK_imagenet1k.py

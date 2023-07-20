@@ -10,8 +10,7 @@ MODEL_NAME = "sup_vitb16_224"
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-# 如果路径中有引号 需要手动删除！example: task="closest_object_distance" --> task=closest_object_distance
-root = "/home/ch7858/vpt/_finalfinal/vtab-svhn"
+root = ""
 dataset_type = 'vtab' # currently support vtab and fgvc
 
 df_list=[]

@@ -10,9 +10,7 @@ LOG_NAME = "logs.txt"
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-# 如果路径中有引号已经括号 需要手动删除！example: （task="closest_object_distance"） --> None 
-# 两个文件夹下:output_before_pruning + output_rewind
-root = '/home/ch7858/vptSelf/origin_mixed/saved_58update/DatasetChanged5000-1250_finalfinal/vtab-diabetic_retinopathy(config="btgraham-300")'
+root = ''
 dataset_type = 'vtab' # currently support vtab, fgvc, vtab_rewind and fgvc_rewind and vtab_finetune
 MODEL_NAME = "sup_vitb16_224" # sup_vitb16_224 # mae_vitb16 # mocov3_vitb # swinb_imagenet22k_224
 

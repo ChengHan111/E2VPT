@@ -18,7 +18,7 @@ See `env_setup.sh`
 
 Note that you need to add a file (which is put in timm_added folder) to timm/models with path `anaconda3/envs/[envs-name]/lib/python3.7/site-packages/timm/models`, and init it in `__init__.py` by adding `from .vision_transformer_changeVK import *`.
 
-## Structure of the this repo (Many thanks to VPT, key files are marked with 👉):
+<!-- ## Structure of the this repo (Many thanks to VPT, key files are marked with 👉):
 
 - `src/configs`: handles config parameters for the experiments.
   
@@ -70,7 +70,7 @@ Note that you need to add a file (which is put in timm_added folder) to timm/mod
 - Others:
   - RUN_N_TIMES: ensure only run once in case for duplicated submision, not used during vtab runs
   - OUTPUT_DIR: output dir of the final model and logs
-  - MODEL.SAVE_CKPT: if set to `True`, will save model ckpts and final output of both val and test set
+  - MODEL.SAVE_CKPT: if set to `True`, will save model ckpts and final output of both val and test set -->
 
 ### Datasets preperation:
 

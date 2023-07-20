@@ -1,291 +1,49 @@
-python train.py --config-file /home/ch7858/vpt/configs/prompt/*.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
-
-python train.py --config-file /home/ch7858/vpt/configs/prompt/cub.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
-
-python tune_fgvc.py --config-file configs/prompt/*.yaml SFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
-
-# vpt example
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1"
-
-python train.py \
-        --config-file configs/prompt/cub.yaml \
-        MODEL.TYPE "vit" \
-        DATA.BATCH_SIZE "64" \
-        MODEL.PROMPT.NUM_TOKENS "100" \
-        MODEL.PROMPT.DEEP "True" \
-        MODEL.PROMPT.DROPOUT "0.1" \
-        DATA.FEATURE "sup_vitb16_imagenet21k" \
-        DATA.NAME "vtab-dmlab" \
-        DATA.NUMBER_CLASSES "6" \
-        SOLVER.BASE_LR "0.25" \
-        SOLVER.WEIGHT_DECAY "0.001" \
-        SEED ${seed} \
-        MODEL.MODEL_ROOT "${model_root}" \
-        DATA.DATAPATH "${data_path}" \
-        OUTPUT_DIR "${output_dir}/seed${seed}"
-
-python tune_fgvc.py \
-    --train-type "prompt" \
-    --config-file configs/prompt/cub.yaml \
-    MODEL.TYPE "vit" \
-    DATA.BATCH_SIZE "128" \
-    MODEL.PROMPT.DEEP "True" \
-    MODEL.PROMPT.DROPOUT "0.1" \
-    MODEL.PROMPT.NUM_TOKENS "10" \
-    DATA.FEATURE "sup_vitb16_imagenet21k" \
-    DATA.DATAPATH  \
-    MODEL.MODEL_ROOT  \
-    OUTPUT_DIR 
-
-
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/*.yaml MODEL.TRANSFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.0"
-
-src里面提供了config的baseline 但是configs里面的文件的优先级在其之上(修改对应configs文件内的内容就行)
-tune_fgvc 和 tune_vtab 是用来一次性跑很多实验的 (find the best lr and wd) wd as WEIGHT_DECAY
-
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "prompt" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.0"
-
-prompt_proj 写着一层的目的是区分训练部分 方便选择对应的部分进行train
-
-DATASETS = [
-    'caltech101',
-    'cifar(num_classes=100)',
-    'dtd',
-    'oxford_flowers102',
-    'oxford_iiit_pet',
-    'patch_camelyon',
-    'sun397',
-    'svhn',
-    'resisc45',
-    'eurosat',
-    'dmlab',
-    'kitti(task="closest_vehicle_distance")',
-    'smallnorb(predicted_attribute="label_azimuth")',
-    'smallnorb(predicted_attribute="label_elevation")',
-    'dsprites(predicted_attribute="label_x_position",num_classes=16)',
-    'dsprites(predicted_attribute="label_orientation",num_classes=16)',
-    'clevr(task="closest_object_distance")',
-    'clevr(task="count_all")',
-    'diabetic_retinopathy(config="btgraham-300")'
-]
-
-##### P_VK approach separate commands
-# FGVC
-Cars: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-CUB: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/cub.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Dogs: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/dogs.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Flowers: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/flowers.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Nabirds: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-# VTAB-1k
-## Natural
-Caltech101(Failed): 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-dtd: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-
-## Specialized
-Diabetic_retinopathy_detection (Failed (Due to memory)): 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Resisc45 (Failed): 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-
-
-## Structured
-Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Dsprites_location (Failed (Due to memory)): 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Dsprites_orientation (Failed (Due to memory)): 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TRANSFER_TYPE "P_VK" MODEL.PROMPT.NUM_TOKENS "10"
-
-
-
-# SELF_QKV + bias approach
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python train.py --config-file /home/ch7858/vpt/configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TRANSFER_TYPE "SELF_QKV+bias" MODEL.PROMPT.NUM_TOKENS "10"
-
-
-%%bash
-# Tune VTAB-caltech101 with VPT:
-python tune_vtab.py \
-    --train-type "QKV" \
-    --config-file configs/prompt/cub.yaml \
-    MODEL.TYPE "vit" \
-    DATA.BATCH_SIZE "128" \
-    MODEL.PROMPT.DEEP "True" \
-    MODEL.PROMPT.DROPOUT "0.1" \
-    MODEL.PROMPT.NUM_TOKENS "10" \
-    DATA.FEATURE "sup_vitb16_imagenet21k" \
-    DATA.NAME "vtab-caltech101" \
-    DATA.NUMBER_CLASSES "102" \
-    DATA.DATAPATH  \
-    MODEL.MODEL_ROOT  \
-    OUTPUT_DIR  
-
-# Tune CUB with VPT:
-python tune_fgvc.py \
-    --train-type "QKV" \
-    --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml \
-    MODEL.TYPE "vit" \
-    DATA.BATCH_SIZE "128" \
-    MODEL.QKV_insert.DEEP "True" \
-    MODEL.QKV_insert.DROPOUT "0.1" \
-    MODEL.QKV_insert.NUM_TOKENS "10" \
-    DATA.FEATURE "sup_vitb16_imagenet21k" \
-    DATA.DATAPATH  \
-    MODEL.MODEL_ROOT  \
-    OUTPUT_DIR 
-
-
-
-##### P_VK approach tune_command commands
-# FGVC
-Cars: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "20" MODEL.P_VK.NUM_TOKENS "20" MODEL.P_VK.SHARE_PARAM_KV "True"
-CUB: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cub.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.SHARED_ACCROSS "True"
-Dogs: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/dogs.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "100" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True"
-Flowers: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/flowers.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True"
-Nabirds: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True"
-
-
-# VTAB-1k
-## Natural
-Caltech101: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-dtd: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
-
-## Specialized
-Diabetic_retinopathy_detection: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
-Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
-Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
-Resisc45: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
-
-
-## Structured
-Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "20" MODEL.P_VK.NUM_TOKENS "20" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
-
-
-# FGVC final runs(contain 5 runs)
-# cub
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cub.yaml
-# cars
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/cars.yaml
-# dogs
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/dogs.yaml
-# flowers
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/flowers.yaml
-# nabirds
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python five_runs_fgvc.py --train-type "P_VK" --config-file configs/prompt/prompt_test/FGVC/nabirds.yaml
-
-
 ****************************************************************
 ########## Documented Version (Origin 5runs on VTAB-1k)
 # VTAB-1k
 ## Natural
 Caltech101: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 dtd: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 
 ## Specialized
 Diabetic_retinopathy_detection: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Resisc45: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 
 ## Structured
 Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.MASK_CLS_TOKEN "False"  
 
 ########## Documented Version (Origin 5runs on FGVC)
 CUB
@@ -306,47 +64,47 @@ CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_fiveRuns.py --config-file con
 # VTAB-1k
 ## Natural
 Caltech101: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 dtd: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Specialized
 Diabetic_retinopathy_detection: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Resisc45: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Structured
 Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ########## Documented Version (Pruning and Rewind on FGVC)
 CUB
@@ -366,47 +124,47 @@ CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-fil
 ########## Documented Version (ssl mae VTAB-1k)
 ## Natural
 Caltech101: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 dtd: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Specialized
 Diabetic_retinopathy_detection: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Resisc45: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Structured
 Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_mae/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ########## Documented Version (ssl mae FGVC)
 CUB
@@ -426,47 +184,47 @@ CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-fil
 ########## Documented Version (ssl moco VTAB-1k)
 ## Natural
 Caltech101: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Cifar100: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/cifar100.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 dtd: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/dtd.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_flowers102: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/oxford_flowers102.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Oxford_iiit_pet: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/oxford_iiit_pet.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 SUN397: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/sun397.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Svhn_cropped: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Natural/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Natural/svhn_cropped.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Specialized
 Diabetic_retinopathy_detection: 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/diabetic_retinopathy_detection.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Eurosat: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/eurosat.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Patch_camelyon: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/patch_camelyon.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "10" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Resisc45: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Specialized/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Specialized/resisc45.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ## Structured
 Clevr_count: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/clevr_count.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Clevr_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dmlab: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dmlab.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_location: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dsprites_location.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Dsprites_orientation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/dsprites_orientation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Kitti_distance: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/kitti_distance.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_azimuth: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/smallnorb_azimuth.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 Smallnorb_evaluation: 
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" DATA.DATAPATH "/home/zhiwenc/data/VTAB-1k/Structured/"
+CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_ssl_moco/VTAB-1k/Structured/smallnorb_evaluation.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "128" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "10" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True"  
 
 ########## Documented Version (ssl moco FGVC)
 CUB
@@ -479,74 +237,3 @@ Stanford Dogs
 CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/dogs.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
 Stanford Cars
 CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_fgvc_PruningRewind.py --config-file configs/prompt/prompt_ssl_moco/FGVC/cars.yaml MODEL.TYPE "ssl-vit" DATA.BATCH_SIZE "64" MODEL.TRANSFER_TYPE "P_VK" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "5" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" 
-
-
-## for 384 resolution 
-add DATA_CROPSIZE "384" to the end of the command, notice for OOM problem (By default, all settings are under batchsize=32)
-
-## for full fine-tune (FGVC for visualization propose)
-CUB
-python train.py --config-file configs/finetune/cub.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
-NA Birds
-python train.py --config-file configs/finetune/nabirds.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
-Oxford_flowers102
-python train.py --config-file configs/finetune/flowers.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.001" SOLVER.WEIGHT_DECAY "0.0001"
-Stanford Dogs
-python train.py --config-file configs/finetune/dogs.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.005" SOLVER.WEIGHT_DECAY "0.0"
-Stanford Cars
-python train.py --config-file configs/finetune/cars.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0005" SOLVER.WEIGHT_DECAY "0.01"
-
-
-
-## get results
-python get_results_PruningRewind_CVK.py
-
-## finetune command 
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Structured/clevr_distance.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "128"
-
-## get results for imagenet prompt tuning (saved for NIPS)
-
-python tune_vtab_PruningRewind_CVK_imagenet1k.py --train-type "P_VK" --config-file configs/prompt/prompt_test/imagenet1k.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "1" MODEL.P_VK.NUM_TOKENS "1" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.P_VK.QUERY_PROMPT_MODE "0"
-
-(under construction)
-# python train.py --config-file configs/finetune/imagenet1k.yaml DATA.BATCH_SIZE "128" SOLVER.BASE_LR "0.0001" SOLVER.WEIGHT_DECAY "0.0001"
-
-# calculate IG 
-python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "A_test_as" DATA.BATCH_SIZE "64"
-python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "A_test_as" DATA.BATCH_SIZE "64"
-
-python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "A_test_as_finetune" DATA.BATCH_SIZE "128"
-
-CUDA_VISIBLE_DEVICES=0 PORT=20000 python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "A_test_as_finetune_general" DATA.BATCH_SIZE "64" ATTRIBUTION_TYPE "general"
-
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "IG_VIS" DATA.BATCH_SIZE "64" ATTRIBUTION_TYPE "general" ATTRIBUTION_INTEGRATED_METHOD "ig"
-
-# example command for visualization
-CUDA_VISIBLE_DEVICES=1 PORT=20000 python tune_vtab_AS.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "IG_VIS_absolute" DATA.BATCH_SIZE "64" ATTRIBUTION_TYPE "general" ATTRIBUTION_INTEGRATED_METHOD "ig"
-
-CUDA_VISIBLE_DEVICES=0 PORT=30000 python tune_vtab_AS.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Natural/cifar100.yaml OUTPUT_DIR "IG_VIS_abs_finetune" DATA.BATCH_SIZE "128" ATTRIBUTION_TYPE "general" ATTRIBUTION_INTEGRATED_METHOD "ig"
-
-
-# example command for few-shot learning
-CUDA_VISIBLE_DEVICES=0 PORT=40000 python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/dsprites_orientation.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "50" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "fewshot_prompt" DATA.BATCH_SIZE "64" DATA.EVEN_SEPARETE "True"
-
-CUDA_VISIBLE_DEVICES=1 PORT=50000 python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k/Structured/dsprites_orientation.yaml OUTPUT_DIR "fewshot_finetune" DATA.BATCH_SIZE "128" DATA.EVEN_SEPARETE "True"
-
-# example command for swin finetune
-python tune_vtab.py --train-type "finetune" --config-file configs/finetune/VTAB-1k_swin/Natural/cifar100.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "128" OUTPUT_DIR "DatasetChanged_swin8000-2000FineTune"
-
-# example command for swin vpt origin
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_swin/VTAB-1k_forVPT/Natural/cifar100.yaml MODEL.TYPE "swin" DATA.BATCH_SIZE "80" MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "test_dataset"
-
-
-# ft + pt(two steps)
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Structured/clevr_distance.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "200" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt" DATA.BATCH_SIZE "64"
-
-# ft + pt(one step) ## run!
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "ft_pt_mixed" DATA.BATCH_SIZE "64" MODEL.PROMPT.FT_PT_MIXED "True"
-
-# pt (original) ## run!
-python tune_vtab.py --train-type "prompt" --config-file configs/prompt/prompt_vpt/Natural/cifar100_forVPT.yaml MODEL.PROMPT.DEEP "True" MODEL.PROMPT.NUM_TOKENS "10" MODEL.PROMPT.DROPOUT "0.1" OUTPUT_DIR "pt_origin" DATA.BATCH_SIZE "64"
-
-# ft + pt(one step) for E2VPT
-python tune_vtab_PruningRewind_CVK.py --train-type "P_VK" --config-file configs/prompt/prompt_test/VTAB-1k/Natural/caltech101.yaml MODEL.TYPE "vit" DATA.BATCH_SIZE "64" MODEL.P_VK.DEEP "True" MODEL.P_VK.DEEP_P "True" MODEL.P_VK.DROPOUT_P "0.1" MODEL.P_VK.NUM_TOKENS_P "32" MODEL.P_VK.NUM_TOKENS "5" MODEL.P_VK.ORIGIN_INIT "2" MODEL.P_VK.SHARE_PARAM_KV "True" MODEL.PROMPT.FT_PT_MIXED "True"

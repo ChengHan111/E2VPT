@@ -81,7 +81,7 @@ Note that you need to add a file (which is put in timm_added folder) to timm/mod
 - E^2VPT related:
   - MODEL.P_VK.NUM_TOKENS: prompt length on Value-Key pair
   - MODEL.P_VK.NUM_TOKENS_P: prompt length (similar to VPT, but with pruning and rewinding)
-  - MODEL.P_VK.DEEP: deep or shallow prompt
+  <!-- - MODEL.P_VK.DEEP: deep or shallow prompt -->
 - Fine-tuning method specification ("P_VK" as default method for E^2VPT):
   - MODEL.TRANSFER_TYPE
 - Vision backbones:

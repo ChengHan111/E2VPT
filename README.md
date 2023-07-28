@@ -74,6 +74,31 @@ Note that you need to add a file (which is put in timm_added folder) to timm/mod
   - OUTPUT_DIR: output dir of the final model and logs
   - MODEL.SAVE_CKPT: if set to `True`, will save model ckpts and final output of both val and test set -->
 
+## Experiments
+
+### Key configs:
+
+- E^2VPT related:
+  - MODEL.P_VK.NUM_TOKENS: prompt length on Value-Key pair
+  - MODEL.P_VK.NUM_TOKENS_P: prompt length (similar to VPT will pruning and rewinding)
+  - MODEL.P_VK.DEEP: deep or shallow prompt
+- Fine-tuning method specification ("P_VK" as default method for E^2VPT):
+  - MODEL.TRANSFER_TYPE
+- Vision backbones:
+  - DATA.FEATURE: specify which representation to use
+  - MODEL.TYPE: the general backbone type, e.g., "vit" or "swin"
+  - MODEL.MODEL_ROOT: folder with pre-trained model checkpoints
+- Optimization related: 
+  - SOLVER.BASE_LR: learning rate for the experiment
+  - SOLVER.WEIGHT_DECAY: weight decay value for the experiment
+  - DATA.BATCH_SIZE
+- Datasets related:
+  - DATA.NAME
+  - DATA.DATAPATH: where you put the datasets
+  - DATA.NUMBER_CLASSES
+- Others:
+  - OUTPUT_DIR: output dir of the final model and logs
+
 ### Datasets preperation:
 
 As I am having a hard time preparing for all of the datasets, I am considering to release a compiled version of FGVC and VTAB-1k sooner or later. For now, you can follow the instructions in [VPT](https://github.com/KMnP/vpt) for more details. We strictly follow the same datasets setup as VPT.

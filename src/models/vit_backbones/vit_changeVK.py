@@ -122,7 +122,7 @@ class Attention(nn.Module):
         
         num_layers = self.config.transformer["num_layers"]
         num_tokens = self.qkv_cfg.NUM_TOKENS
-        print('num_tokens', num_tokens)
+        # print('num_tokens', num_tokens)
         if self.qkv_cfg.NUM_TOKENS_P is not None:
             print('num_tokens_p', self.qkv_cfg.NUM_TOKENS_P)
         
@@ -163,7 +163,7 @@ class Attention(nn.Module):
                 patch_size = _pair(self.config.patches["size"])
                 # print('patch_size', patch_size) # 16, 16
                 val = math.sqrt(6. / float(3 * reduce(mul, patch_size, 1) + 16))
-                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) # 现在是随便设置的， 需要后期改
+                # val = math.sqrt(6. / float(3 * reduce(mul, query_layer.shape[0], 1) + 16)) 
                 nn.init.uniform_(self.deep_QKV_embeddings.data, -val, val)
             elif self.qkv_cfg.ORIGIN_INIT == 1:
                 trunc_normal_(self.deep_QKV_embeddings, std=0.02)
@@ -173,9 +173,9 @@ class Attention(nn.Module):
                 torch.nn.init.kaiming_uniform_(self.deep_QKV_embeddings, a=0, mode='fan_in', nonlinearity='leaky_relu')
 
         elif self.qkv_cfg.SHARE_PARAM_KV == True and self.qkv_cfg.QUERY_PROMPT_MODE == 3:
-            # print('should pass for mode3')
+            
             head_fixed, num_patches_QKV, head_size_fixed = self.num_attention_heads, num_tokens, self.attention_head_size
-            # 197 as the input dimension
+            # 197 as the input dimension #TODO: make it dynamic
             self.deep_QKV_embeddings = nn.Parameter(torch.zeros(
                         head_fixed, 197 + self.qkv_cfg.NUM_TOKENS_P, num_patches_QKV))
             self.deep_QKV_embeddings_addition = nn.Parameter(torch.zeros(

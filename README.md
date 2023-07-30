@@ -3,7 +3,7 @@
 
 (👉Under construction! There are several redundancies in the current version, and the commands/instructions are not perfectly ready for formal release. I will gradually update it! Please stay tuned.)
 
-Our [arxiv](https://arxiv.org/abs/2307.13770) version is currently availible. `:fire:`
+Our [arxiv](https://arxiv.org/abs/2307.13770) version is currently availible. Please check it out! 🔥🔥🔥
 
 This repository contains the official PyTorch implementation for E2VPT: An Effective and Efficient Approach for Visual Prompt Tuning. Our work is based on Visual Prompt Tuning [VPT](https://github.com/KMnP/vpt), and we thank the great work of them. 
 
